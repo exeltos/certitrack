@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CertiTrack - Εγγραφή Προμηθευτή</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class'
+  };
+</script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Supabase client -->
+  <script type="module" src="../js/supabaseClient.js"></script>
+  <!-- Optional common utilities: showLoading, hideLoading, handleError -->
+  <script type="module" src="../js/common.js"></script>
+  <style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+    .fade-in { animation: fadeIn 0.8s ease-out; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white dark:bg-gray-900 p-4 shadow-md fade-in">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-14 w-auto" />
+        <h1 class="text-2xl font-bold text-blue-700 dark:text-teal-400">CertiTrack</h1>
+      </div>
+      <nav class="flex items-center gap-4">
+        <a href="index.html" class="text-gray-700 dark:text-gray-300 hover:underline">Αρχική</a>
+        <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
+  <svg id="icon-moon" class="w-6 h-6 dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+    <path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z" />
+  </svg>
+  <svg id="icon-sun" class="w-6 h-6 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+    <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM3.03 4.97a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L3.03 6.03a.75.75 0 010-1.06zM15.85 4.97a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM2 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 012 10zM14.25 9.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM3.03 15.03a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM15.85 15.03l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06z" />
+  </svg>
+</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Registration Form -->
+  <main class="flex-1 flex items-center justify-center px-4 fade-in">
+    <div class="max-w-md w-full p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-500 dark:border-gray-400 transition-all duration-500">
+      <h2 class="text-2xl font-bold text-center text-blue-700 dark:text-teal-400 mb-6">Εγγραφή Προμηθευτή</h2>
+      <form id="supplierForm" class="space-y-4">
+        <input id="name" name="name" type="text" placeholder="Επωνυμία Προμηθευτή" required class="w-full p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input id="email" name="email" type="email" placeholder="Email Προμηθευτή" required class="w-full p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input id="afm" name="afm" type="text" placeholder="ΑΦΜ" required class="w-full p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input id="afmConfirm" name="afmConfirm" type="text" placeholder="Επιβεβαίωση ΑΦΜ" required class="w-full p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div class="relative">
+          <input id="password" name="password" type="password" placeholder="Κωδικός" required class="w-full p-3 pr-10 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-3 flex items-center text-gray-400 dark:text-gray-300">👁️</button>
+        </div>
+        <div class="relative">
+          <input id="passwordConfirm" name="passwordConfirm" type="password" placeholder="Επιβεβαίωση Κωδικού" required class="w-full p-3 pr-10 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <button type="button" onclick="togglePassword('passwordConfirm')" class="absolute inset-y-0 right-3 flex items-center text-gray-400 dark:text-gray-300">👁️</button>
+        </div>
+        <p id="errorMsg" class="text-red-500 text-sm hidden"></p>
+        <button id="submitBtn" type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg flex justify-center items-center">
+          <svg id="spinner" class="animate-spin mr-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          Εγγραφή
+        </button>
+      </form>
+      <p class="text-center text-gray-600 text-sm mt-4">Έχετε ήδη λογαριασμό; <a href="general_login.html" class="text-blue-500 hover:underline">Σύνδεση</a></p>
+    </div>
+  </main>
+
+  <!-- Toggle Password Script -->
+  <script>
+    function togglePassword(id) {
+      const input = document.getElementById(id);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+  </script>
+
+  <!-- Registration Logic -->
+  <script type="module">
+    import { supabase } from '../js/supabaseClient.js';
+
+    const form = document.getElementById('supplierForm');
+    const errorEl = document.getElementById('errorMsg');
+    const submitBtn = document.getElementById('submitBtn');
+    const spinner = document.getElementById('spinner');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.classList.add('hidden');
+      submitBtn.disabled = true;
+      spinner.classList.remove('hidden');
+
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const afm = form.afm.value.trim();
+      const afmConfirm = form.afmConfirm.value.trim();
+      const password = form.password.value;
+      const passwordConfirm = form.passwordConfirm.value;
+
+      // Basic validations
+      if (!name || !email || !afm || !afmConfirm || !password || !passwordConfirm) {
+        errorEl.textContent = 'Παρακαλώ συμπληρώστε όλα τα πεδία.';
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+        return errorEl.classList.remove('hidden');
+      }
+      if (afm !== afmConfirm) {
+        errorEl.textContent = 'Τα ΑΦΜ δεν ταιριάζουν.';
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+        return errorEl.classList.remove('hidden');
+      }
+      if (password !== passwordConfirm) {
+        errorEl.textContent = 'Οι κωδικοί δεν ταιριάζουν.';
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+        return errorEl.classList.remove('hidden');
+      }
+
+      try {
+        // Check existing supplier by AFM or Email
+        const { data: existingSupplierData, error: existsErr } = await supabase
+          .from('suppliers')
+          .select('id, user_id')
+          .or(`afm.eq.${afm},email.eq.${email}`)
+          .limit(1);
+        const existingSupplier = existingSupplierData?.[0];
+
+        if (existsErr) throw existsErr;
+        if (existingSupplier && existingSupplier.user_id) {
+          Swal.fire('Προσοχή', 'Αυτός ο προμηθευτής είναι ήδη εγγεγραμμένος. Παρακαλώ κάνε σύνδεση.', 'info');
+          spinner.classList.add('hidden');
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const { data: emailExists, error: emailErr } = await supabase.from('suppliers').select('email, user_id').eq('email', email).maybeSingle();
+        if (emailErr) throw emailErr;
+        if (emailExists && emailExists.user_id) {
+          Swal.fire('Προσοχή', 'Αυτό το email είναι ήδη συνδεδεμένο με λογαριασμό.', 'info');
+          spinner.classList.add('hidden');
+          submitBtn.disabled = false;
+          return;
+        }
+
+
+        // Αντί για έλεγχο μέσω auth.admin (δεν υποστηρίζεται στο frontend), ελέγχουμε το σφάλμα μετά το signUp.
+
+
+        // Sign up user
+        const { data: signData, error: signErr } = await supabase.auth.signUp(
+          { email, password },
+          {
+            redirectTo: `${window.location.origin}/general_login.html`,
+            data: { type: 'supplier', afm, name }
+          }
+        );
+        if (signErr) {
+          if (signErr.message === 'User already registered') {
+            Swal.fire('Προσοχή', 'Αυτός ο χρήστης είναι ήδη εγγεγραμμένος. Παρακαλώ κάνε σύνδεση.', 'info');
+            spinner.classList.add('hidden');
+            submitBtn.disabled = false;
+            return;
+          }
+          throw signErr;
+        }
+
+        // Ενημέρωση υπάρχοντος supplier αν υπάρχει χωρίς user_id
+        if (existingSupplier) {
+          const { error: updateErr } = await supabase
+            .from('suppliers')
+            .update({
+              user_id: signData.user.id,
+              status: '✅ Εγγεγραμμένος',
+              timestamp: new Date().toISOString()
+            })
+            .eq('id', existingSupplier.id);
+          if (updateErr) throw updateErr;
+
+          // ✅ Ενημέρωση ή εισαγωγή εγγραφής στον πίνακα company_suppliers
+          const { data: companyLink, error: linkErr } = await supabase
+            .from('company_suppliers')
+            .select('id')
+            .eq('supplier_id', existingSupplier.id)
+            .eq('company_id', existingSupplier.company_id)
+            .maybeSingle();
+
+          if (linkErr) throw linkErr;
+
+          if (companyLink) {
+            await supabase
+              .from('company_suppliers')
+              .update({ 
+                status: '✅ Εγγεγραμμένος',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', companyLink.id);
+          } else {
+            await supabase
+              .from('company_suppliers')
+              .insert([{ 
+                supplier_id: existingSupplier.id,
+                company_id: existingSupplier.company_id,
+                status: '✅ Εγγεγραμμένος',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }]);
+          }
+        } else {
+          // Εισαγωγή νέου supplier
+          const timestamp = new Date().toISOString();
+          const { error: insertErr } = await supabase
+            .from('suppliers')
+            .insert([{ name, email, afm, user_id: signData.user.id, timestamp, status: '✅ Εγγεγραμμένος' }]);
+          if (insertErr) throw insertErr;
+        }
+        Swal.fire({
+          title: 'Επιτυχία',
+          text: 'Η εγγραφή ολοκληρώθηκε.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        }).then(() => {
+          window.location.href = 'general_login.html';
+        });
+      } catch (err) {
+        console.error('Registration error:', err);
+        errorEl.textContent = err.message || 'Σφάλμα εγγραφής.';
+        errorEl.classList.remove('hidden');
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('theme-toggle');
+    const moonIcon = document.getElementById('icon-moon');
+    const sunIcon = document.getElementById('icon-sun');
+
+    function updateIcons() {
+      const isDark = document.documentElement.classList.contains('dark');
+      moonIcon?.classList.toggle('hidden', isDark);
+      sunIcon?.classList.toggle('hidden', !isDark);
+    }
+
+    if (
+      localStorage.theme === 'dark' ||
+      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    ) {
+      document.documentElement.classList.add('dark');
+    }
+    updateIcons();
+
+    toggleBtn?.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      updateIcons();
+    });
+  });
+</script>
+</body>
+</html>
+
+
