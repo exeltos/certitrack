@@ -15,6 +15,20 @@
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
     .expired { border: 2px solid #dc2626 !important; }
     .near-expire { border: 2px solid #f59e0b !important; }
+    .card-transition {
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+    .card-transition:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+    .fade-in { animation: fadeIn 0.6s ease-in-out; }
+    .skeleton { background-color: #D1D5DB; background-color: #374151; border-radius: 0.75rem; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+    .expired { border: 2px solid #dc2626 !important; }
+    .near-expire { border: 2px solid #f59e0b !important; }
   </style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -30,12 +44,17 @@
       <h1 id="companyHeader" class="text-2xl font-bold text-blue-700 dark:text-teal-400">CertiTrack - <span id="companyName"></span></h1>
     </div>
     <div class="flex items-center gap-4">
-      <button id="themeToggle" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-        <i data-lucide="moon"></i><i data-lucide="sun" class="hidden dark:block"></i>
-      </button>
-      <button id="logoutBtn" class="text-red-500 hover:text-red-700 flex items-center gap-1">
-        <i data-lucide="log-out"></i> Αποσύνδεση
-      </button>
+      <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
+  <svg id="icon-moon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z" />
+  </svg>
+  <svg id="icon-sun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM3.03 4.97a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L3.03 6.03a.75.75 0 010-1.06zM15.85 4.97a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM2 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 012 10zM14.25 9.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM3.03 15.03a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06zM15.85 15.03l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06z" />
+  </svg>
+</button>
+      <button id="logoutBtn" class="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm transition" title="Αποσύνδεση">
+  <i data-lucide="log-out"></i>
+</button>
     </div>
   </div>
 </header>
@@ -46,21 +65,26 @@
       👥 Οι Προμηθευτές μου <span id="supplierCount" class="ml-1 text-sm"></span>
     </button>
     <div class="relative">
-      <button id="btnCertificates" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
-        📦 Τα Πιστοποιητικά μου <span id="certificateCount" class="ml-1 text-sm"></span>
-      </button>
-      <button id="expiringBtn" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hidden" title="Επερχόμενες λήξεις">
-        <i data-lucide="bell"></i>
-      </button>
+      <a href="company_certificates.html" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
+  📦 Τα Πιστοποιητικά μου
+</a>
+      
     </div>
   </div>
 
-  <div id="certControls" class="flex items-center mb-6 justify-center gap-2 hidden">
-    <input id="searchInputCertificates" type="text" placeholder="Αναζήτηση πιστοποιητικών..." class="p-2 border rounded-xl w-60 focus:outline-none focus:ring-2 focus:ring-indigo-400" oninput="filterData()">
-    <button onclick="showCertificateForm()" class="w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow hover:shadow-lg transition">
-      <i data-lucide="plus"></i>
+  
+  <div id="certEmailActions" class="flex gap-2 justify-end">
+    <button id="selectAllBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+      ☑️ Επιλογή Όλων
+    </button>
+    <button id="sendEmailBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
+      📧 Αποστολή Email
+    </button>
+    <button id="downloadBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
+      📥 Λήψη
     </button>
   </div>
+</div>
 
   <div id="supplierControls" class="flex items-center mb-6 justify-center gap-2 hidden">
     <input id="searchInputSuppliers" type="text" placeholder="Αναζήτηση προμηθευτών..." class="p-2 border rounded-xl w-60 focus:outline-none focus:ring-2 focus:ring-indigo-400" oninput="filterData()">
@@ -87,10 +111,12 @@
     </div>
   </div>
 
-  <div id="dataSection" class="space-y-6"></div>
+  <div id="dataSection" class="grid gap-4 grid-cols-1 sm:grid-cols-2"></div>
 </main>
 
 <script type="module" src="../js/company_dashboard.js"></script>
 
 </body>
 </html>
+
+

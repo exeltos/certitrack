@@ -218,7 +218,22 @@ if (downloadBtn) downloadBtn.classList.add('hidden');
     document.getElementById('userGreeting').textContent = `Καλώς ήρθες, ${displayName}`;
 
     document.getElementById('addCertFixed').addEventListener('click', showCreateModal);
-    document.getElementById('logoutBtn')?.addEventListener('click', () => location.href = 'index.html');
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+  const result = await Swal.fire({
+    title: 'Αποσύνδεση',
+    text: 'Θέλεις σίγουρα να αποσυνδεθείς;',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Ναι, αποσύνδεση',
+    cancelButtonText: 'Ακύρωση'
+  });
+
+  if (result.isConfirmed) {
+    sessionStorage.removeItem('sawPopupOnce');
+    await supabase.auth.signOut();
+    window.location.href = 'index.html';
+  }
+});
     document.getElementById('notifyBtn')?.addEventListener('click', showExpirationPopup);
     document.getElementById('userSettingsBtn')?.addEventListener('click', () => window.location.href = 'supplier_info.html');
 
@@ -377,7 +392,12 @@ function bindCertificateActions() {
 
 function updateNotifications(data) {
   const fromProfile = sessionStorage.getItem('fromProfile');
-  if (fromProfile) sessionStorage.removeItem('fromProfile');
+const hasSeenPopup = sessionStorage.getItem('sawPopupOnce');
+if (fromProfile) {
+  sessionStorage.removeItem('fromProfile');
+  return;
+}
+if (hasSeenPopup) return;
   const countEl = document.getElementById('notifyCount');
   const soon = data.filter(c => {
     const diff = Math.ceil((new Date(c.date) - new Date()) / (1000 * 60 * 60 * 24));
@@ -385,7 +405,9 @@ function updateNotifications(data) {
   });
   countEl.textContent = soon.length;
   countEl.classList.toggle('hidden', soon.length === 0);
-  if (soon.length > 0 && !fromProfile) {
+  if (soon.length > 0 && !fromProfile && !sessionStorage.getItem('sawPopupOnce')) {
+    sessionStorage.setItem('sawPopupOnce', 'true');
+    sessionStorage.setItem('sawPopupOnce', 'true');
     showExpirationPopup();
   }
 }
@@ -503,6 +525,7 @@ function showCreateModal() {
     }
   });
 }
+
 
 
 

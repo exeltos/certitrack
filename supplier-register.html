@@ -129,10 +129,34 @@
         // Check existing supplier by AFM or Email
         const { data: existingSupplierData, error: existsErr } = await supabase
           .from('suppliers')
-          .select('id, user_id')
+          .select('id, user_id, company_id')
           .or(`afm.eq.${afm},email.eq.${email}`)
           .limit(1);
         const existingSupplier = existingSupplierData?.[0];
+
+        // 🔍 Αν δεν υπάρχει company_id, πάρε το από τον πίνακα company_suppliers
+        if (existingSupplier && !existingSupplier.company_id) {
+          const { data: companyLinkData, error: companyFetchErr } = await supabase
+            .from('company_suppliers')
+            .select('company_id')
+            .eq('supplier_id', existingSupplier.id)
+            .maybeSingle();
+          if (!companyFetchErr && companyLinkData?.company_id) {
+            existingSupplier.company_id = companyLinkData.company_id;
+          }
+        }
+
+        // 🔍 Επέκταση αντικειμένου supplier ώστε να περιλαμβάνει και το company_id για ενημέρωση status
+        if (existingSupplier?.id) {
+          const { data: supplierFull, error: loadErr } = await supabase
+            .from('suppliers')
+            .select('company_id')
+            .eq('id', existingSupplier.id)
+            .maybeSingle();
+          if (!loadErr && supplierFull?.company_id) {
+            existingSupplier.company_id = supplierFull.company_id;
+          }
+        }
 
         if (existsErr) throw existsErr;
         if (existingSupplier && existingSupplier.user_id) {
@@ -185,34 +209,40 @@
             .eq('id', existingSupplier.id);
           if (updateErr) throw updateErr;
 
-          // ✅ Ενημέρωση ή εισαγωγή εγγραφής στον πίνακα company_suppliers
-          const { data: companyLink, error: linkErr } = await supabase
-            .from('company_suppliers')
-            .select('id')
-            .eq('supplier_id', existingSupplier.id)
-            .eq('company_id', existingSupplier.company_id)
-            .maybeSingle();
-
-          if (linkErr) throw linkErr;
-
-          if (companyLink) {
-            await supabase
+          // ✅ Ενημέρωση ή εισαγωγή εγγραφής στον πίνακα company_suppliers ΜΟΝΟ αν υπάρχει company_id
+          // και αλλάζουμε το status σε ✅ Εγγεγραμμένος όταν γίνεται εγγραφή
+          if (existingSupplier.company_id) {
+            console.log('[DEBUG] company_id:', existingSupplier.company_id);
+            console.log('[DEBUG] supplier_id:', existingSupplier.id);
+            console.log('[DEBUG] fetching companyLink...');
+            const { data: companyLink, error: linkErr } = await supabase
               .from('company_suppliers')
-              .update({ 
-                status: '✅ Εγγεγραμμένος',
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', companyLink.id);
-          } else {
-            await supabase
-              .from('company_suppliers')
-              .insert([{ 
-                supplier_id: existingSupplier.id,
-                company_id: existingSupplier.company_id,
-                status: '✅ Εγγεγραμμένος',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }]);
+              .select('id')
+              .eq('supplier_id', existingSupplier.id)
+              .eq('company_id', existingSupplier.company_id)
+              .maybeSingle();
+
+            if (linkErr) throw linkErr;
+
+            if (!companyLink) {
+  console.warn('[DEBUG] Δεν βρέθηκε εγγραφή στον πίνακα company_suppliers με supplier_id:', existingSupplier.id, 'και company_id:', existingSupplier.company_id);
+} else {
+  console.log('[DEBUG] companyLink found:', companyLink);
+}
+            if (companyLink) {
+  const { error: updateErr, data: updated } = await supabase
+    .from('company_suppliers')
+    .update({ 
+      status: '✅ Εγγεγραμμένος',
+      timestamp: new Date().toISOString()
+    })
+    .eq('supplier_id', existingSupplier.id)
+    .eq('company_id', existingSupplier.company_id)
+    .select();
+
+  console.log('[DEBUG] update result:', updated);
+  if (updateErr) throw updateErr;
+}
           }
         } else {
           // Εισαγωγή νέου supplier
@@ -269,5 +299,3 @@
 </script>
 </body>
 </html>
-
-

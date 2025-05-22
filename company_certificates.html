@@ -37,6 +37,8 @@
     transform: translateY(-4px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2); /* πιο έντονη σκιά στο hover */
   }
+  .border-warning { border: 2px solid #f59e0b !important; }
+  .border-error { border: 2px solid #dc2626 !important; }
 </style>
 <script>
 function updateIcons() {
@@ -74,13 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
   <header class="sticky top-0 z-50 bg-white dark:bg-gray-900 px-4 py-3 shadow-md">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
   <div class="flex items-center gap-2">
-    <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-14 w-auto">
-    <div class="relative flex items-center gap-2 text-lg font-bold text-blue-700 dark:text-teal-400">
-      <span>Πιστοποιητικά</span>
+  <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-14 w-auto">
+  <div id="companyHeader" class="relative flex items-center gap-2 text-lg font-bold text-blue-700 dark:text-teal-400">
+  Πιστοποιητικά - <span id="companyName" class="ml-1"></span>
       <button id="notifyBtn" class="relative focus:outline-none" title="Ειδοποιήσεις">
-        <i data-lucide="bell" class="w-5 h-5 text-gray-500 hover:text-red-500"></i>
-        <span id="notifyCount" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-1 hidden"></span>
-      </button>
+  <i data-lucide="bell" class="w-5 h-5 text-gray-500 hover:text-red-500"></i>
+  <span id="notifyCount" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-1 hidden">0</span>
+</button>
   
 </div>
   </div>
@@ -102,12 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
         <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM3.03 4.97a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L3.03 6.03a.75.75 0 010-1.06zM15.85 4.97a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM2 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 012 10zM14.25 9.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM3.03 15.03a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM15.85 15.03l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06z" />
       </svg>
     </button>
-    <button id="logoutBtn" class="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm transition" title="Αποσύνδεση">
-      <i data-lucide="log-out"></i>
-    </button>
+    <a href="company_dashboard.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm flex items-center gap-1 transition" title="Επιστροφή">
+  <i data-lucide="arrow-left"></i>
+  Επιστροφή
+</a>
   </div>
 </div>
-<div id="userGreeting" class="max-w-6xl mx-auto text-left text-xs text-gray-600 dark:text-gray-300 mt-1 pl-16"></div>
+
   </header>
 
   <!-- Main -->
@@ -115,17 +118,16 @@ document.addEventListener('DOMContentLoaded', () => {
     <main class="flex flex-col gap-4">
       <!-- Search & Add -->
       <div class="flex flex-col sm:flex-row sm:justify-start items-center gap-4">
-  <div class="flex gap-2 items-center" id="emailActions">
-  <button id="selectAllBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
-    ☑️ Επιλογή Όλων
-  </button>
-  <button id="sendEmailBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
-    📧 Αποστολή Email
-  </button>
-  <button id="downloadBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
-    📥 Λήψη
-  </button>
-</div>
+  <div id="certEmailActions" class="flex gap-2 justify-end hidden w-full" data-export-mode="false">
+    <button id="selectAllBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">☑️ Επιλογή Όλων</button>
+    <button id="sendEmailBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
+      📧 Αποστολή Email
+    </button>
+    <button id="downloadBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
+      📥 Λήψη
+    </button>
+  </div>
+  
         <input id="searchInput" type="text" placeholder="Αναζήτηση με τίτλο, τύπο, ΑΦΜ..." class="w-full sm:w-72 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-300 dark:bg-gray-800 dark:text-white" oninput="loadCertificates()">
         <button id="addCertFixed" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition" title="Νέο Πιστοποιητικό">
           <i data-lucide="plus" class="w-5 h-5"></i>
@@ -159,10 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </main>
 
     <!-- Sidebar -->
-    <aside class="bg-white bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-50 p-4 rounded-xl shadow">
-      <h2 class="text-sm font-semibold text-blue-700 dark:text-teal-400 mb-2 border-b pb-1">Οι Εταιρείες μου</h2>
-      <ul id="myCompaniesList" class="text-xs text-gray-700 dark:text-gray-300 space-y-2"></ul>
-    </aside>
+    
   </div>
 
   <!-- Footer -->
@@ -172,13 +171,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   <!-- JavaScript remains unchanged -->
 <script type="module">
-  import { initPage } from '../js/certificates.js';
-  document.addEventListener('DOMContentLoaded', initPage);
+  import { initCompanyCertificatesPage } from '../js/company_certificates.js';
+  document.addEventListener('DOMContentLoaded', () => {
+  initCompanyCertificatesPage().then(() => {
+    const notifyCountEl = document.getElementById('notifyCount');
+    const bellBtn = document.getElementById('notifyBtn');
+    const allSoon = document.querySelectorAll('.cert-card.border-warning');
+    if (allSoon.length > 0) {
+      notifyCountEl.textContent = allSoon.length;
+      notifyCountEl.classList.remove('hidden');
+      bellBtn.addEventListener('click', () => {
+        Swal.fire({
+          title: 'Πιστοποιητικά που λήγουν σύντομα',
+          html: '<ul style="text-align:left">' +
+            Array.from(allSoon).map(card => `<li>• ${card.querySelector('h3')?.textContent}</li>`).join('') +
+            '</ul>',
+          icon: 'info',
+          confirmButtonText: 'ΟΚ'
+        });
+      });
+    }
+  });
+});
 </script>
 
 
 </body>
 </html>
-
-
-

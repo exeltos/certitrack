@@ -12,12 +12,12 @@ dashboardInit();
 
 async function dashboardInit() {
   lucide.createIcons();
+
   try {
     const { data: { session: sess } } = await supabase.auth.getSession();
     session = sess;
     if (!session) return logout();
     userId = session.user.id;
-    await preloadCertificateCount(userId);
 
     const { data: comp, error: compErr } = await supabase
       .from('companies')
@@ -27,6 +27,7 @@ async function dashboardInit() {
     if (compErr) return logout();
 
     company = comp;
+    await updateRegisteredSuppliers(company.id);
     document.getElementById('companyName').textContent = company.name;
     document.getElementById('logoutBtn').onclick = logout;
 
@@ -35,66 +36,45 @@ async function dashboardInit() {
       showSuppliers(company);
     });
 
-    document.getElementById('btnCertificates')?.addEventListener('click', () => {
-      setActiveTab('btnCertificates');
-      showCertificates();
-      const supplierControls = document.getElementById('supplierControls');
-      if (supplierControls) supplierControls.classList.add('hidden');
-    });
-
-    document.getElementById('themeToggle')?.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-    });
-
-    await showSuppliers(company);
-    document.getElementById('sortSelect')?.addEventListener('change', () => filterData());
-
     const supplierControls = document.getElementById('supplierControls');
     if (supplierControls) supplierControls.classList.remove('hidden');
-
-    // Υπολογισμός επερχόμενων λήξεων και εμφάνιση σήμανσης στο κουμπί
-    try {
-      const { data: certs, error: certErr } = await supabase
-        .from('company_certificates')
-        .select('id, title, type, date')
-        .eq('company_user_id', userId);
-      if (!certErr && certs?.length) {
-        const now = new Date();
-        const soonExpiring = certs.filter(c => {
-          const diff = Math.ceil((new Date(c.date) - now) / (1000*60*60*24));
-          return diff >= 0 && diff <= 30;
-        });
-        const badge = document.getElementById('expiringBtn');
-        if (soonExpiring.length > 0) {
-          badge.textContent = soonExpiring.length;
-          badge.classList.remove('hidden');
-          badge.onclick = () => showExpiringCertificatesPopup(soonExpiring);
-        } else {
-          badge.classList.add('hidden');
-        }
-      }
-    } catch (e) {
-      console.warn('Σφάλμα κατά τον υπολογισμό ειδοποιήσεων λήξης:', e);
-    }
-  } catch (err) {
-    handleError(err);
+    // handleError(err); (διορθώθηκε σφάλμα: err δεν υπήρχε εδώ)
   } finally {
     document.getElementById('loading')?.classList.add('hidden');
   }
 }
 
-async function preloadCertificateCount(userId) {
+// preloadCertificateCount καταργήθηκε (πλέον δεν χρησιμοποιείται)
+
+async function updateRegisteredSuppliers(companyId) {
   try {
-    const { data, error } = await supabase
-      .from('company_certificates')
-      .select('id')
-      .eq('company_user_id', userId);
-    if (error) throw error;
-    const certCount = data?.length || 0;
-    const el = document.getElementById('certificateCount');
-    if (el) el.textContent = certCount;
+    const { data: links, error: linksErr } = await supabase
+      .from('company_suppliers')
+      .select('id, supplier_id')
+      .eq('company_id', companyId);
+
+    if (linksErr) throw linksErr;
+
+    for (const link of links) {
+      if (!link.supplier_id) continue;
+      const { data: supplier, error: sErr } = await supabase
+        .from('suppliers')
+        .select('user_id')
+        .eq('id', link.supplier_id)
+        .maybeSingle();
+
+      if (sErr || !supplier?.user_id) continue;
+
+      await supabase
+        .from('company_suppliers')
+        .update({
+          status: '✅ Εγγεγραμμένος',
+          timestamp: new Date().toISOString()
+        })
+        .eq('id', link.id);
+    }
   } catch (err) {
-    console.warn('Σφάλμα κατά την προφόρτωση πλήθους πιστοποιητικών:', err);
+    console.warn('updateRegisteredSuppliers error:', err);
   }
 }
 
@@ -108,12 +88,16 @@ function setActiveTab(activeId) {
   document.getElementById(activeId)?.classList.add('ring-2', 'ring-blue-500');
 
   const supplierControls = document.getElementById('supplierControls');
-  const certControls = document.getElementById('certControls');
+  // const certControls = document.getElementById('certControls'); (καταργήθηκε γιατί δεν χρησιμοποιείται πια)
+  const inviteBtn = document.getElementById('inviteBtn');
 
   if (activeId === 'btnSuppliers') {
     supplierControls?.classList.remove('hidden');
-    certControls?.classList.add('hidden');
-  } else if (activeId === 'btnCertificates') {
+    
+    inviteBtn?.classList.remove('hidden');
+  
+} else if (activeId === 'btnCertificates') {
+    inviteBtn?.classList.add('hidden');
     certControls?.classList.remove('hidden');
     supplierControls?.classList.add('hidden');
   }
@@ -178,7 +162,7 @@ function showCertificateForm() {
 
   // ✅ Αγνόησε γραμμές χωρίς afm (ή όλα τα πεδία κενά)
   if (!afm || (!name && !email)) continue;
-            const { data, error } = await supabase.from('suppliers').insert([{ name, email, afm }]).select();
+            const { data, error } = await supabase.from('suppliers').insert([{ name, email, afm, status: '🕓 Μη Εγγεγραμμένος', company_id: company.id }]).select();
             if (!error) {
               await supabase.from('company_suppliers').insert([
                 {
@@ -281,7 +265,9 @@ function showAddSupplierForm() {
       const newSupplier = {
         name: result.value.name,
         email: result.value.email,
-        afm: result.value.afm
+        afm: result.value.afm,
+        status: '🕓 Μη Εγγεγραμμένος',
+        company_id: company.id
       };
       const { data, error } = await supabase.from('suppliers').insert([newSupplier]).select();
       if (error) throw error;
@@ -291,6 +277,9 @@ function showAddSupplierForm() {
         {
           company_id: company.id,
           supplier_id: supplierId,
+          status: '🕓 Μη Εγγεγραμμένος',
+          timestamp: new Date().toISOString(),
+          status: '🕓 Μη Εγγεγραμμένος',
           company_name: company.name,
           supplier_name: result.value.name
         }
@@ -305,36 +294,9 @@ function showAddSupplierForm() {
   });
 }
 
-function renderCertificates(search = '') {
-  showCertificates(search);
-}
+// renderCertificates καταργήθηκε - πλέον δεν χρησιμοποιείται γιατί τα πιστοποιητικά εμφανίζονται σε ξεχωριστή σελίδα
 
-function showExpiringCertificatesPopup(list) {
-  if (!list.length) return;
-  const today = new Date();
-  const html = list.map(c => {
-    const expDate = new Date(c.date);
-    const diff = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-    return `
-      <div class="text-left mb-2 p-2 rounded bg-white dark:bg-gray-700 border">
-        <div class="font-semibold text-blue-700 dark:text-blue-300">${c.title || '(Χωρίς τίτλο)'}</div>
-        <div class="text-sm text-gray-700 dark:text-gray-300">
-          Τύπος: ${c.type || '—'}<br>
-          Ημερομηνία λήξης: <strong>${expDate.toLocaleDateString('el-GR')}</strong><br>
-          Λήγει σε: <strong>${diff} ημέρες</strong>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  Swal.fire({
-    title: `Πιστοποιητικά που λήγουν σύντομα (${list.length})`,
-    html: `<div class="max-h-[400px] overflow-y-auto space-y-2">${html}</div>`,
-    width: 650,
-    confirmButtonText: 'Κλείσιμο'
-  });
-
-}
+// showExpiringCertificatesPopup καταργήθηκε - πλέον δεν χρησιμοποιείται γιατί τα πιστοποιητικά εμφανίζονται σε ξεχωριστή σελίδα
 
 function bindCertificateActions() {
   document.querySelectorAll('.view-btn').forEach(btn => {
@@ -412,7 +374,7 @@ function bindCertificateActions() {
 async function showCertificates(search = '') {
   const container = document.getElementById('dataSection');
   container.innerHTML = '';
-  document.getElementById('certControls')?.classList.remove('hidden');
+  
   document.getElementById('loading')?.classList.remove('hidden');
 
   try {
@@ -423,7 +385,7 @@ async function showCertificates(search = '') {
       .order('date', { ascending: false });
 
     if (error) throw error;
-    document.getElementById('certificateCount').textContent = data.length;
+    // document.getElementById('certificateCount').textContent = data.length; (πλέον δεν χρησιμοποιείται εδώ)
 
     const today = new Date();
     const grid = document.createElement('div');
@@ -449,7 +411,7 @@ async function showCertificates(search = '') {
           : '';
 
       const card = document.createElement('div');
-      card.className = `bg-white dark:bg-gray-800 rounded-2xl shadow p-4 flex flex-col justify-between border-2 ${borderClass} transition hover:shadow-lg hover:scale-105`;
+      card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card`;
       card.innerHTML = `
         <div>
           <h3 class="font-semibold mb-1">${cert.title}</h3>

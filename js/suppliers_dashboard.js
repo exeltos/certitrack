@@ -6,6 +6,7 @@ import { showLoading, hideLoading, handleError } from './common.js';
 export async function showSuppliers(company) {
   document.getElementById('certControls')?.classList.add('hidden');
   document.getElementById('loading')?.classList.remove('hidden');
+  document.getElementById('supplierControls')?.classList.remove('hidden');
   await renderSuppliers(company);
   document.getElementById('loading')?.classList.add('hidden');
 }
@@ -28,7 +29,7 @@ export async function renderSuppliers(company, search = '') {
       name: s.name,
       afm: s.afm,
       email: s.email,
-      status: s.user_id ? '✅ Εγγεγραμμένος' : '🕓 Εκκρεμής εγγραφή'
+      status: s.user_id ? '✅ Εγγεγραμμένος' : '🕓 Εκκρεμή εγγραφή'
     };
   }).filter(r => r.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -38,43 +39,53 @@ export async function renderSuppliers(company, search = '') {
   else if (sort === 'pending') list.sort((a, b) => (a.user_id ? 1 : 0) - (b.user_id ? 1 : 0));
 
   const container = document.getElementById('dataSection');
-  container.className = 'flex flex-col gap-4';
+  container.className = 'grid gap-4 grid-cols-1 sm:grid-cols-2';
   container.innerHTML = '';
 
   // 🟣 Προσθήκη κουμπιών επιλογών πάνω από τις κάρτες
+  const containerSection = document.getElementById('supplierControls');
+const supplierControlsVisible = containerSection && !containerSection.classList.contains('hidden');
+const existingActions = document.getElementById('selectAllBtn');
+if (!existingActions && supplierControlsVisible) {
   const actionsDiv = document.createElement('div');
   actionsDiv.className = 'flex justify-end gap-2 mb-4';
   actionsDiv.innerHTML = `
-    <button id="selectAllBtn" class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm">☑️ Επιλογή όλων</button>
-    <button id="deselectAllBtn" class="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm">⬜ Αποεπιλογή όλων</button>
+    <button id="selectAllBtn" class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm hidden">☑️ Επιλογή όλων</button>
+    <button id="sendInviteBtn" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm hidden">📨 Αποστολή Πρόσκλησης</button>
     <button id="inviteBtn" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">📧 Πρόσκληση εγγραφής</button>
   `;
-  container.appendChild(actionsDiv);
+  container.parentElement.insertBefore(actionsDiv, container);
+}
 
-  document.getElementById('selectAllBtn').onclick = () => {
-    document.querySelectorAll('.supplier-checkbox').forEach(cb => cb.checked = true);
-  };
-  document.getElementById('deselectAllBtn').onclick = () => {
-    document.querySelectorAll('.supplier-checkbox').forEach(cb => cb.checked = false);
-  };
-  document.getElementById('inviteBtn').onclick = async () => {
-    const selected = [...document.querySelectorAll('.supplier-checkbox:checked')];
-    if (!selected.length) return Swal.fire('Καμία επιλογή', 'Επίλεξε τουλάχιστον έναν προμηθευτή.', 'info');
-    const ids = selected.map(cb => cb.dataset.id);
+  const selectAllBtnEl = document.getElementById('selectAllBtn');
+if (selectAllBtnEl) selectAllBtnEl.onclick = () => {
+  const checkboxes = document.querySelectorAll('.supplier-checkbox');
+  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+  checkboxes.forEach(cb => cb.checked = !allChecked);
+  toggleSendButton();
+};
+  
+  const inviteBtnEl = document.getElementById('inviteBtn');
+if (inviteBtnEl) inviteBtnEl.onclick = async () => {
+  const checkboxes = document.querySelectorAll('.supplier-checkbox');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  const sendBtn = document.getElementById('sendInviteBtn');
 
-    const { data, error } = await supabase
-      .from('suppliers')
-      .select('email')
-      .in('id', ids);
+  const isActive = selectAllBtn && !selectAllBtn.classList.contains('hidden');
 
-    if (error) return handleError(error);
-
-    for (const s of data) {
-      await supabase.functions.invoke('invite_supplier', {
-        body: { email: s.email }
-      });
+  checkboxes.forEach(cb => {
+    const isPending = cb.dataset.status === '🕓 Εκκρεμή εγγραφή';
+    if (isPending) {
+      cb.classList.toggle('hidden', isActive);
     }
-    Swal.fire('Εστάλησαν', 'Οι προσκλήσεις εγγραφής εστάλησαν.', 'success');
+  });
+
+  if (selectAllBtn) selectAllBtn.classList.toggle('hidden', isActive);
+  if (sendBtn) sendBtn.classList.toggle('hidden', isActive);
+
+  if (isActive) return;
+
+  toggleSendButton();
   };
   document.getElementById('supplierCount').textContent = list.length;
 
@@ -125,16 +136,67 @@ export async function renderSuppliers(company, search = '') {
     `;
     if (!r.user_id) {
       const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.className = 'supplier-checkbox w-5 h-5 absolute top-2 right-2 z-10 rounded-full accent-purple-600 border border-purple-300';
+checkbox.type = 'checkbox';
+checkbox.classList.add('supplier-checkbox', 'w-5', 'h-5', 'absolute', 'top-2', 'right-2', 'z-10', 'rounded-full', 'accent-purple-600', 'border', 'border-purple-300', 'hidden');
       checkbox.dataset.id = r.id;
+      checkbox.dataset.status = r.status;
       card.appendChild(checkbox);
+
+      // Αν το κουμπί επιλογής είναι ήδη ενεργό, δείξε το checkbox αμέσως
+      const inviteBtn = document.getElementById('inviteBtn');
+      const selectAllBtn = document.getElementById('selectAllBtn');
+      if (inviteBtn && selectAllBtn && !selectAllBtn.classList.contains('hidden')) {
+        checkbox.classList.remove('hidden');
+      }
+
+      // 🔄 Όταν αλλάζει η επιλογή, έλεγξε αν πρέπει να φανεί το κουμπί αποστολής
+      checkbox.addEventListener('change', () => {
+  toggleSendButton();
+});
       card.classList.add('relative');
     }
     container.appendChild(card);
+
+    // Αν το κουμπί αποστολής υπάρχει, ελέγξτε με το toggleSendButton αρχικά (σε περίπτωση που το checkbox είναι already checked)
+    toggleSendButton();
   };
 
   lucide.createIcons();
+
+// Ενεργοποίηση dark mode toggle
+const toggleBtn = document.getElementById('theme-toggle');
+const moonIcon = document.getElementById('icon-moon');
+const sunIcon = document.getElementById('icon-sun');
+
+function updateIcons() {
+  const isDark = document.documentElement.classList.contains('dark');
+  moonIcon?.classList.toggle('hidden', isDark);
+  sunIcon?.classList.toggle('hidden', !isDark);
+}
+
+if (
+  localStorage.theme === 'dark' ||
+  (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+) {
+  document.documentElement.classList.add('dark');
+}
+updateIcons();
+
+toggleBtn?.addEventListener('click', () => {
+  const isDarkNow = document.documentElement.classList.toggle('dark');
+  document.body.classList.toggle('dark:bg-gray-900', isDarkNow);
+  document.body.classList.toggle('bg-gray-100', !isDarkNow);
+  localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  updateIcons();
+});
+
+function toggleSendButton() {
+  const sendBtn = document.getElementById('sendInviteBtn');
+  const checkboxes = document.querySelectorAll('.supplier-checkbox:checked');
+  if (sendBtn) {
+    sendBtn.classList.toggle('hidden', checkboxes.length === 0);
+  }
+}
   hideLoading();
 }
 

@@ -3,13 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CertiTrack - Προσωπικά Στοιχεία</title>
+  <title id="pageTitle">Προμηθευτής</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = { darkMode: 'class' };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
+<script type="module">
+  import { supabase } from '../js/supabaseClient.js';
+  const { data: sessionData } = await supabase.auth.getSession();
+  const user = sessionData?.session?.user;
+  if (user) {
+    const { data: supplier } = await supabase.from('suppliers').select('name').eq('user_id', user.id).maybeSingle();
+    if (supplier?.name) {
+      document.title = supplier.name;
+    }
+  }
+</script>
 </head>
 <body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-800 dark:to-blue-900 min-h-screen flex flex-col">
 
@@ -17,7 +28,7 @@
   <header class="sticky top-0 z-50 bg-white dark:bg-gray-900 px-4 py-2 shadow-md">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-2">
-        <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-12 w-auto">
+        <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-14 w-auto">
         <div class="relative flex items-center gap-2 text-lg font-bold text-blue-700 dark:text-teal-400">
           <span id="supplierHeader">CertiTrack</span>
         </div>
@@ -146,7 +157,7 @@
       const { data: supplier } = await supabase.from('suppliers').select('*').eq('user_id', user.id).maybeSingle();
       document.getElementById('profileName').value = supplier?.name || '';
       document.getElementById('profileEmail').value = user.email || '';
-      document.getElementById('supplierHeader').textContent = `CertiTrack - ${supplier?.name || 'Προμηθευτής'}`;
+      document.getElementById('supplierHeader').textContent = supplier?.name || 'Προμηθευτής';
       document.getElementById('profileAfm').value = supplier?.afm || '';
 
       document.getElementById('profileForm').addEventListener('submit', async (e) => {
@@ -226,4 +237,5 @@
 </script>
 </body>
 </html>
+
 

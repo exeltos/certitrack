@@ -90,12 +90,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!email) {
-          throw new Error('Δεν βρέθηκε χρήστης με τα δεδομένα που εισήχθησαν.');
+          Swal.close();
+          return Swal.fire({
+            icon: 'warning',
+            title: 'Σφάλμα',
+            text: 'Δεν βρέθηκε χρήστης με αυτά τα στοιχεία.'
+          });
         }
 
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        if (!data.session) throw new Error('Η σύνδεση απέτυχε.');
+        if (error) {
+          Swal.close();
+          return Swal.fire({
+            icon: 'error',
+            title: 'Λάθος στοιχεία',
+            text: 'Ο συνδυασμός email και κωδικού είναι λανθασμένος.'
+          });
+        }
+
+        if (!data.session) {
+          Swal.close();
+          return Swal.fire({
+            icon: 'error',
+            title: 'Αποτυχία',
+            text: 'Η σύνδεση απέτυχε. Προσπαθήστε ξανά.'
+          });
+        }
 
         Swal.fire({
           icon: 'success',
@@ -106,10 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }).then(() => window.location.href = redirectTo);
       } catch (err) {
         console.error('Login error:', err);
+        Swal.close();
         Swal.fire({
           icon: 'error',
           title: 'Σφάλμα',
-          text: err.message || 'Κάτι πήγε στραβά'
+          text: 'Κάτι πήγε στραβά κατά τη σύνδεση. Προσπαθήστε ξανά.'
         });
       }
     });
