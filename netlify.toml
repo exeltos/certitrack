@@ -6,4 +6,4 @@
   node_bundler = "esbuild"
 
 [functions."notify_expiring_certificates"]
-  schedule = "0 9 * * *" # κάθε μέρα στις 09:00 UTC (11:00 Ελλάδας)
+  schedule = "0 9 * * *"
