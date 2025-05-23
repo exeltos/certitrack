@@ -24,21 +24,35 @@ export async function handler(event) {
       };
     }
 
+    // Έλεγχος περιβάλλοντος
+    const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
+    if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+      console.error('[CertiTrack] Λείπουν οι μεταβλητές SMTP περιβάλλοντος:', {
+        SMTP_HOST,
+        SMTP_USER,
+        SMTP_PASS_PRESENT: !!SMTP_PASS
+      });
+      return {
+        statusCode: 500,
+        body: 'Missing SMTP configuration'
+      };
+    }
+
     // Ρυθμίσεις SMTP (π.χ. Gmail, SendGrid κλπ)
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT || 587,
+      host: SMTP_HOST,
+      port: SMTP_PORT || 587,
       secure: false,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: SMTP_USER,
+        pass: SMTP_PASS,
       },
     });
 
     console.log('[CertiTrack] SMTP transporter created');
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'no-reply@yourdomain.com',
+      from: SMTP_FROM || 'no-reply@yourdomain.com',
       to: email,
       subject: 'Τα Πιστοποιητικά σας από CertiTrack',
       text: 'Συνημμένα θα βρείτε τα πιστοποιητικά σας σε αρχείο ZIP.',
