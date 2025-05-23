@@ -1,4 +1,4 @@
-// notify_expiring_certificates.js with logging
+// notify_expiring_certificates.js with logging and hardcoded email URL
 const { createClient } = require('@supabase/supabase-js');
 const fetch = require('node-fetch');
 
@@ -6,6 +6,8 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+const EMAIL_FUNCTION_URL = "https://certitrack.gr/.netlify/functions/send_certificate_email";
 
 exports.handler = async function () {
   try {
@@ -70,7 +72,7 @@ exports.handler = async function () {
         console.log(`[CertiTrack] Αποστολή email σε ${email} για ${certs.length} ${type} certs`);
 
         const zipContent = certs.map(c => `• ${c.title} (Λήξη: ${new Date(c.date).toLocaleDateString('el-GR')})`).join('\n');
-        const response = await fetch(process.env.EMAIL_FUNCTION_URL, {
+        const response = await fetch(EMAIL_FUNCTION_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
