@@ -1,4 +1,4 @@
-// notify_expiring_certificates.js
+// notify_expiring_certificates.js with logging
 const { createClient } = require('@supabase/supabase-js');
 const fetch = require('node-fetch');
 
@@ -12,7 +12,8 @@ exports.handler = async function () {
     const today = new Date();
     const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    // ---- ΒΗΜΑ 1: Βρες όλα τα certificates (εταιρειών & προμηθευτών) που έχουν λήξει ή θα λήξουν εντός 30 ημερών ----
+    console.log('[CertiTrack] Εύρεση ληγμένων/προς λήξη πιστοποιητικών...');
+
     const [companyCerts, supplierCerts] = await Promise.all([
       supabase
         .from('company_certificates')
@@ -30,7 +31,9 @@ exports.handler = async function () {
       return { statusCode: 500, body: 'Error loading certificates' };
     }
 
-    // ---- ΒΗΜΑ 2: Φιλτράρισμα ώστε να μη σταλεί ξανά email για τα ίδια πιστοποιητικά ----
+    console.log(`Company certs: ${companyCerts.data.length}`);
+    console.log(`Supplier certs: ${supplierCerts.data.length}`);
+
     const [companyNotifs, supplierNotifs] = await Promise.all([
       supabase.from('company_notifications').select('certificate_id'),
       supabase.from('supplier_notifications').select('certificate_id')
@@ -42,12 +45,17 @@ exports.handler = async function () {
     const pendingCompany = companyCerts.data.filter(c => !alreadyNotifiedCompany.has(c.id));
     const pendingSupplier = supplierCerts.data.filter(c => !alreadyNotifiedSupplier.has(c.id));
 
-    // ---- ΒΗΜΑ 3: Ομαδοποίηση πιστοποιητικών ανά email ----
+    console.log(`Pending company certs: ${pendingCompany.length}`);
+    console.log(`Pending supplier certs: ${pendingSupplier.length}`);
+
     const groupByEmail = (certs, emailField) => {
       const map = {};
       for (const cert of certs) {
         const email = cert[emailField];
-        if (!email) continue;
+        if (!email) {
+          console.warn('[CertiTrack] Πιστοποιητικό χωρίς email:', cert);
+          continue;
+        }
         if (!map[email]) map[email] = [];
         map[email].push(cert);
       }
@@ -57,28 +65,41 @@ exports.handler = async function () {
     const groupedCompanies = groupByEmail(pendingCompany, 'company_email');
     const groupedSuppliers = groupByEmail(pendingSupplier, 'supplier_email');
 
-    // ---- ΒΗΜΑ 4: Στείλε email και καταχώρισε την ειδοποίηση ----
     const sendNotification = async (email, certs, type) => {
-      const zipContent = certs.map(c => `\u2022 ${c.title} (Λήξη: ${new Date(c.date).toLocaleDateString('el-GR')})`).join('\n');
-      const response = await fetch(process.env.EMAIL_FUNCTION_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          zipBase64: Buffer.from(zipContent, 'utf-8').toString('base64')
-        })
-      });
+      try {
+        console.log(`[CertiTrack] Αποστολή email σε ${email} για ${certs.length} ${type} certs`);
 
-      if (!response.ok) throw new Error('Email send failed');
+        const zipContent = certs.map(c => `• ${c.title} (Λήξη: ${new Date(c.date).toLocaleDateString('el-GR')})`).join('\n');
+        const response = await fetch(process.env.EMAIL_FUNCTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            zipBase64: Buffer.from(zipContent, 'utf-8').toString('base64')
+          })
+        });
 
-      const notifications = certs.map(c => ({
-        certificate_id: c.id,
-        [type === 'company' ? 'company_id' : 'supplier_user_id']: c[type === 'company' ? 'company_id' : 'supplier_user_id'],
-        notified_at: new Date().toISOString()
-      }));
+        if (!response.ok) {
+          console.error(`[CertiTrack] Αποτυχία αποστολής email σε ${email}`);
+          return;
+        }
 
-      const table = type === 'company' ? 'company_notifications' : 'supplier_notifications';
-      await supabase.from(table).insert(notifications);
+        const notifications = certs.map(c => ({
+          certificate_id: c.id,
+          [type === 'company' ? 'company_id' : 'supplier_user_id']: c[type === 'company' ? 'company_id' : 'supplier_user_id'],
+          notified_at: new Date().toISOString()
+        }));
+
+        const table = type === 'company' ? 'company_notifications' : 'supplier_notifications';
+        const { error: insertError } = await supabase.from(table).insert(notifications);
+        if (insertError) {
+          console.error(`[CertiTrack] Αποτυχία καταγραφής notification σε ${table}`, insertError);
+        } else {
+          console.log(`[CertiTrack] Καταγράφηκαν ειδοποιήσεις σε ${table} για ${email}`);
+        }
+      } catch (err) {
+        console.error(`[CertiTrack] Σφάλμα αποστολής/καταγραφής για ${email}:`, err);
+      }
     };
 
     for (const [email, certs] of Object.entries(groupedCompanies)) {
