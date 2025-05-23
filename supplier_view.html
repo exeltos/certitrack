@@ -11,6 +11,10 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
     .fade-in { animation: fadeIn 0.5s ease-in-out; }
   </style>
+  <script type="module">
+    import { supabase } from '../js/supabaseClient.js';
+    window.supabase = supabase;
+  </script>
 </head>
 <body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col">
 
@@ -62,9 +66,64 @@
     </section>
   </main>
 
-  <script type="module">
-    import { loadSupplierView } from '../js/suppliers_dashboard.js';
-    loadSupplierView();
-  </script>
+  <script>
+  // Φόρτωση πιστοποιητικών προμηθευτή
+  document.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const supplierId = urlParams.get('id');
+    if (!supplierId) return;
+
+    try {
+      const { data: supplierRecord, error: supplierError } = await supabase
+      .from('suppliers')
+      .select('name, email, afm')
+      .eq('id', supplierId)
+      .single();
+    if (supplierError) throw supplierError;
+
+    document.getElementById('input-name').value = supplierRecord.name || '';
+    document.getElementById('input-email').value = supplierRecord.email || '';
+    document.getElementById('input-afm').value = supplierRecord.afm || '';
+
+    const { data: certificates, error } = await supabase
+      .from('supplier_certificates')
+      .select('*')
+      .eq('supplier_afm', supplierRecord.afm);
+      if (error) throw error;
+
+      const container = document.getElementById('certificatesContainer');
+      const summary = { total: certificates.length, active: 0, soon: 0, expired: 0 };
+      const now = new Date();
+
+      certificates.forEach(cert => {
+        const expDate = new Date(cert.date);
+        const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+        const statusClass = daysLeft < 0
+          ? 'border-error'
+          : daysLeft <= 30
+          ? 'border-warning'
+          : 'border-green-500';
+
+        if (daysLeft < 0) summary.expired++;
+        else if (daysLeft <= 30) summary.soon++;
+        else summary.active++;
+
+        const card = document.createElement('div');
+        card.className = `border rounded p-4 shadow bg-white dark:bg-gray-800 ${statusClass}`;
+        card.innerHTML = `
+          <h3 class="font-semibold text-lg text-blue-700 dark:text-teal-300">${cert.title}</h3>
+          <p class="text-sm">Τύπος: ${cert.type}</p>
+          <p class="text-sm">Ημερομηνία λήξης: ${expDate.toLocaleDateString('el-GR')} (${daysLeft} ημέρες)</p>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('certSummary').textContent = `Πιστοποιητικά: ${summary.total} (Ενεργά: ${summary.active}, Προς λήξη: ${summary.soon}, Ληγμένα: ${summary.expired})`;
+    } catch (err) {
+      console.error('Σφάλμα φόρτωσης πιστοποιητικών:', err);
+    }
+  });
+</script>
 </body>
 </html>
+

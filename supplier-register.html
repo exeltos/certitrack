@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CertiTrack - Εγγραφή Προμηθευτή</title>
@@ -26,7 +27,7 @@
 
   <!-- Header -->
   <header class="bg-white dark:bg-gray-900 p-4 shadow-md fade-in">
-    <div class="max-w-6xl mx-auto flex justify-between items-center">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-2">
         <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-14 w-auto" />
         <h1 class="text-2xl font-bold text-blue-700 dark:text-teal-400">CertiTrack</h1>
@@ -74,6 +75,10 @@
       <p class="text-center text-gray-600 text-sm mt-4">Έχετε ήδη λογαριασμό; <a href="general_login.html" class="text-blue-500 hover:underline">Σύνδεση</a></p>
     </div>
   </main>
+
+  <footer class="bg-white dark:bg-gray-900 text-center py-4 mt-auto border-t dark:border-gray-800">
+    <p class="text-sm text-gray-600 dark:text-gray-400">© 2025 CertiTrack</p>
+  </footer>
 
   <!-- Toggle Password Script -->
   <script>
@@ -299,3 +304,4 @@
 </script>
 </body>
 </html>
+

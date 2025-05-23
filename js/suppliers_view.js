@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient.js';
 import { showLoading, hideLoading, handleError } from './common.js';
 
 export async function viewSupplierDetails(supplierId) {
+  loadSupplierCertificates(supplierId);
   try {
     showLoading();
 
@@ -40,8 +41,8 @@ export async function viewSupplierDetails(supplierId) {
       showCancelButton: isPending,
       confirmButtonText: isPending ? 'Αποθήκευση' : 'Κλείσιμο',
       didClose: () => {
-        // Φόρτωση πιστοποιητικών ΜΟΝΟ αν κλείσει το βασικό modal
-        loadSupplierCertificates(supplierId);
+        const certsContainer = document.getElementById('certificatesContainer');
+        if (certsContainer) loadSupplierCertificates(supplierId);
       }
     });
 
@@ -87,13 +88,9 @@ async function loadSupplierCertificates(supplierId) {
       `;
     }).join('');
 
-    Swal.fire({
-      title: 'Πιστοποιητικά Προμηθευτή',
-      html: `<div class="max-h-[400px] overflow-y-auto text-left">${html}</div>`,
-      width: 650,
-      confirmButtonText: 'Κλείσιμο'
-    });
+    document.getElementById('certificatesContainer').innerHTML = `<div class="grid gap-4">${html}</div>`;
   } catch (err) {
     handleError(err);
   }
 }
+

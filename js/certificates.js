@@ -83,11 +83,27 @@ async function sendSelectedCertificates() {
 
     const endpoint = '/.netlify/functions/send_certificate_email'; // Χρησιμοποιείται σε production hosting, π.χ. Netlify
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: toEmail, certificates: certs })
-    });
+    const { jsPDF } = await import('https://cdn.skypack.dev/jspdf');
+    const JSZip = (await import('https://cdn.jsdelivr.net/npm/jszip@3.7.1/+esm')).default;
+
+const zip = new JSZip();
+
+for (const cert of certs) {
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text(`Τίτλος: ${cert.title || "Άγνωστος"}`, 10, 20);
+  doc.text(`Ημερομηνία: ${cert.date || "-"}`, 10, 30);
+  doc.text(`Σύνδεσμος: ${cert.url || "-"}`, 10, 40);
+  const pdfBlob = doc.output('blob');
+  zip.file(`${cert.title || "πιστοποιητικό"}.pdf`, pdfBlob);
+}
+
+const zipBlob = await zip.generateAsync({ type: 'base64' });
+const response = await fetch(endpoint, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email: toEmail, zipBase64: zipBlob })
+});
 
     if (!response.ok) throw new Error('Αποτυχία αποστολής email');
     Swal.fire('Εστάλη', 'Το email στάλθηκε επιτυχώς.', 'success');
@@ -188,17 +204,19 @@ if (downloadBtn) downloadBtn.classList.add('hidden');
     if (type === 'excel') {
       import('https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs').then(XLSX => {
         const ws = XLSX.utils.json_to_sheet(certs.map(cert => ({
-  'ΤΙΤΛΟΣ': cert.title,
-  'ΤΥΠΟΣ': cert.type,
-  'ΗΜΕΡΟΜΗΝΙΑ ΛΗΞΗΣ': cert.date,
-  'ΕΠΩΝΥΜΙΑ ΠΡΟΜΗΘΕΥΤΗ': cert.supplier
-})));
+          'ΤΙΤΛΟΣ': cert.title,
+          'ΤΥΠΟΣ': cert.type,
+          'ΗΜΕΡΟΜΗΝΙΑ ΛΗΞΗΣ': cert.date,
+          'ΕΠΩΝΥΜΙΑ ΠΡΟΜΗΘΕΥΤΗ': cert.supplier
+        })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Πιστοποιητικά');
         XLSX.writeFile(wb, 'certificates_export.xlsx');
       });
     } else if (type === 'pdf') {
-      Swal.fire('Υπό ανάπτυξη', 'Η εξαγωγή σε PDF δεν είναι ακόμη διαθέσιμη.', 'info');
+      import('./certificates_download.js').then(module => {
+        module.downloadSelectedCertificates(certs);
+      });
     }
   });
 
@@ -525,6 +543,7 @@ function showCreateModal() {
     }
   });
 }
+
 
 
 

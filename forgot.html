@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://klutmusrabsizqjnzwpu.supabase.co; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:;">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ξέχασα Κωδικό - CertiTrack</title>
@@ -23,7 +24,7 @@
 </head>
 <body class="min-h-screen flex flex-col bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-900 dark:to-gray-800">
   <header class="bg-white dark:bg-gray-900 p-4 shadow-md fade-in">
-    <div class="max-w-6xl mx-auto flex justify-between items-center">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-2">
         <img src="../images/certitrack-logo.png" alt="CertiTrack" class="h-14 w-auto" />
         <h1 class="text-xl font-bold text-blue-700 dark:text-teal-400">CertiTrack</h1>
@@ -53,6 +54,10 @@
     </div>
   </main>
 
+  <footer class="bg-white dark:bg-gray-900 text-center py-4 mt-auto border-t dark:border-gray-800">
+    <p class="text-sm text-gray-600 dark:text-gray-400">© 2025 CertiTrack</p>
+  </footer>
+
   <script type="module">
     import { supabase } from '../js/supabaseClient.js';
     // Handle Forgot Password form submission
@@ -64,12 +69,24 @@
 
       // Verify AFM/email match existing user
       let record;
-      let { data: company, error: cmpErr } = await supabase.from('companies').select('email').eq('afm', afm).single();
-      if (!cmpErr && company && company.email === emailInput) {
+      let company = await fetch(`https://klutmusrabsizqjnzwpu.supabase.co/rest/v1/companies?select=email&afm=eq.${afm}`, {
+        headers: {
+          'apikey': supabase.supabaseKey,
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Accept': 'application/json'
+        }
+      }).then(res => res.ok ? res.json() : null).then(rows => rows?.[0] || null);
+      if (company && company.email === emailInput) {
         record = company;
       } else {
-        let { data: supplier, error: supErr } = await supabase.from('suppliers').select('email').eq('afm', afm).single();
-        if (!supErr && supplier && supplier.email === emailInput) {
+        let supplier = await fetch(`https://klutmusrabsizqjnzwpu.supabase.co/rest/v1/suppliers?select=email&afm=eq.${afm}`, {
+        headers: {
+          'apikey': supabase.supabaseKey,
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Accept': 'application/json'
+        }
+      }).then(res => res.ok ? res.json() : null).then(rows => rows?.[0] || null);
+        if (supplier && supplier.email === emailInput) {
           record = supplier;
         }
       }
@@ -119,5 +136,6 @@
 </script>
 </body>
 </html>
+
 
 

@@ -31,41 +31,55 @@
     .near-expire { border: 2px solid #f59e0b !important; }
   </style>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
-<body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col">
+<body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-900 dark:to-blue-800 min-h-screen flex flex-col">
 
 <header class="fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 p-4 shadow-md fade-in z-50">
   <div class="max-w-6xl mx-auto flex justify-between items-center">
     <div class="flex items-center gap-2">
       <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-14">
-      <h1 id="companyHeader" class="text-2xl font-bold text-blue-700 dark:text-teal-400">CertiTrack - <span id="companyName"></span></h1>
+      <h1 id="companyHeader" class="text-xl font-semibold text-blue-700 dark:text-teal-400">CertiTrack - <span id="companyName"></span></h1>
     </div>
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3">
+      <button id="emailBtn" title="Αποστολή Email" class="text-gray-600 dark:text-gray-300 hover:text-green-600">
+        <i data-lucide="mail"></i>
+      </button>
+      <button id="exportMenuBtn" title="Εξαγωγή" class="text-gray-600 dark:text-gray-300 hover:text-blue-600">
+        <i data-lucide="download"></i>
+      </button>
+      <button title="Ρυθμίσεις" class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white">
+        <i data-lucide="settings"></i>
+      </button>
       <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
-  <svg id="icon-moon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-    <path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z" />
-  </svg>
-  <svg id="icon-sun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM3.03 4.97a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L3.03 6.03a.75.75 0 010-1.06zM15.85 4.97a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM2 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 012 10zM14.25 9.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM3.03 15.03a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06zM15.85 15.03l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06z" />
-  </svg>
-</button>
+        <svg id="icon-moon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z" />
+        </svg>
+        <svg id="icon-sun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM3.03 4.97a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L3.03 6.03a.75.75 0 010-1.06zM15.85 4.97a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM2 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 012 10zM14.25 9.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM3.03 15.03a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06zM15.85 15.03l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06z" />
+        </svg>
+      </button>
       <button id="logoutBtn" class="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm transition" title="Αποσύνδεση">
-  <i data-lucide="log-out"></i>
-</button>
+        <i data-lucide="log-out"></i>
+      </button>
     </div>
   </div>
 </header>
 
 <main class="flex-grow p-6 max-w-6xl mx-auto fade-in mt-20">
   <div class="flex flex-wrap gap-4 mb-4 items-center justify-center">
-    <button id="btnSuppliers" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
+    <button id="btnSuppliers" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
       👥 Οι Προμηθευτές μου <span id="supplierCount" class="ml-1 text-sm"></span>
     </button>
     <div class="relative">
-      <a href="company_certificates.html" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
+      <a href="company_certificates.html" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
   📦 Τα Πιστοποιητικά μου
 </a>
       
@@ -73,20 +87,11 @@
   </div>
 
   
-  <div id="certEmailActions" class="flex gap-2 justify-end">
-    <button id="selectAllBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-      ☑️ Επιλογή Όλων
-    </button>
-    <button id="sendEmailBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
-      📧 Αποστολή Email
-    </button>
-    <button id="downloadBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
-      📥 Λήψη
-    </button>
-  </div>
+  
 </div>
 
-  <div id="supplierControls" class="flex items-center mb-6 justify-center gap-2 hidden">
+  <div id="supplierControls" class="flex flex-col items-center gap-4 mb-6 hidden">
+  <div class="flex flex-wrap items-center justify-center gap-4">
     <input id="searchInputSuppliers" type="text" placeholder="Αναζήτηση προμηθευτών..." class="p-2 border rounded-xl w-60 focus:outline-none focus:ring-2 focus:ring-indigo-400" oninput="filterData()">
     <select id="sortSelect" class="p-2 border rounded-xl">
       <option value="">Ταξινόμηση</option>
@@ -99,6 +104,18 @@
       <i data-lucide="plus"></i>
     </button>
   </div>
+  <div id="certEmailActions" class="flex gap-2 justify-center hidden">
+  <button id="selectAllBtn" class="text-sm px-3 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300">
+    ☑️ Επιλογή Όλων
+  </button>
+  <button id="sendEmailBtn" class="text-sm px-3 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 hidden">
+    📧 Αποστολή Email
+  </button>
+  <button id="downloadBtn" class="text-sm px-3 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 hidden">
+    📥 Λήψη
+  </button>
+</div>
+</div>
 
   <div id="loading" class="hidden">
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
@@ -111,12 +128,40 @@
     </div>
   </div>
 
-  <div id="dataSection" class="grid gap-4 grid-cols-1 sm:grid-cols-2"></div>
+  <div id="dataSection" class="grid gap-4 grid-cols-1 sm:grid-cols-2 text-gray-900 dark:text-gray-100"></div>
 </main>
 
 <script type="module" src="../js/company_dashboard.js"></script>
 
+<script>
+  function updateIcons() {
+    const isDark = document.documentElement.classList.contains('dark');
+    document.getElementById('icon-moon')?.classList.toggle('hidden', isDark);
+    document.getElementById('icon-sun')?.classList.toggle('hidden', !isDark);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('theme-toggle');
+    if (
+      localStorage.theme === 'dark' ||
+      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    ) {
+      document.documentElement.classList.add('dark');
+    }
+    updateIcons();
+
+    toggleBtn?.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      updateIcons();
+    });
+  });
+</script>
+<footer class="bg-white dark:bg-gray-900 text-center py-4 mt-auto border-t dark:border-gray-800">
+  <p class="text-sm text-gray-500 dark:text-gray-400">© 2025 CertiTrack</p>
+</footer>
 </body>
 </html>
+
 
 

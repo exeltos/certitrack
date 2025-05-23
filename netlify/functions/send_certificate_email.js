@@ -1,62 +1,59 @@
+import nodemailer from 'nodemailer';
+
 export async function handler(event) {
-  if (event.httpMethod === 'OPTIONS') {
+  if (event.httpMethod !== 'POST') {
     return {
-      statusCode: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      }
+      statusCode: 405,
+      body: 'Method Not Allowed',
     };
   }
 
   try {
-    const { email, certificates } = JSON.parse(event.body || '{}');
+    const { email, zipBase64 } = JSON.parse(event.body);
 
-    if (!email || !Array.isArray(certificates)) {
+    if (!email || !zipBase64) {
       return {
         statusCode: 400,
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ error: 'Missing data' })
+        body: 'Missing email or zipBase64',
       };
     }
 
-    const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    const certList = certificates.map(c => `• ${c.title} (${c.date})\n${c.url}`).join('\n\n');
-
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
+    // Ρυθμίσεις SMTP (π.χ. Gmail, SendGrid κλπ)
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT || 587,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
-      body: JSON.stringify({
-        from: 'noreply@certitrack.gr',
-        to: email,
-        subject: 'Τα πιστοποιητικά σας',
-        text: `Σας αποστέλλονται τα παρακάτω:\n\n${certList}`
-      })
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      return {
-        statusCode: 500,
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ error: 'Email failed', detail: err })
-      };
-    }
+    const mailOptions = {
+      from: process.env.SMTP_FROM || 'no-reply@yourdomain.com',
+      to: email,
+      subject: 'Τα Πιστοποιητικά σας από CertiTrack',
+      text: 'Συνημμένα θα βρείτε τα πιστοποιητικά σας σε αρχείο ZIP.',
+      attachments: [
+        {
+          filename: 'certificates.zip',
+          content: Buffer.from(zipBase64, 'base64'),
+          contentType: 'application/zip',
+        },
+      ],
+    };
+
+    await transporter.sendMail(mailOptions);
 
     return {
       statusCode: 200,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ success: true })
+      body: JSON.stringify({ message: 'Email sent successfully' }),
     };
-  } catch (err) {
+  } catch (error) {
+    console.error('Error sending email:', error);
     return {
       statusCode: 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Internal error', detail: err.message })
+      body: 'Internal Server Error',
     };
   }
 }
