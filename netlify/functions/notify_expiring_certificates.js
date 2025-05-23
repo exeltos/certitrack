@@ -1,4 +1,4 @@
-// notify_expiring_certificates.js with logging and hardcoded email URL
+// notify_expiring_certificates.js with debug logging
 const { createClient } = require('@supabase/supabase-js');
 const fetch = require('node-fetch');
 
@@ -72,6 +72,13 @@ exports.handler = async function () {
         console.log(`[CertiTrack] Αποστολή email σε ${email} για ${certs.length} ${type} certs`);
 
         const zipContent = certs.map(c => `• ${c.title} (Λήξη: ${new Date(c.date).toLocaleDateString('el-GR')})`).join('\n');
+
+        console.log('Sending request to:', EMAIL_FUNCTION_URL);
+        console.log('Payload (trimmed):', {
+          email,
+          zipBase64: Buffer.from(zipContent, 'utf-8').toString('base64').substring(0, 100) + '...'
+        });
+
         const response = await fetch(EMAIL_FUNCTION_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -80,6 +87,10 @@ exports.handler = async function () {
             zipBase64: Buffer.from(zipContent, 'utf-8').toString('base64')
           })
         });
+
+        console.log('Response status:', response.status);
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
 
         if (!response.ok) {
           console.error(`[CertiTrack] Αποτυχία αποστολής email σε ${email}`);
