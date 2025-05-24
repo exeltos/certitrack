@@ -103,6 +103,14 @@
           body: JSON.stringify({ email: emailInput })
         });
 
+        console.log('RESPONSE STATUS:', response.status);
+        const text = await response.text();
+        console.log('RESPONSE BODY:', text);
+
+        if (!response.ok) {
+          throw new Error(text);
+        }
+
         if (!response.ok) {
           const text = await response.text();
           throw new Error(text);
