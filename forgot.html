@@ -109,11 +109,9 @@
 
         if (!response.ok) {
           throw new Error(text);
-        }
-
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(text);
+        } else {
+          Swal.fire('Έλεγχος Email', 'Έστειλα link επαναφοράς στο email σου.', 'success')
+            .then(() => window.location.href = 'general_login.html');
         }
       } catch (err) {
         return Swal.fire('Σφάλμα', err.message, 'error');
@@ -160,7 +158,3 @@
 </script>
 </body>
 </html>
-
-
-
-
