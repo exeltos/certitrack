@@ -7,3 +7,8 @@
 
 [functions."notify_expiring_certificates"]
   schedule = "0 9 * * *"
+
+[[redirects]]
+  from = "/reset-password"
+  to = "/reset-password.html"
+  status = 200
