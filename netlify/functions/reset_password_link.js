@@ -17,7 +17,9 @@ export async function handler(event) {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://certitrack.gr/reset-password.html'
+      redirectTo: 'https://www.certitrack.gr/reset-password.html#'
+
+
     });
 
     if (error) {
@@ -29,3 +31,4 @@ export async function handler(event) {
     return { statusCode: 500, body: `Server Error: ${err.message}` };
   }
 }
+
