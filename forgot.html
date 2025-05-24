@@ -94,7 +94,25 @@
         return Swal.fire('Σφάλμα', 'Το ΑΦΜ και το Email δεν ταιριάζουν με εγγεγραμμένο χρήστη.', 'error');
       }
 
-      // Send reset email link
+      $1
+      // Netlify Function-based password reset
+      try {
+        const response = await fetch('/.netlify/functions/reset_password_link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailInput })
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text);
+        }
+      } catch (err) {
+        return Swal.fire('Σφάλμα', err.message, 'error');
+      }
+
+      // Εναλλακτική: Χρήση Supabase απευθείας (fallback)
+      /*
       const { data, error } = await supabase.auth.resetPasswordForEmail(emailInput, {
         redirectTo: window.location.origin + '/reset-password.html'
       });
@@ -102,9 +120,7 @@
       if (error) {
         return Swal.fire('Σφάλμα', error.message, 'error');
       }
-
-      Swal.fire('Έλεγχος Email', 'Έστειλα link επαναφοράς στο email σου.', 'success')
-        .then(() => window.location.href = 'general_login.html');
+      */
     });
   </script>
 <script>
@@ -136,6 +152,7 @@
 </script>
 </body>
 </html>
+
 
 
 
