@@ -94,7 +94,7 @@
         return Swal.fire('Σφάλμα', 'Το ΑΦΜ και το Email δεν ταιριάζουν με εγγεγραμμένο χρήστη.', 'error');
       }
 
-      $1
+      
       // Netlify Function-based password reset
       try {
         const response = await fetch('/.netlify/functions/reset_password_link', {
