@@ -55,26 +55,29 @@ exports.handler = async function () {
 
         console.log(`[SENDING] To: ${supplier.email} | Subject: ${subject}`);
 
-        const { error: mailError } = await supabase.functions.invoke('send-email', {
-          body: {
-            to: supplier.email,
-            subject,
-            message
+        try {
+          const res = await fetch('https://www.certitrack.gr/.netlify/functions/send_email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to: supplier.email, subject, message })
+          });
+
+          if (!res.ok) {
+            const errText = await res.text();
+            console.error(`[MAIL ERROR] ${supplier.email}: ${errText}`);
+            return;
           }
-        });
 
-        if (mailError) {
-          console.error(`[MAIL ERROR] ${supplier.email}:`, mailError.message);
-          return;
+          console.log(`[NOTIFIED] ${supplier.email} | Type: ${type}`);
+
+          await supabase.from('supplier_notifications').insert({
+            supplier_id: supplier.id,
+            type,
+            sent_at: new Date().toISOString()
+          });
+        } catch (mailErr) {
+          console.error(`[MAIL EXCEPTION] ${supplier.email}:`, mailErr);
         }
-
-        console.log(`[NOTIFIED] ${supplier.email} | Type: ${type}`);
-
-        await supabase.from('supplier_notifications').insert({
-          supplier_id: supplier.id,
-          type,
-          sent_at: new Date().toISOString()
-        });
       };
 
       await send('expired', grouped[afm].expired);
