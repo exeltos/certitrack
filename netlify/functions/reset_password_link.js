@@ -17,7 +17,7 @@ export async function handler(event) {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://www.certitrack.gr/reset-password.html'
+      redirectTo: 'https://exeltos-certitrack.netlify.app/reset-password.html'
 
 
     });
