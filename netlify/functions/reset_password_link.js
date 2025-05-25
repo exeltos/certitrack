@@ -6,6 +6,16 @@ const supabase = createClient(
 );
 
 export async function handler(event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      }
+    };
+  }
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -23,12 +33,31 @@ export async function handler(event) {
     });
 
     if (error) {
-      return { statusCode: 500, body: `Error: ${error.message}` };
+      return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: `Error: ${error.message}`
+    };
     }
 
-    return { statusCode: 200, body: 'OK' };
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: 'OK'
+    };
   } catch (err) {
-    return { statusCode: 500, body: `Server Error: ${err.message}` };
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: `Server Error: ${err.message}`
+    };
   }
 }
+
 

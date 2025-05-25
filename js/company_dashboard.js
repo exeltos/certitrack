@@ -106,19 +106,8 @@ const total = data?.length || 0;
 }
 
 function logout() {
-  Swal.fire({
-    title: 'Αποσύνδεση',
-    text: 'Είστε σίγουροι ότι θέλετε να αποσυνδεθείτε;',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Ναι, αποσύνδεση',
-    cancelButtonText: 'Ακύρωση'
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      await supabase.auth.signOut();
-      window.location.href = 'index.html';
-    }
-  });
+  supabase.auth.signOut();
+  window.location.href = 'general_login.html';
 }
 
 function setActiveTab(activeId) {
@@ -362,28 +351,54 @@ function showAddSupplierForm() {
     if (!result.isConfirmed || !result.value) return;
     try {
       showLoading();
-      const newSupplier = {
-        name: result.value.name,
-        email: result.value.email,
-        afm: result.value.afm,
-        status: '🕓 Μη Εγγεγραμμένος',
-        company_id: company.id
-      };
-      const { data, error } = await supabase.from('suppliers').insert([newSupplier]).select();
-      if (error) throw error;
+      const { name, email, afm } = result.value;
 
-      const supplierId = data[0].id;
-      await supabase.from('company_suppliers').insert([
-        {
+      let supplierId;
+      const { data: existing, error: existingErr } = await supabase
+        .from('suppliers')
+        .select('id')
+        .eq('afm', afm)
+        .maybeSingle();
+
+      if (existingErr) throw existingErr;
+
+      if (existing) {
+        supplierId = existing.id;
+      } else {
+        const { data: newSupplierData, error: insertErr } = await supabase.from('suppliers').insert([{
+          name,
+          email,
+          afm,
+          status: '🕓 Μη Εγγεγραμμένος',
+          company_id: company.id
+        }]).select();
+
+        if (insertErr) throw insertErr;
+        supplierId = newSupplierData[0].id;
+      }
+
+      // check if company_suppliers entry exists
+      const { data: existingLink, error: linkErr } = await supabase
+        .from('company_suppliers')
+        .select('id')
+        .eq('company_id', company.id)
+        .eq('supplier_id', supplierId)
+        .maybeSingle();
+
+      if (linkErr) throw linkErr;
+
+      if (!existingLink) {
+        await supabase.from('company_suppliers').insert([{
           company_id: company.id,
           supplier_id: supplierId,
           status: '🕓 Μη Εγγεγραμμένος',
           timestamp: new Date().toISOString(),
           company_name: company.name,
-          supplier_name: result.value.name
-        }
-      ]);
-      Swal.fire('Επιτυχία', 'Ο προμηθευτής προστέθηκε.', 'success');
+          supplier_name: name
+        }]);
+      }
+
+      Swal.fire('Επιτυχία', 'Ο προμηθευτής προστέθηκε ή συνδέθηκε.', 'success');
       await showSuppliers(company);
     } catch (err) {
       handleError(err);
@@ -391,6 +406,7 @@ function showAddSupplierForm() {
       hideLoading();
     }
   });
+
 }
 
 function toggleSendButton() {
@@ -443,4 +459,5 @@ function setupBulkInviteButtons() {
     Swal.fire('Επιτυχία', 'Οι προσκλήσεις στάλθηκαν.', 'success');
   });
 }
+
 

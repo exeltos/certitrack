@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Προμηθευτής</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+<script type="module">
+  import { supabase } from '../js/supabaseClient.js';
+  const { data: sessionData } = await supabase.auth.getSession();
+  const user = sessionData?.session?.user;
+  if (user) {
+    let displayName = '';
+const userType = user?.user_metadata?.type;
+if (userType === 'supplier') {
+  const { data: supplier } = await supabase.from('suppliers').select('name').eq('user_id', user.id).maybeSingle();
+  displayName = supplier?.name || 'Προμηθευτής';
+} else if (userType === 'company') {
+  const { data: company } = await supabase.from('companies').select('name').eq('user_id', user.id).maybeSingle();
+  displayName = company?.name || 'Εταιρεία';
+}
+document.title = displayName;
+    }
+  
+</script>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-800 dark:to-blue-900 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-white dark:bg-gray-900 px-4 py-2 shadow-md">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-14 w-auto">
+        <div class="relative flex items-center gap-2 text-lg font-bold text-blue-700 dark:text-teal-400">
+  <span id="supplierHeader">CertiTrack</span>
+  <span id="userTypeLabel" class="text-sm font-medium text-gray-500 dark:text-gray-400"></span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="company_dashboard.html" title="Επιστροφή" class="text-blue-600 dark:text-teal-300 hover:underline flex items-center gap-1 text-sm">
+          <i data-lucide="arrow-left"></i>
+          Επιστροφή
+        </a>
+        <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
+          <svg id="icon-moon" class="w-5 h-5 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+  <path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z" />
+</svg>
+          <svg id="icon-sun" class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+  <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM3.03 4.97a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L3.03 6.03a.75.75 0 010-1.06zM15.85 4.97a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM2 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 012 10zM14.25 9.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM3.03 15.03a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM15.85 15.03l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06z" />
+</svg>
+        </button>
+        <button id="logoutBtn" class="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm transition" title="Αποσύνδεση">
+          <i data-lucide="log-out"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    
+    <section class="max-w-xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <h2 class="text-xl font-bold text-blue-700 dark:text-teal-400 mb-4">Προσωπικά Στοιχεία</h2>
+      <form id="profileForm" class="space-y-4">
+        
+<input id="profileName" type="text" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Όνομα">
+        <input id="profileEmail" type="email" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="Email">
+<input id="profileAfm" type="text" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white" placeholder="ΑΦΜ" disabled>
+<div class="space-y-2">
+  <button type="button" id="togglePasswordFields" class="text-sm text-blue-600 hover:underline">Αλλαγή Κωδικού</button>
+  <div id="passwordFields" class="space-y-2 hidden">
+    <div class="relative w-60">
+  <input id="profilePassword" type="password" class="w-full p-2 pr-10 rounded border dark:bg-gray-700 dark:text-white" placeholder="Νέος Κωδικός Πρόσβασης">
+  <button type="button" onclick="toggleVisibility('profilePassword')" class="absolute inset-y-0 right-2 flex items-center text-gray-500 dark:text-gray-300">👁️</button>
+</div>
+    <div class="relative w-60">
+  <input id="profilePasswordConfirm" type="password" class="w-full p-2 pr-10 rounded border dark:bg-gray-700 dark:text-white" placeholder="Επιβεβαίωση Κωδικού">
+  <button type="button" onclick="toggleVisibility('profilePasswordConfirm')" class="absolute inset-y-0 right-2 flex items-center text-gray-500 dark:text-gray-300">👁️</button>
+</div>
+    <p id="passwordMatchMsg" class="text-sm"></p>
+  </div>
+</div>
+        <div class="flex gap-4 justify-end">
+          <button type="submit" id="saveBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2">
+            <svg id="saveSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            Αποθήκευση
+          </button>
+          <button type="button" id="deleteAccountBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Διαγραφή Λογαριασμού</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-gray-900 text-center py-4 mt-auto">
+    <p class="text-sm text-gray-500 dark:text-gray-400">© 2025 CertiTrack</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module">
+    import { supabase } from '../js/supabaseClient.js';
+    import { handleError, toggleDarkMode } from '../js/common.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Toggle εμφάνισης πεδίων αλλαγής κωδικού
+      const togglePwdBtn = document.getElementById('togglePasswordFields');
+      const pwdSection = document.getElementById('passwordFields');
+      const pass = document.getElementById('profilePassword');
+      const confirm = document.getElementById('profilePasswordConfirm');
+      const msg = document.getElementById('passwordMatchMsg');
+
+      togglePwdBtn?.addEventListener('click', () => {
+        pwdSection.classList.toggle('hidden');
+      });
+
+      [pass, confirm].forEach(el => el?.addEventListener('input', () => {
+        if (!pass.value && !confirm.value) {
+          msg.textContent = '';
+          return;
+        }
+        if (pass.value === confirm.value) {
+          msg.textContent = 'Οι κωδικοί ταιριάζουν';
+          msg.className = 'text-green-600 text-sm';
+        } else {
+          msg.textContent = 'Οι κωδικοί δεν ταιριάζουν';
+          msg.className = 'text-red-600 text-sm';
+        }
+      }));
+      // Theme toggle
+      const toggleBtn = document.getElementById('theme-toggle');
+      const moonIcon = document.getElementById('icon-moon');
+      const sunIcon = document.getElementById('icon-sun');
+
+      function updateIcons() {
+  const isDark = document.documentElement.classList.contains('dark');
+  if (moonIcon && sunIcon) {
+    moonIcon.classList.toggle('hidden', isDark);
+    sunIcon.classList.toggle('hidden', !isDark);
+  }
+}
+
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+      updateIcons();
+
+      toggleBtn?.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        updateIcons();
+      });
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
+      if (!user) return location.href = 'index.html';
+
+      let name = '', afm = '', type = '';
+const userType = user?.user_metadata?.type || '';
+type = userType;
+
+if (userType === 'company') {
+  const { data: company } = await supabase.from('companies').select('*').eq('user_id', user.id).maybeSingle();
+  name = company?.name || '';
+  afm = company?.afm || '';
+} else {
+  const { data: supplier } = await supabase.from('suppliers').select('*').eq('user_id', user.id).maybeSingle();
+  name = supplier?.name || '';
+  afm = supplier?.afm || '';
+}
+
+document.getElementById('profileName').value = name;
+document.getElementById('profileEmail').value = user.email || '';
+document.getElementById('supplierHeader').textContent = name || 'Χρήστης';
+document.getElementById('userTypeLabel').textContent = userType === 'company' ? '(Εταιρεία)' : '(Προμηθευτής)';
+document.getElementById('profileAfm').value = afm;
+      // Αφαιρέθηκε η επανάληψη που έγραφε πάντα supplier.afm
+// Η τιμή έχει ήδη οριστεί νωρίτερα δυναμικά
+
+
+      document.getElementById('profileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('profileName').value.trim();
+        const email = document.getElementById('profileEmail').value.trim();
+        if (!name || !email) return Swal.fire('Σφάλμα', 'Συμπληρώστε όλα τα πεδία.', 'error');
+
+        if (type === 'company') {
+  await supabase.from('companies').update({ name }).eq('user_id', user.id);
+} else {
+  await supabase.from('suppliers').update({ name }).eq('user_id', user.id);
+}
+        const { error: emailErr } = await supabase.auth.updateUser({ email });
+        if (emailErr) return Swal.fire('Σφάλμα', emailErr.message, 'error');
+
+        if (pass.value && pass.value === confirm.value) {
+          const { error: passErr } = await supabase.auth.updateUser({ password: pass.value });
+          if (passErr) return Swal.fire('Σφάλμα', passErr.message, 'error');
+        }
+        document.getElementById('saveSpinner').classList.remove('hidden');
+        document.getElementById('saveBtn').disabled = true;
+        setTimeout(() => {
+          document.getElementById('saveSpinner').classList.add('hidden');
+          document.getElementById('saveBtn').disabled = false;
+          Swal.fire('Επιτυχία', 'Τα στοιχεία αποθηκεύτηκαν.', 'success').then(() => {
+            sessionStorage.setItem('fromProfile', 'true');
+          window.location.href = type === 'company' ? 'company_dashboard.html' : 'certificates.html';
+          });
+        }, 1000);
+      });
+
+      document.getElementById('deleteAccountBtn')?.addEventListener('click', async () => {
+        const { value: formValues } = await Swal.fire({
+          title: 'Επιβεβαίωση Διαγραφής',
+          html:
+            '<input id="swal-afm" class="swal2-input" placeholder="ΑΦΜ">' +
+            '<input id="swal-password" type="password" class="swal2-input" placeholder="Κωδικός">',
+          focusConfirm: false,
+          showCancelButton: true,
+          confirmButtonText: 'Διαγραφή',
+          preConfirm: () => {
+            const afm = document.getElementById('swal-afm').value.trim();
+            const pwd = document.getElementById('swal-password').value;
+            if (!afm || !pwd) {
+              Swal.showValidationMessage('Συμπλήρωσε ΑΦΜ και Κωδικό');
+            }
+            return { afm, pwd };
+          }
+        });
+
+        if (formValues) {
+          const { afm, pwd } = formValues;
+          let check = null;
+if (type === 'company') {
+  const { data } = await supabase.from('companies').select('*').eq('user_id', user.id).maybeSingle();
+  check = data;
+} else {
+  const { data } = await supabase.from('suppliers').select('*').eq('user_id', user.id).maybeSingle();
+  check = data;
+}
+if (check?.afm !== afm) {
+            return Swal.fire('Λάθος ΑΦΜ', 'Το ΑΦΜ δεν αντιστοιχεί στον λογαριασμό σου.', 'error');
+          }
+          const { error: signInErr } = await supabase.auth.signInWithPassword({ email: user.email, password: pwd });
+          if (signInErr) return Swal.fire('Λάθος Κωδικός', 'Ο κωδικός που έδωσες είναι λάθος.', 'error');
+
+          if (type === 'company') {
+  await supabase.from('companies').delete().eq('user_id', user.id);
+} else {
+  await supabase.from('suppliers').delete().eq('user_id', user.id);
+}
+          await supabase.auth.signOut();
+          Swal.fire('Διαγραφή', 'Ο λογαριασμός διαγράφηκε.', 'success').then(() => {
+            location.href = 'index.html';
+          });
+        }
+      });
+        
+
+      document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        location.href = 'index.html';
+      });
+    });
+  </script>
+<script>
+  function toggleVisibility(id) {
+    const input = document.getElementById(id);
+    if (input) input.type = input.type === 'password' ? 'text' : 'password';
+  }
+</script>
+</body>
+</html>
+
+

@@ -1,7 +1,8 @@
+
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://klutmusrabsizqjnzwpu.supabase.co https://www.certitrack.gr; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CertiTrack - Εγγραφή Εταιρείας</title>
@@ -164,13 +165,14 @@
         }
 
         // Sign up user
-        const { data: signData, error: signErr } = await supabase.auth.signUp(
-          { email, password },
-          {
-            redirectTo: `${window.location.origin}/general_login.html`,
-            data: { type: 'company', afm, name }
-          }
-        );
+        const { data: signData, error: signErr } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    data: { type: 'company', afm, name },
+    redirectTo: `${window.location.origin}/general_login.html`
+  }
+});
         if (signErr) throw signErr;
         const userId = signData.user.id;  // νέο user id για FK
 
@@ -231,6 +233,7 @@
 </script>
 </body>
 </html>
+
 
 
 
