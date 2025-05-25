@@ -81,28 +81,17 @@ async function sendSelectedCertificates() {
     console.log('[DEBUG] EMAIL:', toEmail);
     console.log('[DEBUG] CERTIFICATES:', certs);
 
-    const endpoint = '/.netlify/functions/send_certificate_email'; // Χρησιμοποιείται σε production hosting, π.χ. Netlify
+    const endpoint = '/.netlify/functions/send_email'; // Χρησιμοποιείται σε production hosting, π.χ. Netlify
 
-    const { jsPDF } = await import('https://cdn.skypack.dev/jspdf');
-    const JSZip = (await import('https://cdn.jsdelivr.net/npm/jszip@3.7.1/+esm')).default;
-
-const zip = new JSZip();
-
-for (const cert of certs) {
-  const doc = new jsPDF();
-  doc.setFontSize(14);
-  doc.text(`Τίτλος: ${cert.title || "Άγνωστος"}`, 10, 20);
-  doc.text(`Ημερομηνία: ${cert.date || "-"}`, 10, 30);
-  doc.text(`Σύνδεσμος: ${cert.url || "-"}`, 10, 40);
-  const pdfBlob = doc.output('blob');
-  zip.file(`${cert.title || "πιστοποιητικό"}.pdf`, pdfBlob);
-}
-
-const zipBlob = await zip.generateAsync({ type: 'base64' });
+    
 const response = await fetch(endpoint, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email: toEmail, zipBase64: zipBlob })
+  body: JSON.stringify({
+        email: toEmail,
+        type: 'certificate',
+        certificates: certs
+      })
 });
 
     if (!response.ok) throw new Error('Αποτυχία αποστολής email');
@@ -295,46 +284,94 @@ export async function loadCertificates() {
       total++;
     });
     document.getElementById('stat-total').textContent = total;
-    document.getElementById('stat-active').textContent = active;
-    document.getElementById('stat-soon').textContent = soon;
-    document.getElementById('stat-expired').textContent = expired;
+document.getElementById('stat-total')?.parentElement?.addEventListener('click', () => {
+  renderFiltered(filtered);
+  highlightStat('stat-total');
+});
+
+document.getElementById('stat-active').textContent = active;
+document.getElementById('stat-active')?.parentElement?.addEventListener('click', () => {
+  renderFiltered(filtered.filter(cert => {
+    const days = Math.ceil((new Date(cert.date) - today) / (1000 * 60 * 60 * 24));
+    return days > 30;
+  }));
+  highlightStat('stat-active');
+});
+
+document.getElementById('stat-soon').textContent = soon;
+document.getElementById('stat-soon')?.parentElement?.addEventListener('click', () => {
+  renderFiltered(filtered.filter(cert => {
+    const days = Math.ceil((new Date(cert.date) - today) / (1000 * 60 * 60 * 24));
+    return days >= 0 && days <= 30;
+  }));
+  highlightStat('stat-soon');
+});
+
+document.getElementById('stat-expired').textContent = expired;
+
+// Προσθήκη cursor-pointer και hover ring στατιστικών
+['stat-total', 'stat-active', 'stat-soon', 'stat-expired'].forEach(id => {
+  const el = document.getElementById(id)?.parentElement;
+  if (el) {
+    el.classList.add('cursor-pointer', 'hover:ring', 'hover:ring-offset-1', 'hover:ring-blue-300');
+  }
+});
+document.getElementById('stat-expired')?.parentElement?.addEventListener('click', () => {
+  renderFiltered(filtered.filter(cert => {
+    const days = Math.ceil((new Date(cert.date) - today) / (1000 * 60 * 60 * 24));
+    return days < 0;
+  }));
+  highlightStat('stat-expired');
+});
 
     const grid = document.getElementById('certContainer');
     grid.innerHTML = '';
-    filtered.forEach(cert => {
-      const expDate = new Date(cert.date);
-      const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-      const isExpired = diffDays < 0;
-      const isExpiringSoon = diffDays >= 0 && diffDays <= 30;
-      const borderClass = isExpired ? 'border-[#dc2626]' : isExpiringSoon ? 'border-[#f59e0b]' : 'border-transparent';
-      const label = isExpired ? '(Ληγμένο)' : isExpiringSoon ? `(Λήγει σε ${diffDays} ημέρες)` : '';
 
-      const card = document.createElement('div');
-      card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card`;
-      card.innerHTML = `
-        <div>
-          <h3 class="font-semibold mb-1 text-gray-800 dark:text-white">${cert.title}</h3>
-          <p class="text-sm text-gray-700 dark:text-gray-300">${cert.type}</p>
-          <p class="text-sm text-gray-700 dark:text-gray-300">${expDate.toLocaleDateString('el-GR')} <span class="ml-2">${label}</span></p>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Από: ${cert.supplier_name || 'Άγνωστος'}</p>
-        </div>
-        <div class="mt-4 flex justify-end space-x-2">
-          <button class="edit-btn text-gray-500" data-id="${cert.id}" title="Επεξεργασία"><i data-lucide="pencil"></i></button>
-          <button class="view-btn text-gray-500" data-url="${cert.file_url}" title="Προβολή"><i data-lucide="eye"></i></button>
-          <button class="delete-btn text-gray-500" data-id="${cert.id}" data-url="${cert.file_url}" title="Διαγραφή"><i data-lucide="trash-2"></i></button>
-        </div>`;
-      const exportMode = grid.getAttribute('data-export-mode') === 'true';
-      if (exportMode) {
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'export-checkbox absolute top-2 right-2 w-5 h-5 accent-blue-600';
-        checkbox.style.position = 'absolute';
-        checkbox.style.top = '0.5rem';
-        checkbox.style.right = '0.5rem';
-        card.appendChild(checkbox);
-      }
-      grid.appendChild(card);
-    });
+function highlightStat(activeId) {
+  const ids = ['stat-total', 'stat-active', 'stat-soon', 'stat-expired'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('ring-2', 'ring-blue-500');
+  });
+  const active = document.getElementById(activeId);
+  if (active) active.classList.add('ring-2', 'ring-blue-500');
+}
+
+function renderFiltered(list) {
+  grid.innerHTML = '';
+  list.forEach(cert => {
+    const expDate = new Date(cert.date);
+    const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+    const isExpired = diffDays < 0;
+    const isExpiringSoon = diffDays >= 0 && diffDays <= 30;
+    const borderClass = isExpired ? 'border-[#dc2626]' : isExpiringSoon ? 'border-[#f59e0b]' : 'border-transparent';
+    const label = isExpired
+      ? '<span class="text-red-500 font-semibold">Ληγμένο</span>'
+      : isExpiringSoon
+      ? `<span class="text-yellow-600 font-medium">Λήγει σε ${diffDays} ημέρες</span>`
+      : '';
+
+    const card = document.createElement('div');
+    card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card`;
+    card.innerHTML = `
+      <div>
+        <h3 class="font-semibold mb-1 text-gray-800 dark:text-white">${cert.title}</h3>
+        <p class="text-sm text-gray-700 dark:text-gray-300">${cert.type}</p>
+        <p class="text-sm text-gray-700 dark:text-gray-300">${expDate.toLocaleDateString('el-GR')} <span class="ml-2">${label}</span></p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Από: ${cert.supplier_name || 'Άγνωστος'}</p>
+      </div>
+      <div class="mt-4 flex justify-end space-x-2">
+        <button class="edit-btn text-gray-500" data-id="${cert.id}" title="Επεξεργασία"><i data-lucide="pencil"></i></button>
+        <button class="view-btn text-gray-500" data-url="${cert.file_url}" title="Προβολή"><i data-lucide="eye"></i></button>
+        <button class="delete-btn text-gray-500" data-id="${cert.id}" data-url="${cert.file_url}" title="Διαγραφή"><i data-lucide="trash-2"></i></button>
+      </div>`;
+    grid.appendChild(card);
+  });
+  bindCertificateActions();
+  lucide.createIcons();
+}
+
+renderFiltered(filtered);
     document.getElementById('certContainer').classList.remove('hidden');
     bindCertificateActions();
     updateNotifications(data);
@@ -388,18 +425,26 @@ function bindCertificateActions() {
       title: 'Επεξεργασία Πιστοποιητικού',
       html: `
         <input id="swal-title" class="swal2-input" value="${cert.title}">
-        <select id="swal-type" class="swal2-select mb-2">
-          <option value="Πιστοποιητικό"${cert.type==='Πιστοποιητικό'?' selected':''}>Πιστοποιητικό</option>
-          <option value="Απόφαση"${cert.type==='Απόφαση'?' selected':''}>Απόφαση</option>
-          <option value="Νομιμοποιητικό έγγραφο"${cert.type==='Νομιμοποιητικό έγγραφο'?' selected':''}>Νομιμοποιητικό έγγραφο</option>
-          <option value="Ανάλυση"${cert.type==='Ανάλυση'?' selected':''}>Ανάλυση</option>
-          <option value="CE"${cert.type==='CE'?' selected':''}>CE</option>
-        </select>
+        <select id="swal-type" class="swal2-select mb-2" onchange="document.getElementById('custom-type')?.classList.toggle('hidden', this.value !== 'Άλλο')">
+  <option value="Πιστοποιητικό">Πιστοποιητικό</option>
+  <option value="Απόφαση">Απόφαση</option>
+  <option value="Νομιμοποιητικό έγγραφο">Νομιμοποιητικό έγγραφο</option>
+  <option value="Ανάλυση">Ανάλυση</option>
+  <option value="CE">CE</option>
+  <option value="Στοιχεία προϊόντος">Στοιχεία προϊόντος</option>
+  <option value="Άλλο">Άλλο</option>
+</select>
+<input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρησε την κατηγορία σου">
         <input id="swal-date" type="date" class="swal2-input" value="${cert.date}">
       `,
       focusConfirm: false,
       showCancelButton: true,
-      preConfirm: () => ({ id: cert.id, title: document.getElementById('swal-title').value, type: document.getElementById('swal-type').value, date: document.getElementById('swal-date').value })
+      preConfirm: () => ({
+  id: cert.id,
+  title: document.getElementById('swal-title').value,
+  type: document.getElementById('swal-type').value === 'Άλλο' ? document.getElementById('custom-type').value : document.getElementById('swal-type').value,
+  date: document.getElementById('swal-date').value
+})
     });
     if (value) {
       await supabase.from('supplier_certificates').update(value).eq('id', value.id);
@@ -462,13 +507,16 @@ function showCreateModal() {
     title: 'Νέο Πιστοποιητικό',
     html: `
       <input id="swal-title" class="swal2-input" placeholder="Τίτλος">
-      <select id="swal-type" class="swal2-select mb-2">
-        <option value="Πιστοποιητικό">Πιστοποιητικό</option>
-        <option value="Απόφαση">Απόφαση</option>
-        <option value="Νομιμοποιητικό έγγραφο">Νομιμοποιητικό έγγραφο</option>
-        <option value="Ανάλυση">Ανάλυση</option>
-        <option value="CE">CE</option>
-      </select>
+      <select id="swal-type" class="swal2-select mb-2" onchange="document.getElementById('custom-type')?.classList.toggle('hidden', this.value !== 'Άλλο')">
+  <option value="Πιστοποιητικό">Πιστοποιητικό</option>
+  <option value="Απόφαση">Απόφαση</option>
+  <option value="Νομιμοποιητικό έγγραφο">Νομιμοποιητικό έγγραφο</option>
+  <option value="Ανάλυση">Ανάλυση</option>
+  <option value="CE">CE</option>
+  <option value="Στοιχεία προϊόντος">Στοιχεία προϊόντος</option>
+  <option value="Άλλο">Άλλο</option>
+</select>
+<input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρησε την κατηγορία σου">
       <input id="swal-date" type="date" class="swal2-input">
       <input id="swal-file" type="file" accept="application/pdf" class="swal2-file mt-2" />
       <div id="swal-preview" class="mt-4"></div>
@@ -489,15 +537,16 @@ function showCreateModal() {
       });
     },
     preConfirm: () => {
-      const title = document.getElementById('swal-title').value;
-      const type = document.getElementById('swal-type').value;
-      const date = document.getElementById('swal-date').value;
-      const file = document.getElementById('swal-file').files[0];
-      if (!title || !type || !date || !file) {
-        Swal.showValidationMessage('Συμπλήρωσε όλα τα πεδία και ανέβασε PDF');
-      }
-      return { title, type, date, file };
-    }
+  const title = document.getElementById('swal-title').value;
+  const rawType = document.getElementById('swal-type').value;
+  const type = rawType === 'Άλλο' ? document.getElementById('custom-type').value : rawType;
+  const date = document.getElementById('swal-date').value;
+  const file = document.getElementById('swal-file').files[0];
+  if (!title || !type || !date || !file) {
+    Swal.showValidationMessage('Συμπλήρωσε όλα τα πεδία και ανέβασε PDF');
+  }
+  return { title, type, date, file };
+}
   }).then(async (res) => {
     if (res.isConfirmed) {
       try {
@@ -543,8 +592,3 @@ function showCreateModal() {
     }
   });
 }
-
-
-
-
-

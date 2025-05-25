@@ -1,3 +1,4 @@
+<!-- supplier_view.html – Προβολή και διαχείριση Προμηθευτή (πλήρης) -->
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -7,14 +8,123 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="module">
+    import { supabase } from '../js/supabaseClient.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const supplierId = urlParams.get('id');
+      if (!supplierId) return;
+
+      try {
+        const { data: supplier, error: sErr } = await supabase
+          .from('suppliers')
+          .select('id, name, email, afm')
+          .eq('id', supplierId)
+          .maybeSingle();
+        if (sErr || !supplier) throw sErr;
+
+        const nameInput = document.getElementById('input-name');
+        const emailInput = document.getElementById('input-email');
+        const afmInput = document.getElementById('input-afm');
+        const saveBtn = document.getElementById('saveBtn');
+        const deleteBtn = document.getElementById('deleteSupplierBtn');
+
+        nameInput.value = supplier.name;
+        emailInput.value = supplier.email;
+        afmInput.value = supplier.afm;
+
+        [nameInput, emailInput, afmInput].forEach(input => {
+          input.addEventListener('input', () => saveBtn.classList.remove('hidden'));
+        });
+
+        saveBtn.addEventListener('click', async () => {
+          try {
+            const { error } = await supabase
+              .from('suppliers')
+              .update({
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                afm: afmInput.value.trim()
+              })
+              .eq('id', supplierId);
+
+            if (error) throw error;
+            saveBtn.classList.add('hidden');
+            Swal.fire('Αποθηκεύτηκε', 'Τα στοιχεία ενημερώθηκαν.', 'success');
+          } catch (err) {
+            Swal.fire('Σφάλμα', err.message, 'error');
+          }
+        });
+
+        deleteBtn.addEventListener('click', async () => {
+          const confirm = await Swal.fire({
+            title: 'Διαγραφή Προμηθευτή',
+            text: 'Θέλετε σίγουρα να διαγράψετε τον προμηθευτή;',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ναι, διαγραφή'
+          });
+
+          if (!confirm.isConfirmed) return;
+
+          try {
+            await supabase.from('company_suppliers').delete().eq('supplier_id', supplierId);
+            await supabase.from('suppliers').delete().eq('id', supplierId);
+            Swal.fire('Διαγράφηκε', '', 'success').then(() => {
+              window.location.href = 'company_dashboard.html';
+            });
+          } catch (err) {
+            Swal.fire('Σφάλμα', err.message, 'error');
+          }
+        });
+
+        const { data: certificates, error } = await supabase
+          .from('supplier_certificates')
+          .select('*')
+          .eq('supplier_afm', supplier.afm);
+
+        const container = document.getElementById('certificatesContainer');
+        const summary = { total: certificates.length, active: 0, soon: 0, expired: 0 };
+        const now = new Date();
+
+        certificates.forEach(cert => {
+          const expDate = new Date(cert.date);
+          const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+          const statusClass = daysLeft < 0
+            ? 'border-error'
+            : daysLeft <= 30
+            ? 'border-warning'
+            : 'border-green-500';
+
+          if (daysLeft < 0) summary.expired++;
+          else if (daysLeft <= 30) summary.soon++;
+          else summary.active++;
+
+          const card = document.createElement('div');
+          card.className = `border rounded p-4 shadow bg-white dark:bg-gray-800 ${statusClass}`;
+          card.innerHTML = `
+            <h3 class="font-semibold text-lg text-blue-700 dark:text-teal-300">${cert.title}</h3>
+            <p class="text-sm">Τύπος: ${cert.type}</p>
+            <p class="text-sm">Ημερομηνία λήξης: ${expDate.toLocaleDateString('el-GR')} (${daysLeft} ημέρες)</p>
+          `;
+          container.appendChild(card);
+        });
+
+        document.getElementById('certSummary').textContent = `Πιστοποιητικά: ${summary.total} (Ενεργά: ${summary.active}, Προς λήξη: ${summary.soon}, Ληγμένα: ${summary.expired})`;
+
+      } catch (err) {
+        console.error('Σφάλμα φόρτωσης προμηθευτή:', err);
+        Swal.fire('Σφάλμα', err.message, 'error');
+      }
+    });
+  </script>
   <style>
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
     .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    .border-warning { border: 2px solid #f59e0b !important; }
+    .border-error { border: 2px solid #dc2626 !important; }
   </style>
-  <script type="module">
-    import { supabase } from '../js/supabaseClient.js';
-    window.supabase = supabase;
-  </script>
 </head>
 <body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col">
 
@@ -55,9 +165,7 @@
 
     <section>
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-blue-700 dark:text-teal-300">
-          Πιστοποιητικά Προμηθευτή
-        </h2>
+        <h2 class="text-xl font-semibold text-blue-700 dark:text-teal-300">Πιστοποιητικά Προμηθευτή</h2>
         <div id="certSummary" class="text-sm text-gray-700 dark:text-gray-300">
           Πιστοποιητικά: 0 (Ενεργά: 0, Προς λήξη: 0, Ληγμένα: 0)
         </div>
@@ -65,65 +173,5 @@
       <div id="certificatesContainer" class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
     </section>
   </main>
-
-  <script>
-  // Φόρτωση πιστοποιητικών προμηθευτή
-  document.addEventListener('DOMContentLoaded', async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const supplierId = urlParams.get('id');
-    if (!supplierId) return;
-
-    try {
-      const { data: supplierRecord, error: supplierError } = await supabase
-      .from('suppliers')
-      .select('name, email, afm')
-      .eq('id', supplierId)
-      .single();
-    if (supplierError) throw supplierError;
-
-    document.getElementById('input-name').value = supplierRecord.name || '';
-    document.getElementById('input-email').value = supplierRecord.email || '';
-    document.getElementById('input-afm').value = supplierRecord.afm || '';
-
-    const { data: certificates, error } = await supabase
-      .from('supplier_certificates')
-      .select('*')
-      .eq('supplier_afm', supplierRecord.afm);
-      if (error) throw error;
-
-      const container = document.getElementById('certificatesContainer');
-      const summary = { total: certificates.length, active: 0, soon: 0, expired: 0 };
-      const now = new Date();
-
-      certificates.forEach(cert => {
-        const expDate = new Date(cert.date);
-        const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
-        const statusClass = daysLeft < 0
-          ? 'border-error'
-          : daysLeft <= 30
-          ? 'border-warning'
-          : 'border-green-500';
-
-        if (daysLeft < 0) summary.expired++;
-        else if (daysLeft <= 30) summary.soon++;
-        else summary.active++;
-
-        const card = document.createElement('div');
-        card.className = `border rounded p-4 shadow bg-white dark:bg-gray-800 ${statusClass}`;
-        card.innerHTML = `
-          <h3 class="font-semibold text-lg text-blue-700 dark:text-teal-300">${cert.title}</h3>
-          <p class="text-sm">Τύπος: ${cert.type}</p>
-          <p class="text-sm">Ημερομηνία λήξης: ${expDate.toLocaleDateString('el-GR')} (${daysLeft} ημέρες)</p>
-        `;
-        container.appendChild(card);
-      });
-
-      document.getElementById('certSummary').textContent = `Πιστοποιητικά: ${summary.total} (Ενεργά: ${summary.active}, Προς λήξη: ${summary.soon}, Ληγμένα: ${summary.expired})`;
-    } catch (err) {
-      console.error('Σφάλμα φόρτωσης πιστοποιητικών:', err);
-    }
-  });
-</script>
 </body>
 </html>
-

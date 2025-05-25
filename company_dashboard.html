@@ -29,7 +29,33 @@
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
     .expired { border: 2px solid #dc2626 !important; }
     .near-expire { border: 2px solid #f59e0b !important; }
-  </style>
+    .card {
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+    border-radius: 0.75rem;
+    background-color: white;
+  }
+  .dark .card {
+    background-color: #1f2937;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+  .card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    border-radius: 0.75rem;
+    background-color: white;
+  }
+  .dark .card {
+    background-color: #1f2937;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+</style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -49,9 +75,7 @@
       <h1 id="companyHeader" class="text-xl font-semibold text-blue-700 dark:text-teal-400">CertiTrack - <span id="companyName"></span></h1>
     </div>
     <div class="flex items-center gap-3">
-      <button id="emailBtn" title="Αποστολή Email" class="text-gray-600 dark:text-gray-300 hover:text-green-600">
-        <i data-lucide="mail"></i>
-      </button>
+      <!-- Το κουμπί email κρύφτηκε -->
       <button id="exportMenuBtn" title="Εξαγωγή" class="text-gray-600 dark:text-gray-300 hover:text-blue-600">
         <i data-lucide="download"></i>
       </button>
@@ -73,14 +97,14 @@
   </div>
 </header>
 
-<main class="flex-grow p-6 max-w-6xl mx-auto fade-in mt-20">
+<main class="flex-grow p-6 max-w-6xl mx-auto fade-in pt-24">
   <div class="flex flex-wrap gap-4 mb-4 items-center justify-center">
     <button id="btnSuppliers" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
       👥 Οι Προμηθευτές μου <span id="supplierCount" class="ml-1 text-sm"></span>
     </button>
     <div class="relative">
       <a href="company_certificates.html" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
-  📦 Τα Πιστοποιητικά μου
+  📦 Τα Πιστοποιητικά μου <span id="certificateCount" class="ml-1 text-sm text-gray-500"></span>
 </a>
       
     </div>
@@ -104,14 +128,14 @@
       <i data-lucide="plus"></i>
     </button>
   </div>
-  <div id="certEmailActions" class="flex gap-2 justify-center hidden">
-  <button id="selectAllBtn" class="text-sm px-3 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300">
+  <div id="certEmailActions" class="flex flex-wrap items-center gap-2 justify-start hidden">
+  <button id="selectAllBtn" class="text-sm px-3 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 flex-shrink-0">
     ☑️ Επιλογή Όλων
   </button>
   <button id="sendEmailBtn" class="text-sm px-3 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 hidden">
     📧 Αποστολή Email
   </button>
-  <button id="downloadBtn" class="text-sm px-3 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 hidden">
+  <button id="downloadBtn" class="text-sm px-3 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 hidden flex-shrink-0 ml-auto">
     📥 Λήψη
   </button>
 </div>
@@ -128,7 +152,8 @@
     </div>
   </div>
 
-  <div id="dataSection" class="grid gap-4 grid-cols-1 sm:grid-cols-2 text-gray-900 dark:text-gray-100"></div>
+  <div id="dataSection" class="grid gap-6 grid-cols-1 sm:grid-cols-2 text-gray-900 dark:text-gray-100">
+  <!-- Apply .card class dynamically to each card via JavaScript or in template --></div>
 </main>
 
 <script type="module" src="../js/company_dashboard.js"></script>
@@ -162,6 +187,9 @@
 </footer>
 </body>
 </html>
+
+
+
 
 
 

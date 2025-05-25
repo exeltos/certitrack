@@ -306,6 +306,97 @@ export async function loadCertificates() {
     document.getElementById('stat-soon').textContent = soon;
     document.getElementById('stat-expired').textContent = expired;
 
+// Ενεργοποίηση φιλτραρίσματος με κλικ στατιστικών
+const statHandlers = [
+  {
+    id: 'stat-total',
+    filter: () => filtered,
+  },
+  {
+    id: 'stat-active',
+    filter: () => filtered.filter(cert => {
+      const days = Math.ceil((new Date(cert.date) - today) / (1000 * 60 * 60 * 24));
+      return days > 30;
+    })
+  },
+  {
+    id: 'stat-soon',
+    filter: () => filtered.filter(cert => {
+      const days = Math.ceil((new Date(cert.date) - today) / (1000 * 60 * 60 * 24));
+      return days >= 0 && days <= 30;
+    })
+  },
+  {
+    id: 'stat-expired',
+    filter: () => filtered.filter(cert => {
+      const days = Math.ceil((new Date(cert.date) - today) / (1000 * 60 * 60 * 24));
+      return days < 0;
+    })
+  }
+];
+
+statHandlers.forEach(({ id, filter }) => {
+  const el = document.getElementById(id)?.parentElement;
+  if (el) {
+    el.onclick = () => {
+      renderFiltered(filter());
+      highlightStat(id);
+    };
+  }
+});
+
+function highlightStat(activeId) {
+  ['stat-total', 'stat-active', 'stat-soon', 'stat-expired'].forEach(id => {
+    const el = document.getElementById(id)?.parentElement;
+    if (el) el.classList.remove('ring-2', 'ring-blue-500');
+  });
+  const active = document.getElementById(activeId)?.parentElement;
+  if (active) active.classList.add('ring-2', 'ring-blue-500');
+}
+
+function renderFiltered(list) {
+  const grid = document.getElementById('certContainer');
+  grid.innerHTML = '';
+  list.forEach(cert => {
+    const expDate = new Date(cert.date);
+    const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+    const isExpired = diffDays < 0;
+    const isExpiringSoon = diffDays >= 0 && diffDays <= 30;
+    const borderClass = isExpired ? 'border-[#dc2626]' : isExpiringSoon ? 'border-[#f59e0b]' : 'border-transparent';
+    const label = isExpired
+      ? '<span class="text-red-600 font-semibold">Έληξε</span>'
+      : isExpiringSoon
+      ? `<span class="text-orange-500 font-medium">Λήγει σε ${diffDays} ημέρες</span>`
+      : '<span class="text-green-600 font-medium">Ισχύει</span>';
+
+    const card = document.createElement('div');
+    card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card`;
+    card.innerHTML = `
+      <div>
+        <h3 class="font-semibold mb-1 text-gray-800 dark:text-white">${cert.title}</h3>
+        <p class="text-sm text-gray-700 dark:text-gray-300">${cert.type}</p>
+        <p class="text-sm text-gray-700 dark:text-gray-300">${expDate.toLocaleDateString('el-GR')} <span class="ml-2">${label}</span></p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Αρχείο: ${cert.name}</p>
+      </div>
+      <div class="mt-4 flex justify-end space-x-2">
+        <button class="edit-btn text-gray-500" data-id="${cert.id}" title="Επεξεργασία"><i data-lucide="pencil"></i></button>
+        <button class="view-btn text-gray-500" data-url="${cert.file_url}" title="Προβολή"><i data-lucide="eye"></i></button>
+        <button class="delete-btn text-gray-500" data-id="${cert.id}" data-url="${cert.file_url}" title="Διαγραφή"><i data-lucide="trash-2"></i></button>
+      </div>`;
+    grid.appendChild(card);
+  });
+  bindCertificateActions();
+  lucide.createIcons();
+}
+
+// Προσθήκη cursor-pointer και hover ring στατιστικών
+['stat-total', 'stat-active', 'stat-soon', 'stat-expired'].forEach(id => {
+  const el = document.getElementById(id)?.parentElement;
+  if (el) {
+    el.classList.add('cursor-pointer', 'hover:ring', 'hover:ring-offset-1', 'hover:ring-blue-300');
+  }
+});
+
     const grid = document.getElementById('certContainer');
     grid.innerHTML = '';
     filtered.forEach(cert => {
@@ -542,6 +633,7 @@ function showCreateModal() {
     }
   });
 }
+
 
 
 

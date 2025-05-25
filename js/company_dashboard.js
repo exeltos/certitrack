@@ -106,8 +106,19 @@ const total = data?.length || 0;
 }
 
 function logout() {
-  supabase.auth.signOut();
-  window.location.href = 'general_login.html';
+  Swal.fire({
+    title: 'Αποσύνδεση',
+    text: 'Είστε σίγουροι ότι θέλετε να αποσυνδεθείτε;',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ναι, αποσύνδεση',
+    cancelButtonText: 'Ακύρωση'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      await supabase.auth.signOut();
+      window.location.href = 'index.html';
+    }
+  });
 }
 
 function setActiveTab(activeId) {
