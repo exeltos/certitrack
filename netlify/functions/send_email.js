@@ -10,6 +10,9 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields." }) };
   }
 
+  console.log("📤 Αποστολή email:", { email, type, subject });
+  console.log("📦 Περιβάλλον:", process.env.MAILERSEND_TOKEN ? "✔️ Token υπάρχει" : "❌ Token ΔΕΝ υπάρχει");
+
   let htmlContent = "";
   let usedSubject = subject || "CertiTrack";
 
@@ -55,6 +58,9 @@ exports.handler = async (event) => {
         html: htmlContent
       })
     });
+
+    const debug = await response.text();
+    console.log("📨 Mailersend απάντηση:", response.status, debug);
 
     if (!response.ok) throw new Error("Αποτυχία αποστολής email");
 
