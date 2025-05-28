@@ -592,7 +592,7 @@ async function sendInvitesToSelectedSuppliers() {
           await supabase.from('supplier_invitation').insert({
             supplier_id: supplier.id,
             email,
-            sent_by: company?.id,
+            sent_by: company?.id ?? userId,
             sent_at: new Date().toISOString()
           });
         }
