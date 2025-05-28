@@ -9,3 +9,6 @@
   from = "/reset-password"
   to = "/reset-password.html"
   status = 200
+
+[functions."notify_expiring_certificates-scheduled"]
+  schedule = "0 9 * * *" # εκτέλεση κάθε μέρα 12:00 ώρα Ελλάδας
