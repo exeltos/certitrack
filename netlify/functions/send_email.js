@@ -1,9 +1,3 @@
-// send_email.js – Refactored unified email sender
-
-import MailerSend from "@mailersend/sdk";
-
-const mailerSend = new MailerSend({ apiKey: process.env.MAILERSEND_API_KEY });
-
 /**
  * Unified email sender for all types: invite, certificate, reset
  * Expects POST body: { email, subject?, type, certificates? }
@@ -53,14 +47,23 @@ export default async (req, res) => {
         return res.status(400).json({ error: "Invalid email type" });
     }
 
-    const sent = await mailerSend.email.send({
-      from: { email: "noreply@certitrack.gr", name: "CertiTrack" },
-      to: [{ email }],
-      subject: usedSubject,
-      html: htmlContent,
+    const response = await fetch("https://api.mailersend.com/v1/email", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.MAILERSEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: { email: "noreply@certitrack.gr", name: "CertiTrack" },
+        to: [{ email }],
+        subject: usedSubject,
+        html: htmlContent
+      })
     });
 
-    return res.status(200).json({ success: true, sent });
+    if (!response.ok) throw new Error("Αποτυχία αποστολής email");
+
+    return res.status(200).json({ success: true });
   } catch (err) {
     console.error("Email send error:", err);
     return res.status(500).json({ error: "Email sending failed" });
