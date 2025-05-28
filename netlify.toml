@@ -5,8 +5,8 @@
 [functions]
   node_bundler = "esbuild"
 
-[functions."notify_expiring_certificates"]
-  schedule = "0 9 * * *"
+[functions."notify_expiring_certificates-scheduled"]
+  schedule = "0 9 * * *" # 09:00 UTC = 12:00 ώρα Ελλάδας (καλοκαίρι)
 
 [[redirects]]
   from = "/reset-password"
