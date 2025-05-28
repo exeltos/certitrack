@@ -573,8 +573,10 @@ async function sendInvitesToSelectedSuppliers() {
   let sentCount = 0;
   for (const cb of selected) {
     const card = cb.closest('div');
-    const email = card.querySelector('p:nth-of-type(3)')?.textContent?.replace('Email: ', '').trim();
-    const afm = card.querySelector('p:nth-of-type(2)')?.textContent?.replace('ΑΦΜ: ', '').trim();
+    const email = card.querySelector('p.text-sm:nth-of-type(2)')?.textContent?.trim().replace('Email: ', '') || cb.dataset.email;
+    const afm = card.querySelector('p.text-sm:nth-of-type(1)')?.textContent?.trim().replace('ΑΦΜ: ', '') || cb.dataset.afm;
+
+    console.log("🔍 Προσπάθεια αποστολής σε:", email, "AFM:", afm);
 
     if (!email || !email.includes('@') || !afm) continue;
 
@@ -596,6 +598,9 @@ async function sendInvitesToSelectedSuppliers() {
             sent_at: new Date().toISOString()
           });
         }
+      } else {
+        const txt = await res.text();
+        console.error('❌ Αποτυχία αποστολής:', res.status, txt);
       }
     } catch (err) {
       console.error('Invite error:', err);
@@ -678,6 +683,7 @@ function showAddSupplierForm() {
     }
   });
 }
+
 
 
 
