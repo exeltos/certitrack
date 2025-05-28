@@ -1,0 +1,13 @@
+{
+  "name": "certitrack",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo \"no build needed\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.25.0",
+    "@mailersend/sdk": "^1.0.3",
+    "nodemailer": "^6.9.4",
+    "node-fetch": "^2.6.7"
+  }
+}
