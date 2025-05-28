@@ -674,7 +674,7 @@ const testNotifyBtn = document.getElementById('triggerNotifyBtn');
 if (testNotifyBtn) {
   testNotifyBtn.addEventListener('click', async () => {
     try {
-      const res = await fetch('/.netlify/functions/notify_expiring_certificates-scheduled');
+      const res = await fetch('/.netlify/functions/notify_expiring_certificates');
       const text = await res.text();
       Swal.fire('Αποτέλεσμα', text, res.ok ? 'success' : 'error');
     } catch (err) {
