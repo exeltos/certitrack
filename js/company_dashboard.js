@@ -584,7 +584,7 @@ async function sendInvitesToSelectedSuppliers() {
       const res = await fetch('/.netlify/functions/send_email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, type: 'invite', subject: '📨 Πρόσκληση Εγγραφής στο CertiTrack', from: { email: 'risteidis.filokostas@gmail.com', name: 'CertiTrack' } })
+        body: JSON.stringify({ email, type: 'invite', subject: '📨 Πρόσκληση Εγγραφής στο CertiTrack', from: { email: 'noreply@certitrack.gr', name: 'CertiTrack' } })
       });
 
       if (res.ok) {
