@@ -37,6 +37,10 @@
     transform: translateY(-4px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2); /* πιο έντονη σκιά στο hover */
   }
+.cert-card {
+  min-height: 180px;
+  max-width: 360px;
+}
 </style>
 <script>
 function updateIcons() {
@@ -153,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
 
       <!-- Πιστοποιητικά -->
-      <div id="certContainer" class="hidden grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 transition-transform duration-300" data-export-mode="false"></div>
+      <div id="certContainer" class="hidden grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 transition-transform duration-300 items-start" data-export-mode="false"></div>
     </main>
 
     <!-- Sidebar -->
@@ -177,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
 
 
 

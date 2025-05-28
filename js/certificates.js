@@ -3,124 +3,26 @@ import { showLoading, hideLoading, handleError } from '../js/common.js';
 
 let currentUser;
 
-// Ενεργοποίηση email επιλογής
-window.activateEmailMode = function activateEmailMode() {
-  const container = document.getElementById('certContainer');
-  const selectAllBtn = document.getElementById('selectAllBtn');
-  const sendEmailBtn = document.getElementById('sendEmailBtn');
-  const isActive = container.getAttribute('data-export-mode') === 'true';
-
-  if (isActive) {
-    container.setAttribute('data-export-mode', 'false');
-    document.querySelectorAll('.export-checkbox').forEach(cb => cb.remove());
-    selectAllBtn.classList.add('hidden');
-    sendEmailBtn.classList.add('hidden');
-    return;
-  }
-
-  container.setAttribute('data-export-mode', 'true');
-  selectAllBtn.classList.remove('hidden');
-  sendEmailBtn.classList.add('hidden');
-
-  document.querySelectorAll('.cert-card').forEach(card => {
-    let checkbox = card.querySelector('.export-checkbox');
-    if (!checkbox) {
-      checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.className = 'export-checkbox absolute top-2 right-2 w-5 h-5 accent-blue-600';
-      card.classList.add('relative');
-      card.appendChild(checkbox);
-    } else {
-      checkbox.classList.remove('hidden');
-    }
-  });
-
-  document.querySelectorAll('.export-checkbox').forEach(cb => {
-    cb.addEventListener('change', () => {
-      const anyChecked = [...document.querySelectorAll('.export-checkbox')].some(c => c.checked);
-      sendEmailBtn.classList.toggle('hidden', !anyChecked);
-    });
-  });
-}
-
-document.getElementById('emailBtn')?.addEventListener('click', activateEmailMode);
-document.getElementById('sendEmailBtn')?.addEventListener('click', sendSelectedCertificates);
-
-async function sendSelectedCertificates() {
-  console.log('[CertiTrack] sendSelectedCertificates ξεκίνησε');
-  const selected = [...document.querySelectorAll('.export-checkbox:checked')];
-  if (!selected.length) {
-    Swal.fire('Προσοχή', 'Δεν έχεις επιλέξει πιστοποιητικά.', 'info');
-    return;
-  }
-
-  const certs = selected.map(cb => {
-    const card = cb.closest('.cert-card');
-    return {
-      title: card.querySelector('h3')?.textContent.trim() || '',
-      date: card.querySelector('p:nth-of-type(2)')?.textContent.trim() || '',
-      url: card.querySelector('a')?.href || ''
-    };
-  });
-
-  try {
-    const { data: sessionData, error } = await supabase.auth.getSession();
-    if (error || !sessionData.session) throw new Error('Δεν βρέθηκε session');
-
-    const { value: toEmail } = await Swal.fire({
-      title: 'Αποστολή Email',
-      input: 'email',
-      inputLabel: 'Εισάγετε email παραλήπτη',
-      inputPlaceholder: 'example@email.com',
-      showCancelButton: true,
-      confirmButtonText: 'Αποστολή'
-    });
-
-    if (!toEmail) return;
-
-    console.log('[DEBUG] EMAIL:', toEmail);
-    console.log('[DEBUG] CERTIFICATES:', certs);
-
-    const endpoint = '/.netlify/functions/send_email'; // Χρησιμοποιείται σε production hosting, π.χ. Netlify
-
-    
-const response = await fetch(endpoint, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-        email: toEmail,
-        type: 'certificate',
-        certificates: certs
-      })
-});
-
-    if (!response.ok) throw new Error('Αποτυχία αποστολής email');
-    Swal.fire('Εστάλη', 'Το email στάλθηκε επιτυχώς.', 'success');
-  } catch (err) {
-    console.error(err);
-    Swal.fire('Σφάλμα', err.message || 'Αποτυχία αποστολής', 'error');
-  }
-}
-
 // Αρχικοποίηση σελίδας
 export async function initPage() {
+  // Ensure listEl is defined for debug and initial loadCompanies
+  const listEl = document.getElementById('myCompaniesList');
   const selectAllBtn = document.getElementById('selectAllBtn');
   if (selectAllBtn) {
-  selectAllBtn.addEventListener('click', () => {
-    const checkboxes = document.querySelectorAll('.export-checkbox');
-    if (!checkboxes.length) {
-      console.warn('Δεν υπάρχουν διαθέσιμα checkbox');
-      return;
-    }
-    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-    checkboxes.forEach(cb => {
-      cb.checked = !allChecked;
-      cb.dispatchEvent(new Event('change'));
+    selectAllBtn.addEventListener('click', () => {
+      const checkboxes = document.querySelectorAll('.export-checkbox');
+      if (!checkboxes.length) {
+        console.warn('Δεν υπάρχουν διαθέσιμα checkbox');
+        return;
+      }
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      checkboxes.forEach(cb => {
+        cb.checked = !allChecked;
+        cb.dispatchEvent(new Event('change'));
+      });
     });
-  });
-};
   }
-
+  // Export mode buttons setup continues here
   const exportBtn = document.getElementById('exportMenuBtn');
   const downloadBtn = document.getElementById('downloadBtn');
   const certContainer = document.getElementById('certContainer');
@@ -210,6 +112,7 @@ if (downloadBtn) downloadBtn.classList.add('hidden');
   });
 
   try {
+    // Fetch session and profile
     const { data: sessionData } = await supabase.auth.getSession();
     currentUser = sessionData?.session?.user;
     if (!currentUser) throw new Error('Μη έγκυρη συνεδρία.');
@@ -219,28 +122,26 @@ if (downloadBtn) downloadBtn.classList.add('hidden');
       .select('name, afm')
       .eq('user_id', currentUser.id)
       .maybeSingle();
-
     if (profileErr) throw profileErr;
     const displayName = profile?.name || currentUser.email;
     document.getElementById('userGreeting').textContent = `Καλώς ήρθες, ${displayName}`;
 
     document.getElementById('addCertFixed').addEventListener('click', showCreateModal);
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-  const result = await Swal.fire({
-    title: 'Αποσύνδεση',
-    text: 'Θέλεις σίγουρα να αποσυνδεθείς;',
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Ναι, αποσύνδεση',
-    cancelButtonText: 'Ακύρωση'
-  });
-
-  if (result.isConfirmed) {
-    sessionStorage.removeItem('sawPopupOnce');
-    await supabase.auth.signOut();
-    window.location.href = 'index.html';
-  }
-});
+      const result = await Swal.fire({
+        title: 'Αποσύνδεση',
+        text: 'Θέλεις σίγουρα να αποσυνδεθείς;',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ναι, αποσύνδεση',
+        cancelButtonText: 'Ακύρωση'
+      });
+      if (result.isConfirmed) {
+        sessionStorage.removeItem('sawPopupOnce');
+        await supabase.auth.signOut();
+        window.location.href = 'index.html';
+      }
+    });
     document.getElementById('notifyBtn')?.addEventListener('click', showExpirationPopup);
     document.getElementById('userSettingsBtn')?.addEventListener('click', () => window.location.href = 'supplier_info.html');
 
@@ -252,6 +153,8 @@ if (downloadBtn) downloadBtn.classList.add('hidden');
    catch (err) {
     handleError(err);
   }
+}
+
 
 // Φόρτωση πιστοποιητικών
 export async function loadCertificates() {
@@ -267,6 +170,7 @@ export async function loadCertificates() {
       .eq('supplier_user_id', currentUser.id)
       .order('date', { ascending: false });
 
+    
     if (error) throw error;
 
     const today = new Date();
@@ -491,16 +395,44 @@ async function loadCompanies() {
   const listEl = document.getElementById('myCompaniesList');
   listEl.innerHTML = '<li class="text-center text-gray-500">Φόρτωση...</li>';
   try {
-    const { data, error } = await supabase.from('companies').select('name, afm');
-    if (error) throw error;
-    listEl.innerHTML = data.length
-      ? data.map(c => `<li>• ${c.name} (${c.afm})</li>`).join('')
-      : '<li>Καμία εταιρεία.</li>';
+    // Ανάκτηση supplier.id
+    const { data: supRec, error: supErr } = await supabase
+      .from('suppliers')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    if (supErr) throw supErr;
+    const supplierId = supRec?.id;
+    if (!supplierId) {
+      listEl.innerHTML = '<li class="text-center text-gray-500">Δεν υπάρχει καταχωρημένος προμηθευτής.</li>';
+      return;
+    }
+    // Ανάκτηση company_ids
+    const { data: rels, error: relsErr } = await supabase
+      .from('company_suppliers')
+      .select('company_id')
+      .eq('supplier_id', supplierId);
+    if (relsErr) throw relsErr;
+    const companyIds = rels.map(r => r.company_id);
+    if (!companyIds.length) {
+      listEl.innerHTML = '<li class="text-center text-gray-500">Δεν βρέθηκαν εταιρείες για αυτόν τον προμηθευτή.</li>';
+      return;
+    }
+    // Ανάκτηση στοιχείων εταιρειών
+    const { data: companies, error: compsErr } = await supabase
+      .from('companies')
+      .select('id, name, afm')
+      .in('id', companyIds);
+    if (compsErr) throw compsErr;
+    // Render list
+    listEl.innerHTML = companies.map(c => `<li>• ${c.name} (${c.afm})</li>`).join('');
   } catch (err) {
-    console.error(err);
-    listEl.innerHTML = '<li class="text-red-500">Σφάλμα φόρτωσης.</li>';
+    console.error('loadCompanies error:', err);
+    listEl.innerHTML = '<li class="text-red-500">Σφάλμα φόρτωσης εταιρειών.</li>';
   }
 }
+
+    // Φόρτωση εταιρειών μέσω join έχει πλέον αφαιρεθεί, καθώς χρησιμοποιείται η απλή loadCompanies
 
 function showCreateModal() {
   Swal.fire({
@@ -508,15 +440,15 @@ function showCreateModal() {
     html: `
       <input id="swal-title" class="swal2-input" placeholder="Τίτλος">
       <select id="swal-type" class="swal2-select mb-2" onchange="document.getElementById('custom-type')?.classList.toggle('hidden', this.value !== 'Άλλο')">
-  <option value="Πιστοποιητικό">Πιστοποιητικό</option>
-  <option value="Απόφαση">Απόφαση</option>
-  <option value="Νομιμοποιητικό έγγραφο">Νομιμοποιητικό έγγραφο</option>
-  <option value="Ανάλυση">Ανάλυση</option>
-  <option value="CE">CE</option>
-  <option value="Στοιχεία προϊόντος">Στοιχεία προϊόντος</option>
-  <option value="Άλλο">Άλλο</option>
-</select>
-<input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρησε την κατηγορία σου">
+        <option value="Πιστοποιητικό">Πιστοποιητικό</option>
+        <option value="Απόφαση">Απόφαση</option>
+        <option value="Νομιμοποιητικό έγγραφο">Νομιμοποιητικό έγγραφο</option>
+        <option value="Ανάλυση">Ανάλυση</option>
+        <option value="CE">CE</option>
+        <option value="Στοιχεία προϊόντος">Στοιχεία προϊόντος</option>
+        <option value="Άλλο">Άλλο</option>
+      </select>
+      <input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρησε την κατηγορία σου">
       <input id="swal-date" type="date" class="swal2-input">
       <input id="swal-file" type="file" accept="application/pdf" class="swal2-file mt-2" />
       <div id="swal-preview" class="mt-4"></div>
@@ -537,16 +469,16 @@ function showCreateModal() {
       });
     },
     preConfirm: () => {
-  const title = document.getElementById('swal-title').value;
-  const rawType = document.getElementById('swal-type').value;
-  const type = rawType === 'Άλλο' ? document.getElementById('custom-type').value : rawType;
-  const date = document.getElementById('swal-date').value;
-  const file = document.getElementById('swal-file').files[0];
-  if (!title || !type || !date || !file) {
-    Swal.showValidationMessage('Συμπλήρωσε όλα τα πεδία και ανέβασε PDF');
-  }
-  return { title, type, date, file };
-}
+      const title = document.getElementById('swal-title').value;
+      const rawType = document.getElementById('swal-type').value;
+      const type = rawType === 'Άλλο' ? document.getElementById('custom-type').value : rawType;
+      const date = document.getElementById('swal-date').value;
+      const file = document.getElementById('swal-file').files[0];
+      if (!title || !type || !date || !file) {
+        Swal.showValidationMessage('Συμπλήρωσε όλα τα πεδία και ανέβασε PDF');
+      }
+      return { title, type, date, file };
+    }
   }).then(async (res) => {
     if (res.isConfirmed) {
       try {
@@ -569,18 +501,7 @@ function showCreateModal() {
 
         const { error: insertErr } = await supabase
           .from('supplier_certificates')
-          .insert([{
-            supplier_user_id: currentUser.id,
-            title,
-            type,
-            date,
-            file_url: urlData.publicUrl,
-            supplier_email: currentUser.email,
-            name: file.name,
-            supplier_name: profile?.name || currentUser.email,
-            supplier_afm: profile?.afm || '',
-            created_at: new Date().toISOString()
-          }]);
+          .insert([{ supplier_user_id: currentUser.id, title, type, date, file_url: urlData.publicUrl, supplier_email: currentUser.email, name: file.name, supplier_name: profile?.name || currentUser.email, supplier_afm: profile?.afm || '', created_at: new Date().toISOString() }]);
         if (insertErr) throw insertErr;
         await loadCertificates();
         Swal.fire('Επιτυχία', 'Το πιστοποιητικό αποθηκεύτηκε επιτυχώς', 'success');

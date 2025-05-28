@@ -1,124 +1,19 @@
 <!-- supplier_view.html – Προβολή και διαχείριση Προμηθευτή (πλήρης) -->
 <!DOCTYPE html>
-<html lang="el">
+<html lang="el" class="">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Προβολή Προμηθευτή | CertiTrack</title>
+  <title>CertiTrack</title>
   <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class'
+  }
+</script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script type="module">
-    import { supabase } from '../js/supabaseClient.js';
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const supplierId = urlParams.get('id');
-      if (!supplierId) return;
-
-      try {
-        const { data: supplier, error: sErr } = await supabase
-          .from('suppliers')
-          .select('id, name, email, afm')
-          .eq('id', supplierId)
-          .maybeSingle();
-        if (sErr || !supplier) throw sErr;
-
-        const nameInput = document.getElementById('input-name');
-        const emailInput = document.getElementById('input-email');
-        const afmInput = document.getElementById('input-afm');
-        const saveBtn = document.getElementById('saveBtn');
-        const deleteBtn = document.getElementById('deleteSupplierBtn');
-
-        nameInput.value = supplier.name;
-        emailInput.value = supplier.email;
-        afmInput.value = supplier.afm;
-
-        [nameInput, emailInput, afmInput].forEach(input => {
-          input.addEventListener('input', () => saveBtn.classList.remove('hidden'));
-        });
-
-        saveBtn.addEventListener('click', async () => {
-          try {
-            const { error } = await supabase
-              .from('suppliers')
-              .update({
-                name: nameInput.value.trim(),
-                email: emailInput.value.trim(),
-                afm: afmInput.value.trim()
-              })
-              .eq('id', supplierId);
-
-            if (error) throw error;
-            saveBtn.classList.add('hidden');
-            Swal.fire('Αποθηκεύτηκε', 'Τα στοιχεία ενημερώθηκαν.', 'success');
-          } catch (err) {
-            Swal.fire('Σφάλμα', err.message, 'error');
-          }
-        });
-
-        deleteBtn.addEventListener('click', async () => {
-          const confirm = await Swal.fire({
-            title: 'Διαγραφή Προμηθευτή',
-            text: 'Θέλετε σίγουρα να διαγράψετε τον προμηθευτή;',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ναι, διαγραφή'
-          });
-
-          if (!confirm.isConfirmed) return;
-
-          try {
-            await supabase.from('company_suppliers').delete().eq('supplier_id', supplierId);
-            await supabase.from('suppliers').delete().eq('id', supplierId);
-            Swal.fire('Διαγράφηκε', '', 'success').then(() => {
-              window.location.href = 'company_dashboard.html';
-            });
-          } catch (err) {
-            Swal.fire('Σφάλμα', err.message, 'error');
-          }
-        });
-
-        const { data: certificates, error } = await supabase
-          .from('supplier_certificates')
-          .select('*')
-          .eq('supplier_afm', supplier.afm);
-
-        const container = document.getElementById('certificatesContainer');
-        const summary = { total: certificates.length, active: 0, soon: 0, expired: 0 };
-        const now = new Date();
-
-        certificates.forEach(cert => {
-          const expDate = new Date(cert.date);
-          const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
-          const statusClass = daysLeft < 0
-            ? 'border-error'
-            : daysLeft <= 30
-            ? 'border-warning'
-            : 'border-green-500';
-
-          if (daysLeft < 0) summary.expired++;
-          else if (daysLeft <= 30) summary.soon++;
-          else summary.active++;
-
-          const card = document.createElement('div');
-          card.className = `border rounded p-4 shadow bg-white dark:bg-gray-800 ${statusClass}`;
-          card.innerHTML = `
-            <h3 class="font-semibold text-lg text-blue-700 dark:text-teal-300">${cert.title}</h3>
-            <p class="text-sm">Τύπος: ${cert.type}</p>
-            <p class="text-sm">Ημερομηνία λήξης: ${expDate.toLocaleDateString('el-GR')} (${daysLeft} ημέρες)</p>
-          `;
-          container.appendChild(card);
-        });
-
-        document.getElementById('certSummary').textContent = `Πιστοποιητικά: ${summary.total} (Ενεργά: ${summary.active}, Προς λήξη: ${summary.soon}, Ληγμένα: ${summary.expired})`;
-
-      } catch (err) {
-        console.error('Σφάλμα φόρτωσης προμηθευτή:', err);
-        Swal.fire('Σφάλμα', err.message, 'error');
-      }
-    });
-  </script>
+  <script type="module" src="../js/suppliers_view.js"></script>
   <style>
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
     .fade-in { animation: fadeIn 0.5s ease-in-out; }
@@ -126,37 +21,50 @@
     .border-error { border: 2px solid #dc2626 !important; }
   </style>
 </head>
-<body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col">
+<body class="transition-colors duration-300 bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col">
 
   <header class="bg-white dark:bg-gray-900 shadow-md p-4">
-    <div class="max-w-6xl mx-auto flex justify-between items-center">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-2">
         <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-14 w-auto">
-        <h1 class="text-xl font-bold text-blue-700 dark:text-teal-400">CertiTrack - Προμηθευτής</h1>
+        <h1 id="pageHeader" class="text-xl font-bold text-blue-700 dark:text-teal-400">CertiTrack</h1>
       </div>
-      <nav>
-        <a href="company_dashboard.html" class="text-sm text-blue-700 hover:underline dark:text-teal-300">← Επιστροφή</a>
+      <nav class="flex items-center gap-3 ml-auto">
+        <a href="company_dashboard.html" class="text-sm text-blue-700 hover:underline dark:text-teal-300 ml-auto">← Επιστροφή</a>
+        <button id="downloadBtn" title="Λήψη Πιστοποιητικών" class="text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
+          <i data-lucide="download" class="w-5 h-5"></i>
+        </button>
+        <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+          <svg id="icon-moon" class="w-5 h-5 transition duration-200" fill="currentColor" viewBox="0 0 20 20">
+  <path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z"/>
+</svg>
+          <svg id="icon-sun" class="w-5 h-5 hidden transition duration-200" fill="currentColor" viewBox="0 0 20 20">
+  <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zm0 14.75a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM17.25 10a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0117.25 10zM2.75 10a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM14.47 4.22a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 01-1.06-1.06l1.06-1.06zM4.53 15.47a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM15.53 15.53a.75.75 0 01-1.06 0l-1.06-1.06a.75.75 0 011.06-1.06l1.06 1.06a.75.75 0 010 1.06zM4.53 4.53a.75.75 0 011.06 0l1.06 1.06A.75.75 0 114.53 6.65L3.47 5.59a.75.75 0 010-1.06zM10 5.25a4.75 4.75 0 100 9.5 4.75 4.75 0 000-9.5z"/>
+</svg>
+        </button>
       </nav>
     </div>
   </header>
 
-  <main class="flex-1 max-w-6xl mx-auto p-6 fade-in">
+  <main class="flex-1 max-w-6xl mx-auto p-6 fade-in text-gray-800 dark:text-white">
     <section id="supplierInfo" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow space-y-4 mb-8">
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold text-blue-700 dark:text-teal-400">Στοιχεία Προμηθευτή</h2>
-        <button id="deleteSupplierBtn" class="text-sm bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Διαγραφή Προμηθευτή</button>
+        <button id="deleteSupplierBtn" class="text-sm bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+  Διαγραφή Προμηθευτή
+</button>
       </div>
       <div class="grid md:grid-cols-3 gap-4">
         <div>
-          <label class="block text-sm font-medium">Επωνυμία</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Επωνυμία</label>
           <input id="input-name" type="text" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white">
         </div>
         <div>
-          <label class="block text-sm font-medium">Email</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
           <input id="input-email" type="email" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white">
         </div>
         <div>
-          <label class="block text-sm font-medium">ΑΦΜ</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">ΑΦΜ</label>
           <input id="input-afm" type="text" class="w-full p-2 rounded border dark:bg-gray-700 dark:text-white">
         </div>
       </div>
@@ -164,14 +72,54 @@
     </section>
 
     <section>
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-blue-700 dark:text-teal-300">Πιστοποιητικά Προμηθευτή</h2>
-        <div id="certSummary" class="text-sm text-gray-700 dark:text-gray-300">
-          Πιστοποιητικά: 0 (Ενεργά: 0, Προς λήξη: 0, Ληγμένα: 0)
-        </div>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+  <div class="flex items-center gap-2 flex-wrap">
+  <h2 class="text-xl font-semibold text-blue-700 dark:text-teal-300">Πιστοποιητικά Προμηθευτή</h2>
+  <input id="searchInput" type="text" placeholder="Αναζήτηση τίτλου..." class="px-3 py-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
+  <button id="selectAllBtn" class="px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 hidden">
+    ☑️ Επιλογή Όλων
+  </button>
+  <button id="realDownloadBtn" class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 hidden">
+    📥 Λήψη
+  </button>
+  </div>
+  <div id="certSummary" class="text-sm text-gray-700 dark:text-gray-300">
+  Πιστοποιητικά: 0 (Ενεργά: 0, Προς λήξη: 0, Ληγμένα: 0)
+</div>
+
+</div>
       </div>
-      <div id="certificatesContainer" class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
-    </section>
+        
+        <div id="certificatesContainer" class="min-h-[200px] text-center text-gray-500 dark:text-gray-400">
+  <p id="noCertificatesMessage" class="hidden">Δεν υπάρχουν διαθέσιμα πιστοποιητικά για αυτόν τον προμηθευτή.</p>
+</div>
+</section>
   </main>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('theme-toggle');
+    const moonIcon = document.getElementById('icon-moon');
+    const sunIcon = document.getElementById('icon-sun');
+
+    function updateIcons() {
+      const isDark = document.documentElement.classList.contains('dark');
+      if (moonIcon) moonIcon.classList.toggle('hidden', isDark);
+      if (sunIcon) sunIcon.classList.toggle('hidden', !isDark);
+    }
+
+    if (
+      localStorage.getItem('theme') === 'dark' ||
+      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    ) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    updateIcons();
+});
+  ;
+</script>
 </body>
 </html>
+

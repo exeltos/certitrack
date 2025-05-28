@@ -230,7 +230,7 @@ if (certActions) certActions.classList.remove('hidden');
 
     const { data: profile, error: profileErr } = await supabase
       .from('companies')
-      .select('name, afm')
+      .select('id, name, afm')
       .eq('user_id', currentUser.id)
       .maybeSingle();
 
@@ -264,9 +264,44 @@ if (certActions) certActions.classList.remove('hidden');
     // await loadCompanies(); // καταργήθηκε επειδή δεν υπάρχει πλέον σχετικό στοιχείο στο DOM
     await loadCertificates();
 
-    
+    // Εμφάνιση αριθμού πιστοποιητικών στο κουμπί "📦 Τα Πιστοποιητικά μου"
+    const totalCerts = await supabase
+      .from('company_certificates')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_user_id', currentUser.id);
+
+    const certCount = totalCerts?.count || 0;
+    const certTabBtn = document.querySelector('button[disabled]') || document.querySelector('a[href="company_certificates.html"]');
+    if (certTabBtn && certCount) {
+      const badge = document.createElement('span');
+      badge.textContent = ` ${certCount}`;
+      badge.className = 'ml-1 text-sm font-semibold text-gray-700 dark:text-gray-100';
+      certTabBtn.appendChild(badge);
     }
-   catch (err) {
+
+    // ➕ Προσθήκη badge στο κουμπί "👥 Οι Προμηθευτές μου"
+    let suppliers = [];
+    let supplierErr = null;
+
+    if (profile?.id) {
+      const result = await supabase
+        .from('company_suppliers')
+        .select('id')
+        .eq('company_id', profile.id);
+      suppliers = result.data || [];
+      supplierErr = result.error;
+    }
+    console.log('[DEBUG] suppliers:', suppliers);
+    const supplierCount = suppliers?.length || 0;
+    console.log('[DEBUG] supplierCount:', supplierCount);
+    const supplierTabBtn = document.querySelector('a[href="company_dashboard.html"]');
+    if (!supplierErr && supplierTabBtn) {
+      const badge = document.createElement('span');
+      badge.textContent = ` ${supplierCount}`;
+      badge.className = 'ml-1 text-sm font-semibold text-gray-700 dark:text-gray-100';
+      supplierTabBtn.appendChild(badge);
+    }
+    } catch (err) {
     handleError(err);
   }
 
@@ -633,8 +668,4 @@ function showCreateModal() {
     }
   });
 }
-
-
-
-
 

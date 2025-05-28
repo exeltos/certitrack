@@ -28,7 +28,8 @@ async function dashboardInit() {
     setActiveTab('btnSuppliers');
     await showSuppliers(company);
     await updateRegisteredSuppliers(company.id);
-    document.getElementById('companyName').textContent = company.name;
+    const nameSpan = document.getElementById('companyName');
+    if (nameSpan) nameSpan.textContent = company.name;
     document.getElementById('logoutBtn').onclick = logout;
 
     document.getElementById('btnSuppliers')?.addEventListener('click', () => {
@@ -77,28 +78,19 @@ async function updateRegisteredSuppliers(companyId) {
 
 async function updateCertificateCount() {
   try {
-    const { data: suppliers, error: sError } = await supabase
-      .from('company_suppliers')
-      .select('suppliers(user_id)')
-      .eq('company_id', company?.id || '');
-
-    if (sError) throw sError;
-
-    const userIds = suppliers
-      .map(r => r.suppliers?.user_id)
-      .filter(Boolean);
-
-    if (!userIds.length) return;
-
-    const { data, error } = await supabase
-      .from('supplier_certificates')
+    const { data: certs, error } = await supabase
+      .from('company_certificates')
       .select('id')
-      .in('supplier_user_id', userIds);
+      .eq('company_user_id', session.user.id);
 
-const total = data?.length || 0;
+    if (error) throw error;
+
+    
+
+const total = certs?.length || 0;
     const certBtn = document.querySelector('a[href="company_certificates.html"]');
     if (certBtn) {
-      certBtn.innerHTML = `📦 Τα Πιστοποιητικά μου <span class="ml-1 text-sm text-gray-500">(${total})</span>`;
+      certBtn.textContent = `📦 Τα Πιστοποιητικά μου ${total}`;
     }
   } catch (err) {
     console.warn('Σφάλμα στον υπολογισμό πιστοποιητικών:', err);
@@ -106,8 +98,19 @@ const total = data?.length || 0;
 }
 
 function logout() {
-  supabase.auth.signOut();
-  window.location.href = 'general_login.html';
+  Swal.fire({
+    title: 'Αποσύνδεση',
+    text: 'Θέλεις σίγουρα να αποσυνδεθείς;',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Ναι, αποσύνδεση',
+    cancelButtonText: 'Ακύρωση'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      await supabase.auth.signOut();
+      window.location.href = 'general_login.html';
+    }
+  });
 }
 
 function setActiveTab(activeId) {
@@ -149,30 +152,66 @@ async function showSuppliers(company) {
 async function renderSuppliers(company, search = '') {
   const sort = document.getElementById('sortSelect')?.value || '';
   showLoading();
-  const { data, error } = await supabase
+
+  // Fetch supplier relations
+  const { data: relations, error: relError } = await supabase
     .from('company_suppliers')
-    .select('company_name, supplier_name, supplier_id, suppliers (id, name, afm, email, user_id)')
+    .select('company_name, supplier_name, supplier_id, suppliers(id, name, afm, email, user_id)')
     .eq('company_id', company.id);
+  if (relError) return handleError(relError);
 
-  if (error) return handleError(error);
+  // Batch fetch certificates for all suppliers
+  const userIds = relations.map(r => r.suppliers?.user_id).filter(Boolean);
+  let certsBySupplier = {};
+  if (userIds.length) {
+    const { data: allCerts, error: certErr } = await supabase
+      .from('supplier_certificates')
+      .select('supplier_user_id, date')
+      .in('supplier_user_id', userIds);
 
-  let list = data.map(r => {
-    const s = r.suppliers || { name: r.supplier_name, afm: '', email: '', user_id: null };
+    if (!certErr && allCerts) {
+      allCerts.forEach(cert => {
+        const sid = cert.supplier_user_id;
+        certsBySupplier[sid] = certsBySupplier[sid] || [];
+        certsBySupplier[sid].push(cert);
+      });
+    }
+  }
+
+  // Build list with stats
+  let list = relations.map(r => {
+    const s = r.suppliers || { name: r.supplier_name, afm: '', email: '', user_id: null }; 
+    const certs = certsBySupplier[s.user_id] || [];
+    const now = new Date();
+    const stats = { total: certs.length, active: 0, soon: 0, expired: 0 };
+    certs.forEach(cert => {
+      const days = Math.ceil((new Date(cert.date) - now) / (1000 * 60 * 60 * 24));
+      if (days < 0) stats.expired++;
+      else if (days <= 30) stats.soon++;
+      else stats.active++;
+    });
     return {
       id: r.supplier_id,
       user_id: s.user_id,
       name: s.name,
       afm: s.afm,
       email: s.email,
-      status: s.user_id ? '✅ Εγγεγραμμένος' : '🕓 Εκκρεμή εγγραφή'
+      status: s.user_id ? '✅ Εγγεγραμμένος' : '🕓 Εκκρεμή εγγραφή',
+      stats
     };
   }).filter(r => r.name.toLowerCase().includes(search.toLowerCase()));
 
-  if (sort === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
-  else if (sort === 'afm') list.sort((a, b) => a.afm.localeCompare(b.afm));
-  else if (sort === 'registered') list.sort((a, b) => (b.user_id ? 1 : 0) - (a.user_id ? 1 : 0));
-  else if (sort === 'pending') list.sort((a, b) => (a.user_id ? 1 : 0) - (b.user_id ? 1 : 0));
+  if (sort === 'afm') {
+    list.sort((a, b) => a.afm.localeCompare(b.afm));
+  } else if (sort === 'name') {
+    list.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sort === 'registered') {
+    list.sort((a, b) => (b.status === '✅ Εγγεγραμμένος') - (a.status === '✅ Εγγεγραμμένος'));
+  } else if (sort === 'pending') {
+    list.sort((a, b) => (b.status === '🕓 Εκκρεμή εγγραφή') - (a.status === '🕓 Εκκρεμή εγγραφή'));
+  }
 
+  // Continue with stats-rendered list
   const container = document.getElementById('dataSection');
   container.className = 'grid gap-4 grid-cols-1 sm:grid-cols-2';
   container.innerHTML = '';
@@ -184,17 +223,8 @@ async function renderSuppliers(company, search = '') {
   }
 
   for (const r of list) {
-    let certs = [];
-    
-
-    const now = new Date();
-    const stats = { total: certs.length, active: 0, soon: 0, expired: 0 };
-    certs.forEach(cert => {
-      const days = Math.ceil((new Date(cert.date) - now) / (1000 * 60 * 60 * 24));
-      if (days < 0) stats.expired++;
-      else if (days <= 30) stats.soon++;
-      else stats.active++;
-    });
+    // Use precomputed stats
+    const stats = r.stats;
 
     const card = document.createElement('div');
     card.className = 'bg-white bg-gray-100 px-8 py-6 rounded-2xl shadow hover:shadow-xl transition fade-in flex justify-between items-center w-full max-w-7xl self-center relative';
@@ -208,23 +238,31 @@ async function renderSuppliers(company, search = '') {
       const selected = document.querySelectorAll('.supplier-checkbox:checked');
       document.getElementById('downloadBtn')?.classList.toggle('hidden', selected.length === 0);
     });
-    card.appendChild(checkbox);
+    // μεταφέρεται το checkbox μέσα στο innerHTML
 
-      card.innerHTML += `
+    const isExporting = container.getAttribute('data-export-mode') === 'true';
+    if (isExporting) {
+      checkbox.classList.remove('hidden');
+    }
+
+      card.innerHTML = `
+      <input type="checkbox" class="supplier-checkbox w-5 h-5 absolute top-2 right-2 z-10 rounded-full accent-purple-600 border border-purple-300 ${isExporting ? '' : 'hidden'}" data-id="${r.id}" data-status="${r.status}" />
       <div>
         <h3 class="font-semibold text-lg">${r.name}</h3>
         <p class="text-sm">ΑΦΜ: ${r.afm || '—'}</p>
         <p class="text-sm">Email: ${r.email || '—'}</p>
-        <p class="text-xs mt-2 text-gray-600 text-gray-700">
-          Πιστοποιητικά: ${stats.total} (Ενεργά: ${stats.active}, Προς λήξη: ${stats.soon}, Ληγμένα: ${stats.expired})
+        <p class="text-xs mt-2 text-gray-600">
+          Πιστοποιητικά: ${r.stats.total} (Ενεργά: ${r.stats.active}, Προς λήξη: ${r.stats.soon}, Ληγμένα: ${r.stats.expired})
         </p>
       </div>
-      <div class="text-xs font-medium mt-1 ${r.status === '✅ Εγγεγραμμένος' ? 'text-green-500' : 'text-yellow-500'}">${r.status}</div>
-    `;
+      <div class="text-xs font-medium mt-1 ${r.status === '✅ Εγγεγραμμένος' ? 'text-green-500' : 'text-yellow-500'}">${r.status}</div>`;
 
     card.classList.add('cursor-pointer', 'hover:ring-2', 'hover:ring-blue-400');
     card.onclick = (e) => {
-      if (e.target.closest('.supplier-checkbox')) return;
+      const container = document.getElementById('dataSection');
+      const isExporting = container?.getAttribute('data-export-mode') === 'true';
+      const isPending = container?.getAttribute('data-pending-mode') === 'true';
+      if (isExporting || isPending || e.target.closest('.supplier-checkbox')) return;
       window.location.href = `supplier_view.html?id=${r.id}`;
     };
 
@@ -238,28 +276,218 @@ async function renderSuppliers(company, search = '') {
 
 
 window.filterData = filterData;
+document.getElementById('sortSelect')?.addEventListener('change', () => renderSuppliers(company));
 window.showAddSupplierForm = showAddSupplierForm;
+
+function toggleSendDownloadButtons() {
+  const selected = document.querySelectorAll('.supplier-checkbox:checked');
+  document.getElementById('sendEmailBtn')?.classList.toggle('hidden', selected.length === 0);
+}
+
+async function showPendingSuppliersOnly() {
+  document.getElementById('certControls')?.classList.add('hidden');
+  document.getElementById('supplierControls')?.classList.remove('hidden');
+  showLoading();
+  const { data, error } = await supabase
+    .from('company_suppliers')
+    .select('company_name, supplier_name, supplier_id, suppliers (id, name, afm, email, user_id)')
+    .eq('company_id', company.id);
+
+  if (error) return handleError(error);
+
+  const container = document.getElementById('dataSection');
+  container.innerHTML = '';
+
+  const filtered = data
+    .map(r => {
+      const s = r.suppliers || { name: r.supplier_name, afm: '', email: '', user_id: null };
+      return {
+        id: r.supplier_id,
+        user_id: s.user_id,
+        name: s.name,
+        afm: s.afm,
+        email: s.email,
+        status: s.user_id ? '✅ Εγγεγραμμένος' : '🕓 Εκκρεμή εγγραφή'
+      };
+    })
+    .filter(r => !r.user_id);
+
+  for (const r of filtered) {
+    const card = document.createElement('div');
+    card.className = 'bg-white bg-gray-100 px-8 py-6 rounded-2xl shadow hover:shadow-xl transition fade-in flex justify-between items-center w-full max-w-7xl self-center relative';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'supplier-checkbox w-5 h-5 absolute top-2 right-2 rounded-full accent-purple-600 border border-purple-300';
+    checkbox.dataset.id = r.id;
+    checkbox.dataset.status = r.status;
+    checkbox.addEventListener('change', toggleSendDownloadButtons);
+    card.appendChild(checkbox);
+
+    card.innerHTML += `
+      <div>
+        <h3 class="font-semibold text-lg">${r.name}</h3>
+        <p class="text-sm">ΑΦΜ: ${r.afm || '—'}</p>
+        <p class="text-sm">Email: ${r.email || '—'}</p>
+      </div>
+      <div class="text-xs font-medium mt-1 text-yellow-500">${r.status}</div>
+    `;
+
+    card.onclick = (e) => {
+      if (e.target.closest('.supplier-checkbox')) return;
+      window.location.href = `supplier_view.html?id=${r.id}`;
+    };
+
+    container.appendChild(card);
+  }
+
+  document.getElementById('certEmailActions')?.classList.remove('hidden');
+  document.getElementById('sendEmailBtn')?.classList.add('hidden');
+  document.getElementById('selectAllBtn')?.classList.remove('hidden');
+  document.getElementById('downloadBtn')?.classList.add('hidden');
+  document.getElementById('supplierCount').textContent = filtered.length;
+  hideLoading();
+}
 
 // Ενέργειες για το κουμπί Εξαγωγή
 setTimeout(() => {
+  // 🔧 Οπτική ένδειξη ενεργών λειτουργιών
+  const toggleHighlight = (el, active) => {
+  if (!el) return;
+  el.classList.toggle('bg-blue-100', active);
+  el.classList.toggle('text-blue-800', active);
+  el.classList.toggle('dark:bg-blue-800', active);
+  el.classList.toggle('dark:text-white', active);
+  el.classList.toggle('rounded-full', active);
+  el.classList.toggle('shadow-sm', active);
+
+  const icon = el.querySelector('i');
+  if (icon) {
+    icon.classList.toggle('stroke-[3]', active);
+    icon.classList.toggle('scale-110', active);
+  }
+};;
+  // Προσθήκη λειτουργίας στο κουμπί mailBtn (φακέλου)
+  const mailBtn = document.getElementById('mailBtn');
+if (mailBtn && !mailBtn.hasAttribute('data-listener')) {
+  mailBtn.setAttribute('data-listener', 'true');
+  mailBtn.addEventListener('click', () => {
+    const exportBtn = document.getElementById('exportMenuBtn');
+    exportBtn?.classList.remove('ring-2', 'ring-blue-500', 'rounded-lg');
+    const wasPending = exportContainer.getAttribute('data-pending-mode') === 'true';
+    if (wasPending) {
+      toggleHighlight(mailBtn, false);
+      exportContainer.removeAttribute('data-pending-mode');
+      document.getElementById('certEmailActions')?.classList.add('hidden');
+      document.querySelectorAll('.supplier-checkbox').forEach(cb => {
+        cb.classList.add('hidden');
+        cb.checked = false;
+      });
+      document.getElementById('sendEmailBtn')?.classList.add('hidden');
+      showSuppliers(company);
+      return;
+      return;
+    } else {
+      const isPendingNow = !exportContainer.getAttribute('data-pending-mode');
+toggleHighlight(mailBtn, isPendingNow);
+toggleHighlight(document.getElementById('exportMenuBtn'), false);
+    }
+    const exportContainer = document.getElementById('dataSection');
+    const isPendingMode = exportContainer.getAttribute('data-pending-mode') === 'true';
+
+    if (isPendingMode) {
+      toggleHighlight(mailBtn, false);
+      exportContainer.removeAttribute('data-pending-mode');
+      document.getElementById('certEmailActions')?.classList.add('hidden');
+      document.querySelectorAll('.supplier-checkbox').forEach(cb => {
+        cb.classList.add('hidden');
+        cb.checked = false;
+      });
+      document.getElementById('sendEmailBtn')?.classList.add('hidden');
+      showSuppliers(company);
+    } else {
+      toggleHighlight(mailBtn, true);
+      exportContainer.setAttribute('data-pending-mode', 'true');
+      setActiveTab('btnSuppliers');
+      showPendingSuppliersOnly();
+
+// Override selectAll behavior for sendEmailBtn visibility
+document.getElementById('selectAllBtn')?.addEventListener('click', () => {
+  const checkboxes = document.querySelectorAll('.supplier-checkbox');
+  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+  checkboxes.forEach(cb => {
+    cb.checked = !allChecked;
+    cb.dispatchEvent(new Event('change'));
+  });
+  // Ensure export row is visible
+  document.getElementById('certEmailActions')?.classList.remove('hidden');
+  // Toggle send button
+  const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+  document.getElementById('sendEmailBtn')?.classList.toggle('hidden', !anyChecked);
+});
+      document.getElementById('downloadBtn')?.classList.add('hidden');
+      // εμφανίζεται μόνο όταν επιλεγεί κάποιο checkbox
+      toggleSendDownloadButtons();
+    }
+  });
+} else if (!mailBtn) {
+  const mailBtnEl = document.createElement('button');
+  mailBtnEl.id = 'mailBtn';
+  mailBtnEl.title = 'Εναλλαγή λειτουργίας αποστολής πρόσκλησης';
+  mailBtnEl.className = 'text-gray-600 dark:text-gray-300 hover:text-blue-600 rounded-lg';
+  mailBtnEl.innerHTML = '<i data-lucide="mail" class="w-5 h-5"></i>';
+  document.getElementById('exportMenuBtn')?.insertAdjacentElement('afterend', mailBtnEl);
+  lucide.createIcons();
+  mailBtnEl.setAttribute('data-listener', 'true');
+  mailBtnEl.addEventListener('click', () => {
+    const exportContainer = document.getElementById('dataSection');
+    const isPendingMode = exportContainer.getAttribute('data-pending-mode') === 'true';
+
+    if (isPendingMode) {
+      exportContainer.removeAttribute('data-pending-mode');
+      document.getElementById('certEmailActions')?.classList.add('hidden');
+      document.querySelectorAll('.supplier-checkbox').forEach(cb => {
+        cb.classList.add('hidden');
+        cb.checked = false;
+      });
+      showSuppliers(company);
+    } else {
+      exportContainer.setAttribute('data-pending-mode', 'true');
+      setActiveTab('btnSuppliers');
+      showPendingSuppliersOnly();
+    }
+  });
+  }
+  
+  
   const exportBtn = document.getElementById('exportMenuBtn');
+// Η μεταβλητή exportBtn έχει ήδη δηλωθεί — αφαιρείται η επανάληψη
   const certEmailActions = document.getElementById('certEmailActions');
 
   if (exportBtn) {
+    exportBtn.setAttribute('title', 'Εναλλαγή λειτουργίας εξαγωγής');
     exportBtn.addEventListener('click', () => {
+      const mailBtn = document.getElementById('mailBtn');
+      mailBtn?.classList.remove('ring-2', 'ring-blue-500', 'rounded-lg');
+      const isExportingNow = document.getElementById('dataSection').getAttribute('data-export-mode') !== 'true';
+toggleHighlight(exportBtn, isExportingNow);
+toggleHighlight(document.getElementById('mailBtn'), false);
       const exportContainer = document.getElementById('dataSection');
       const isExporting = exportContainer.getAttribute('data-export-mode') === 'true';
 
       if (isExporting) {
-        exportContainer.setAttribute('data-export-mode', 'false');
-        document.querySelectorAll('.supplier-checkbox').forEach(cb => {
-          cb.classList.add('hidden');
-          cb.checked = false;
-        });
-        certEmailActions?.classList.add('hidden');
-        document.getElementById('selectAllBtn')?.classList.add('hidden');
-        document.getElementById('downloadBtn')?.classList.add('hidden');
-        return;
+  toggleHighlight(exportBtn, false);
+  exportContainer.setAttribute('data-export-mode', 'false');
+  exportContainer.removeAttribute('data-pending-mode');
+  document.querySelectorAll('.supplier-checkbox').forEach(cb => {
+    cb.classList.add('hidden');
+    cb.checked = false;
+  });
+  certEmailActions?.classList.add('hidden');
+  document.getElementById('selectAllBtn')?.classList.add('hidden');
+  document.getElementById('downloadBtn')?.classList.add('hidden');
+  showSuppliers(company);
+  return;
       }
 
       Swal.fire({
@@ -274,7 +502,23 @@ setTimeout(() => {
         confirmButtonText: 'Συνέχεια'
       }).then(result => {
         if (!result.isConfirmed) return;
-        exportContainer.setAttribute('data-export-mode', 'true');
+        const wasActive = exportContainer.getAttribute('data-export-mode') === 'true';
+        if (wasActive) {
+          toggleHighlight(exportBtn, false);
+          exportContainer.setAttribute('data-export-mode', 'false');
+          document.querySelectorAll('.supplier-checkbox').forEach(cb => {
+            cb.classList.add('hidden');
+            cb.checked = false;
+          });
+          certEmailActions?.classList.add('hidden');
+          document.getElementById('selectAllBtn')?.classList.add('hidden');
+          document.getElementById('downloadBtn')?.classList.add('hidden');
+          showSuppliers(company);
+          return;
+        } else {
+          toggleHighlight(exportBtn, true);
+          exportContainer.setAttribute('data-export-mode', 'true');
+        }
         certEmailActions?.classList.remove('hidden');
         document.getElementById('selectAllBtn')?.classList.remove('hidden');
         document.querySelectorAll('.supplier-checkbox').forEach(cb => cb.classList.remove('hidden'));
@@ -286,7 +530,12 @@ setTimeout(() => {
   // Ενημέρωση κουμπιού λήψης ανάλογα με την επιλογή
   document.addEventListener('change', () => {
     const selected = document.querySelectorAll('.supplier-checkbox:checked');
-    document.getElementById('downloadBtn')?.classList.toggle('hidden', selected.length === 0);
+    const isPending = document.getElementById('dataSection')?.getAttribute('data-pending-mode') === 'true';
+    if (isPending) {
+      document.getElementById('sendEmailBtn')?.classList.toggle('hidden', selected.length === 0);
+    } else {
+      document.getElementById('downloadBtn')?.classList.toggle('hidden', selected.length === 0);
+    }
   });
 
   // Επιλογή όλων toggle
@@ -297,34 +546,24 @@ setTimeout(() => {
       cb.checked = !allChecked;
       cb.dispatchEvent(new Event('change'));
     });
+
+    const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+    const isPending = document.getElementById('dataSection')?.getAttribute('data-pending-mode') === 'true';
+
+    if (isPending) {
+      document.getElementById('sendEmailBtn')?.classList.toggle('hidden', !anyChecked);
+      document.getElementById('downloadBtn')?.classList.add('hidden');
+    } else {
+      document.getElementById('downloadBtn')?.classList.toggle('hidden', !anyChecked);
+      document.getElementById('sendEmailBtn')?.classList.add('hidden');
+    }
   });
 
-  // Excel export listener
-  const downloadBtn = document.getElementById('downloadBtn');
-  if (downloadBtn && !downloadBtn.hasAttribute('data-listener')) {
-    downloadBtn.setAttribute('data-listener', 'true');
-    downloadBtn.addEventListener('click', () => {
-      const selected = Array.from(document.querySelectorAll('.supplier-checkbox:checked'));
-      if (!selected.length) return;
+  // Alias for setupBulkInviteButtons for backwards compatibility
+  const setupBulkInviteButtons = toggleSendDownloadButtons;
+  window.setupBulkInviteButtons = setupBulkInviteButtons;
 
-      const rows = [['Επωνυμία', 'Email', 'ΑΦΜ', 'Κατάσταση']];
-
-      selected.forEach(cb => {
-        const card = cb.closest('div');
-        const name = card.querySelector('h3')?.textContent?.trim() || '';
-        const allPs = Array.from(card.querySelectorAll('p'));
-        const afm = allPs.find(p => p.textContent.trim().startsWith('ΑΦΜ:'))?.textContent.replace('ΑΦΜ:', '').trim() || '';
-        const email = allPs.find(p => p.textContent.trim().startsWith('Email:'))?.textContent.replace('Email:', '').trim() || '';
-        const status = card.querySelector('div.text-xs.font-medium')?.textContent?.trim() || '';
-        rows.push([name, email, afm, status]);
-      });
-
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Προμηθευτές');
-      XLSX.writeFile(wb, 'suppliers_export.xlsx');
-    });
-  }
+// Close setTimeout block for Export button actions
 }, 0);
 
 function showAddSupplierForm() {
@@ -365,13 +604,7 @@ function showAddSupplierForm() {
       if (existing) {
         supplierId = existing.id;
       } else {
-        const { data: newSupplierData, error: insertErr } = await supabase.from('suppliers').insert([{
-          name,
-          email,
-          afm,
-          status: '🕓 Μη Εγγεγραμμένος',
-          company_id: company.id
-        }]).select();
+        const { data: newSupplierData, error: insertErr } = await supabase.from('suppliers').insert([{ name, email, afm, status: '🕓 Μη Εγγεγραμμένος' }]).select();
 
         if (insertErr) throw insertErr;
         supplierId = newSupplierData[0].id;
@@ -388,14 +621,8 @@ function showAddSupplierForm() {
       if (linkErr) throw linkErr;
 
       if (!existingLink) {
-        await supabase.from('company_suppliers').insert([{
-          company_id: company.id,
-          supplier_id: supplierId,
-          status: '🕓 Μη Εγγεγραμμένος',
-          timestamp: new Date().toISOString(),
-          company_name: company.name,
-          supplier_name: name
-        }]);
+        await supabase.from('company_suppliers').insert([{ company_id: company.id, supplier_id: supplierId, status: '🕓 Μη Εγγεγραμμένος', timestamp: new Date().toISOString(), company_name: company.name, supplier_name: name }]);
+        
       }
 
       Swal.fire('Επιτυχία', 'Ο προμηθευτής προστέθηκε ή συνδέθηκε.', 'success');
@@ -405,58 +632,6 @@ function showAddSupplierForm() {
     } finally {
       hideLoading();
     }
-  });
-
-}
-
-function toggleSendButton() {
-  const sendBtn = document.getElementById('sendInviteBtn');
-  const checkboxes = document.querySelectorAll('.supplier-checkbox:checked');
-  if (sendBtn) {
-    sendBtn.classList.toggle('hidden', checkboxes.length === 0);
-  }
-}
-
-function setupBulkInviteButtons() {
-  const controls = document.getElementById('supplierControls');
-  if (!controls) return;
-
-  const existing = document.getElementById('selectAllBtn');
-  if (existing) existing.remove(); // ανανέωση κουμπιών
-
-  const actions = document.createElement('div');
-  actions.className = 'flex justify-end gap-2 mb-4';
-  actions.innerHTML = `
-    <button id="selectAllBtn" class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm hidden">☑️ Επιλογή όλων</button>
-    <button id="sendInviteBtn" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm hidden">📨 Αποστολή Πρόσκλησης</button>
-  `;
-  controls.appendChild(actions);
-
-  document.getElementById('selectAllBtn')?.addEventListener('click', () => {
-  const checkboxes = document.querySelectorAll('.supplier-checkbox');
-  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-  checkboxes.forEach(cb => cb.checked = !allChecked);
-
-  // Ενημέρωση του κουμπιού λήψης
-  const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-  document.getElementById('downloadBtn')?.classList.toggle('hidden', !anyChecked);
-});
-
-  document.getElementById('sendInviteBtn')?.addEventListener('click', async () => {
-    const selected = Array.from(document.querySelectorAll('.supplier-checkbox:checked'));
-    if (!selected.length) return;
-
-    const ids = selected.map(cb => cb.dataset.id);
-    const { data: suppliers } = await supabase
-      .from('suppliers')
-      .select('email, name')
-      .in('id', ids);
-
-    for (const s of suppliers) {
-      // αποστολή email μπορεί να γίνει με edge function, placeholder εδώ
-      console.log(`Sending invite to: ${s.email}`);
-    }
-    Swal.fire('Επιτυχία', 'Οι προσκλήσεις στάλθηκαν.', 'success');
   });
 }
 
