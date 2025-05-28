@@ -560,8 +560,52 @@ toggleHighlight(document.getElementById('mailBtn'), false);
   });
 
   // Alias for setupBulkInviteButtons for backwards compatibility
-  const setupBulkInviteButtons = toggleSendDownloadButtons;
-  window.setupBulkInviteButtons = setupBulkInviteButtons;
+const setupBulkInviteButtons = toggleSendDownloadButtons;
+window.setupBulkInviteButtons = setupBulkInviteButtons;
+
+// ✅ Αποστολή πρόσκλησης εγγραφής και καταγραφή
+async function sendInvitesToSelectedSuppliers() {
+  const selected = [...document.querySelectorAll('.supplier-checkbox:checked')];
+  if (!selected.length) {
+    return Swal.fire('Προσοχή', 'Δεν έχεις επιλέξει προμηθευτές.', 'info');
+  }
+
+  let sentCount = 0;
+  for (const cb of selected) {
+    const card = cb.closest('div');
+    const email = card.querySelector('p:nth-of-type(3)')?.textContent?.replace('Email: ', '').trim();
+    const afm = card.querySelector('p:nth-of-type(2)')?.textContent?.replace('ΑΦΜ: ', '').trim();
+
+    if (!email || !email.includes('@') || !afm) continue;
+
+    try {
+      const res = await fetch('/.netlify/functions/send_email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, type: 'invite' })
+      });
+
+      if (res.ok) {
+        sentCount++;
+        const { data: supplier, error } = await supabase.from('suppliers').select('id').eq('afm', afm).maybeSingle();
+        if (!error && supplier?.id) {
+          await supabase.from('supplier_invitation').insert({
+            supplier_id: supplier.id,
+            email,
+            sent_by: company?.id,
+            sent_at: new Date().toISOString()
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Invite error:', err);
+    }
+  }
+
+  Swal.fire('Ολοκληρώθηκε', `Στάλθηκαν ${sentCount} προσκλήσεις.`, 'success');
+}
+
+document.getElementById('sendEmailBtn')?.addEventListener('click', sendInvitesToSelectedSuppliers);
 
 // Close setTimeout block for Export button actions
 }, 0);
@@ -634,5 +678,6 @@ function showAddSupplierForm() {
     }
   });
 }
+
 
 
