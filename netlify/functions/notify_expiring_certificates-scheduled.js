@@ -21,6 +21,10 @@ exports.handler = async function (event) {
 
     const groupedSuppliers = {};
     for (const cert of allSupplierCerts.data) {
+      if (!cert?.date || isNaN(new Date(cert.date))) {
+        console.warn("[WARN] Άκυρη ημερομηνία σε supplier_cert:", cert);
+        continue;
+      }
       const expDate = new Date(cert.date);
       const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
       const status = daysLeft < 0 ? 'expired' : daysLeft <= 30 ? 'soon' : null;
@@ -77,6 +81,10 @@ exports.handler = async function (event) {
 
     const groupedCompanies = {};
     for (const cert of allCompanyCerts.data) {
+      if (!cert?.date || isNaN(new Date(cert.date))) {
+        console.warn("[WARN] Άκυρη ημερομηνία σε company_cert:", cert);
+        continue;
+      }
       const expDate = new Date(cert.date);
       const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
       const status = daysLeft < 0 ? 'expired' : daysLeft <= 30 ? 'soon' : null;
@@ -129,15 +137,14 @@ exports.handler = async function (event) {
     console.log("[DEBUG] notify_expiring_certificates-scheduled ολοκληρώθηκε επιτυχώς");
     return { statusCode: 200, body: 'All notifications sent.' };
   } catch (err) {
-  console.error('[CertiTrack] Σφάλμα ειδοποίησης:', err);
-  return {
-    statusCode: 500,
-    body: JSON.stringify({
-      error: 'Σφάλμα ειδοποίησης',
-      message: err.message,
-      stack: err.stack
-    })
-  };
-}
-
-
+    console.error('[CertiTrack] Σφάλμα ειδοποίησης:', err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: 'Σφάλμα ειδοποίησης',
+        message: err.message,
+        stack: err.stack
+      })
+    };
+  }
+};
