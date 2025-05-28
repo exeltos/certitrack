@@ -1,12 +1,14 @@
 {
-  "name": "certitrack",
+  "name": "certitrack-netlify-functions",
   "version": "1.0.0",
+  "description": "Netlify functions for CertiTrack",
+  "main": "index.js",
   "scripts": {
-    "build": "echo \"no build needed\""
+    "build": "echo \"No build step required\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.25.0",
-    "@mailersend/sdk": "^1.0.3",
+    "@mailersend/sdk": "^1.0.0",
     "nodemailer": "^6.9.4",
     "node-fetch": "^2.6.7"
   }
