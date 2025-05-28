@@ -129,7 +129,15 @@ exports.handler = async function (event) {
     console.log("[DEBUG] notify_expiring_certificates-scheduled ολοκληρώθηκε επιτυχώς");
     return { statusCode: 200, body: 'All notifications sent.' };
   } catch (err) {
-    console.error('[CertiTrack] Σφάλμα ειδοποίησης:', err);
-    return { statusCode: 500, body: 'Internal Server Error' };
-  }
-};
+  console.error('[CertiTrack] Σφάλμα ειδοποίησης:', err);
+  return {
+    statusCode: 500,
+    body: JSON.stringify({
+      error: 'Σφάλμα ειδοποίησης',
+      message: err.message,
+      stack: err.stack
+    })
+  };
+}
+
+
