@@ -525,13 +525,16 @@ function bindCertificateActions() {
       title: 'Επεξεργασία Πιστοποιητικού',
       html: `
         <input id="swal-title" class="swal2-input" value="${cert.title}">
-        <select id="swal-type" class="swal2-select mb-2">
-          <option value="Πιστοποιητικό"${cert.type==='Πιστοποιητικό'?' selected':''}>Πιστοποιητικό</option>
-          <option value="Απόφαση"${cert.type==='Απόφαση'?' selected':''}>Απόφαση</option>
-          <option value="Νομιμοποιητικό έγγραφο"${cert.type==='Νομιμοποιητικό έγγραφο'?' selected':''}>Νομιμοποιητικό έγγραφο</option>
-          <option value="Ανάλυση"${cert.type==='Ανάλυση'?' selected':''}>Ανάλυση</option>
-          <option value="CE"${cert.type==='CE'?' selected':''}>CE</option>
-        </select>
+        <select id="swal-type" class="swal2-select mb-2" onchange="document.getElementById('custom-type')?.classList.toggle('hidden', this.value !== 'Άλλο')">
+  <option value="Πιστοποιητικό">Πιστοποιητικό</option>
+  <option value="Απόφαση">Απόφαση</option>
+  <option value="Νομιμοποιητικό έγγραφο">Νομιμοποιητικό έγγραφο</option>
+  <option value="Ανάλυση">Ανάλυση</option>
+  <option value="CE">CE</option>
+  <option value="Στοιχεία προϊόντος">Στοιχεία προϊόντος</option>
+  <option value="Άλλο">Άλλο</option>
+</select>
+<input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρισε τύπο">
         <input id="swal-date" type="date" class="swal2-input" value="${cert.date}">
       `,
       focusConfirm: false,
@@ -587,13 +590,16 @@ function showCreateModal() {
     title: 'Νέο Πιστοποιητικό',
     html: `
       <input id="swal-title" class="swal2-input" placeholder="Τίτλος">
-      <select id="swal-type" class="swal2-select mb-2">
-        <option value="Πιστοποιητικό">Πιστοποιητικό</option>
-        <option value="Απόφαση">Απόφαση</option>
-        <option value="Νομιμοποιητικό έγγραφο">Νομιμοποιητικό έγγραφο</option>
-        <option value="Ανάλυση">Ανάλυση</option>
-        <option value="CE">CE</option>
-      </select>
+      <select id="swal-type" class="swal2-select mb-2" onchange="document.getElementById('custom-type')?.classList.toggle('hidden', this.value !== 'Άλλο')">
+  <option value="Πιστοποιητικό">Πιστοποιητικό</option>
+  <option value="Απόφαση">Απόφαση</option>
+  <option value="Νομιμοποιητικό έγγραφο">Νομιμοποιητικό έγγραφο</option>
+  <option value="Ανάλυση">Ανάλυση</option>
+  <option value="CE">CE</option>
+  <option value="Στοιχεία προϊόντος">Στοιχεία προϊόντος</option>
+  <option value="Άλλο">Άλλο</option>
+</select>
+<input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρισε τύπο">
       <input id="swal-date" type="date" class="swal2-input">
       <input id="swal-file" type="file" accept="application/pdf" class="swal2-file mt-2" />
       <div id="swal-preview" class="mt-4"></div>
@@ -615,7 +621,9 @@ function showCreateModal() {
     },
     preConfirm: () => {
       const title = document.getElementById('swal-title').value;
-      const type = document.getElementById('swal-type').value;
+      const selectedType = document.getElementById('swal-type').value;
+const customTypeInput = document.getElementById('custom-type');
+const type = selectedType === 'Άλλο' && customTypeInput?.value.trim() ? customTypeInput.value.trim() : selectedType;
       const date = document.getElementById('swal-date').value;
       const file = document.getElementById('swal-file').files[0];
       if (!title || !type || !date || !file) {
