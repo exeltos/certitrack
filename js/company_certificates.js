@@ -669,3 +669,17 @@ function showCreateModal() {
   });
 }
 
+// ➕ Trigger λήξεων (χειροκίνητος έλεγχος από κουμπί)
+const testNotifyBtn = document.getElementById('triggerNotifyBtn');
+if (testNotifyBtn) {
+  testNotifyBtn.addEventListener('click', async () => {
+    try {
+      const res = await fetch('/.netlify/functions/notify_expiring_certificates-scheduled');
+      const text = await res.text();
+      Swal.fire('Αποτέλεσμα', text, res.ok ? 'success' : 'error');
+    } catch (err) {
+      console.error('Σφάλμα κατά την ειδοποίηση:', err);
+      Swal.fire('Σφάλμα', 'Η ειδοποίηση απέτυχε.', 'error');
+    }
+  });
+}
