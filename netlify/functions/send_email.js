@@ -1,56 +1,51 @@
-/**
- * Unified email sender for all types: invite, certificate, reset
- * Expects POST body: { email, subject?, type, certificates? }
- */
-export default async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+const fetch = require('node-fetch');
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== "POST") {
+    return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
   }
 
-  const { email, type, certificates = [], subject } = req.body;
+  const { email, type, certificates = [], subject } = JSON.parse(event.body || '{}');
   if (!email || !type) {
-    return res.status(400).json({ error: "Missing required fields." });
+    return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields." }) };
+  }
+
+  let htmlContent = "";
+  let usedSubject = subject || "CertiTrack";
+
+  switch (type) {
+    case "certificate":
+      usedSubject = subject || "📄 Πιστοποιητικά από το CertiTrack";
+      htmlContent = `
+        <h2>Έλαβες νέα πιστοποιητικά</h2>
+        <ul>
+          ${certificates.map(c => `<li><strong>${c.title}</strong> - ${c.date}</li>`).join("")}
+        </ul>
+      `;
+      break;
+    case "invite":
+      usedSubject = subject || "📨 Πρόσκληση Εγγραφής στο CertiTrack";
+      htmlContent = `
+        <p>Σας καλούμε να εγγραφείτε στο CertiTrack για να μοιραζόμαστε εύκολα πιστοποιητικά.</p>
+        <p><a href="https://www.certitrack.gr/supplier-register.html">Εγγραφή Προμηθευτή</a></p>
+      `;
+      break;
+    case "reset":
+      usedSubject = subject || "🔑 Επαναφορά Κωδικού CertiTrack";
+      htmlContent = `
+        <p>Για να αλλάξετε τον κωδικό σας, κάντε κλικ στο παρακάτω σύνδεσμο:</p>
+        <p><a href="https://www.certitrack.gr/reset-password.html">Ορισμός νέου κωδικού</a></p>
+      `;
+      break;
+    default:
+      return { statusCode: 400, body: JSON.stringify({ error: "Invalid email type" }) };
   }
 
   try {
-    let htmlContent = "";
-    let usedSubject = subject || "CertiTrack";
-
-    switch (type) {
-      case "certificate":
-        usedSubject = subject || "📄 Πιστοποιητικά από το CertiTrack";
-        htmlContent = `
-          <h2>Έλαβες νέα πιστοποιητικά</h2>
-          <ul>
-            ${certificates.map(c => `<li><strong>${c.title}</strong> - ${c.date}</li>`).join("")}
-          </ul>
-        `;
-        break;
-
-      case "invite":
-        usedSubject = subject || "📨 Πρόσκληση Εγγραφής στο CertiTrack";
-        htmlContent = `
-          <p>Σας καλούμε να εγγραφείτε στο CertiTrack για να μοιραζόμαστε εύκολα πιστοποιητικά.</p>
-          <p><a href="https://www.certitrack.gr/supplier-register.html">Εγγραφή Προμηθευτή</a></p>
-        `;
-        break;
-
-      case "reset":
-        usedSubject = subject || "🔑 Επαναφορά Κωδικού CertiTrack";
-        htmlContent = `
-          <p>Για να αλλάξετε τον κωδικό σας, κάντε κλικ στο παρακάτω σύνδεσμο:</p>
-          <p><a href="https://www.certitrack.gr/reset-password.html">Ορισμός νέου κωδικού</a></p>
-        `;
-        break;
-
-      default:
-        return res.status(400).json({ error: "Invalid email type" });
-    }
-
     const response = await fetch("https://api.mailersend.com/v1/email", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.MAILERSEND_API_KEY}`,
+        Authorization: `Bearer ${process.env.MAILERSEND_TOKEN}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -63,9 +58,9 @@ export default async (req, res) => {
 
     if (!response.ok) throw new Error("Αποτυχία αποστολής email");
 
-    return res.status(200).json({ success: true });
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
   } catch (err) {
     console.error("Email send error:", err);
-    return res.status(500).json({ error: "Email sending failed" });
+    return { statusCode: 500, body: JSON.stringify({ error: "Email sending failed" }) };
   }
 };
