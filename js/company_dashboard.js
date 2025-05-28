@@ -13,7 +13,10 @@ async function dashboardInit() {
   try {
     const { data: { session: sess } } = await supabase.auth.getSession();
     session = sess;
-    if (!session) return logout();
+    if (!session) {
+      console.warn("⚠️ No session found on dashboardInit");
+      return logout();
+    }
     userId = session.user.id;
 
     const { data: comp, error: compErr } = await supabase
@@ -77,6 +80,7 @@ async function updateRegisteredSuppliers(companyId) {
 }
 
 async function updateCertificateCount() {
+  console.log("📥 User ID for certificate count:", session?.user?.id);
   try {
     const { data: certs, error } = await supabase
       .from('company_certificates')
@@ -88,6 +92,9 @@ async function updateCertificateCount() {
     
 
 const total = certs?.length || 0;
+    const certCountSpan = document.getElementById('certificateCount');
+    if (certCountSpan) certCountSpan.textContent = total;
+
     const certBtn = document.querySelector('a[href="company_certificates.html"]');
     if (certBtn) {
       certBtn.textContent = `📦 Τα Πιστοποιητικά μου ${total}`;
@@ -683,6 +690,7 @@ function showAddSupplierForm() {
     }
   });
 }
+
 
 
 
