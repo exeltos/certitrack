@@ -294,7 +294,7 @@ if (certActions) certActions.classList.remove('hidden');
     console.log('[DEBUG] suppliers:', suppliers);
     const supplierCount = suppliers?.length || 0;
     console.log('[DEBUG] supplierCount:', supplierCount);
-    const supplierTabBtn = document.querySelector('a[href="company_dashboard.html"]');
+    const supplierTabBtn = document.querySelector('a[href="company_dashboard.html"], #btnSuppliers');
     if (!supplierErr && supplierTabBtn) {
       const badge = document.createElement('span');
       badge.textContent = ` ${supplierCount}`;
@@ -668,4 +668,5 @@ function showCreateModal() {
     }
   });
 }
+
 
