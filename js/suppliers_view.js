@@ -160,7 +160,49 @@ const ws = XLSX.utils.json_to_sheet(exportData);
   });
   lucide.createIcons();
 
-  const toggleBtn = document.getElementById('theme-toggle');
+  // ➕ Προσθήκη λειτουργίας στο κουμπί "Αποθήκευση"
+  const saveBtn = document.getElementById('saveBtn');
+if (saveBtn) {
+  const supplierStatus = document.getElementById('input-email')?.disabled;
+  if (supplierStatus) saveBtn.classList.add('hidden');
+  saveBtn.addEventListener('click', async () => {
+    const name = document.getElementById('input-name')?.value.trim();
+    const email = document.getElementById('input-email')?.value.trim();
+    const afm = document.getElementById('input-afm')?.value.trim();
+
+    if (!name || !email || !afm) {
+      Swal.fire('Προσοχή', 'Συμπλήρωσε όλα τα πεδία.', 'warning');
+      return;
+    }
+
+    const confirm = await Swal.fire({
+      title: 'Ενημέρωση Προμηθευτή',
+      text: 'Θέλεις να αποθηκευτούν οι αλλαγές;',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ναι, αποθήκευση',
+      cancelButtonText: 'Ακύρωση'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      showLoading();
+      const { error } = await supabase
+        .from('suppliers')
+        .update({ name, email, afm })
+        .eq('id', supplierId);
+      if (error) throw error;
+      Swal.fire('Επιτυχία', 'Τα στοιχεία ενημερώθηκαν.', 'success');
+    } catch (err) {
+      handleError(err);
+    } finally {
+      hideLoading();
+    }
+    });
+}
+
+const toggleBtn = document.getElementById('theme-toggle');
   const moonIcon = document.getElementById('icon-moon');
   const sunIcon = document.getElementById('icon-sun');
   function updateIcons() {
@@ -306,8 +348,9 @@ console.log("DEBUG: Τίτλος σελίδας =>", document.title);
       afmField.value = supplier.afm || '';
       afmField.disabled = supplier.status === '✅ Εγγεγραμμένος';
     }
-
-    return supplier;
+    const saveBtn = document.getElementById('saveBtn');
+    if (supplier.status === '✅ Εγγεγραμμένος') saveBtn?.classList.add('hidden');
+        return supplier;
   } catch (err) {
     handleError(err);
   } finally {
@@ -483,3 +526,4 @@ async function loadSupplierCertificates(supplier) {
     handleError(err);
   }
 }
+
