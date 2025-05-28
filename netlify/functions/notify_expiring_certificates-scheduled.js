@@ -1,3 +1,4 @@
+import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -7,6 +8,7 @@ const supabase = createClient(
 
 exports.handler = async function (event) {
   console.log("[DEBUG] notify_expiring_certificates-scheduled ξεκίνησε");
+  console.log("[DEBUG] ENV:", process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 5));
 
   try {
     const today = new Date();
