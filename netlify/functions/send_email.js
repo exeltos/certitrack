@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const crypto = require('crypto');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -70,26 +71,29 @@ try {
 
     if (!response.ok) throw new Error("Αποτυχία αποστολής email");
 
-    // 🔄 Καταγραφή πρόσκλησης στον πίνακα supplier_notifications
-    if (type === 'invite') {
-      const { data: supplier, error } = await supabase.from('suppliers').select('id').eq('email', email).maybeSingle();
-      if (supplier?.id) {
-        await supabase.from('supplier_notifications').insert({
-          supplier_id: supplier.id,
-          certificate_id: null,
-          notified_at: new Date().toISOString()
-        });
-        console.log('📌 Καταχωρήθηκε στο supplier_notifications');
-      } else {
-        console.warn('⚠️ Δεν βρέθηκε supplier με email:', email);
-      }
+    // 🔄 Καταγραφή πρόσκλησης στον πίνακα supplier_invites (ανεξαρτήτως ύπαρξης προμηθευτή)
+    const inviteToken = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(); // 7 μέρες
+
+    const { error: inviteErr } = await supabase.from('supplier_invites').insert({
+      email,
+      token: inviteToken,
+      expires_at: expiresAt,
+      company_name: companyName || null,
+      created_at: new Date().toISOString()
+    });
+
+    if (inviteErr) {
+      console.error('❌ Σφάλμα κατά την εισαγωγή πρόσκλησης:', inviteErr);
+    } else {
+      console.log('✅ Καταχωρήθηκε στο supplier_invites');
     }
+
+    
 
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   } catch (err) {
     console.error("Email send error:", err);
     return { statusCode: 500, body: JSON.stringify({ error: "Email sending failed" }) };
   }
-};
-
-
+  }

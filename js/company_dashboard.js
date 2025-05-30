@@ -585,8 +585,8 @@ sendEmailBtn?.addEventListener('click', async () => {
         body: JSON.stringify({
           email,
           type: 'invite',
-          subject: '📨 Πρόσκληση Εγγραφής στο CertiTrack',
-          from: { email: 'noreply@certitrack.gr', name: 'CertiTrack' }
+          subject: `📨 Πρόσκληση από την εταιρεία ${company.name}`,
+          companyName: company.name
         })
       });
 
@@ -865,3 +865,4 @@ function showAddSupplierForm() {
     }
   });
 }
+
