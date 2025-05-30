@@ -22,7 +22,7 @@ exports.handler = async function (event) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.MAILERSEND_API_KEY}`
+        'Authorization': `Bearer ${process.env.MAILERSEND_TOKEN}`
       },
       body: JSON.stringify({
         from: { email: 'noreply@certitrack.gr', name: 'CertiTrack' },
