@@ -47,7 +47,10 @@ exports.handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: "Invalid email type" }) };
   }
 
-  try {
+  const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+try {
     const response = await fetch("https://api.mailersend.com/v1/email", {
       method: "POST",
       headers: {
@@ -66,6 +69,21 @@ exports.handler = async (event) => {
     console.log("📨 Mailersend απάντηση:", response.status, debug);
 
     if (!response.ok) throw new Error("Αποτυχία αποστολής email");
+
+    // 🔄 Καταγραφή πρόσκλησης στον πίνακα supplier_notifications
+    if (type === 'invite') {
+      const { data: supplier, error } = await supabase.from('suppliers').select('id').eq('email', email).maybeSingle();
+      if (supplier?.id) {
+        await supabase.from('supplier_notifications').insert({
+          supplier_id: supplier.id,
+          certificate_id: null,
+          notified_at: new Date().toISOString()
+        });
+        console.log('📌 Καταχωρήθηκε στο supplier_notifications');
+      } else {
+        console.warn('⚠️ Δεν βρέθηκε supplier με email:', email);
+      }
+    }
 
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   } catch (err) {
