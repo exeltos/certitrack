@@ -30,10 +30,11 @@ exports.handler = async (event) => {
       usedSubject = subject || "📨 Πρόσκληση Εγγραφής στο CertiTrack";
       htmlContent = `
         <p>Η εταιρεία <strong>${companyName || "μια συνεργαζόμενη εταιρεία"}</strong> σας προσκαλεί να εγγραφείτε στο CertiTrack.</p>
-        <p>Με την εγγραφή σας, θα μπορείτε να ανταλλάσσετε πιστοποιητικά εύκολα και οργανωμένα.</p>
+        <p>Με την εγγραφή σας, θα μπορείτε να ανταλλάσσετε πιστοποιητικά και έγγραφα εύκολα και οργανωμένα με τους συνδεδεμένους πελάτες σας.</p>
+        <p>Ολοκληρώστε την εγγραφή σας, καταχωρώντας τα στοιχεία σας στον παρακάτω σύνδεσμο:</p>
         <p><a href="https://www.certitrack.gr/supplier-register.html">➕ Εγγραφή Προμηθευτή</a></p>
       `;
-      break;      break;
+      break;
     case "reset":
       usedSubject = subject || "🔑 Επαναφορά Κωδικού CertiTrack";
       htmlContent = `
@@ -71,4 +72,5 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: JSON.stringify({ error: "Email sending failed" }) };
   }
 };
+
 
