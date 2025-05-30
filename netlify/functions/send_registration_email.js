@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+const fetch = require('node-fetch');
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -18,37 +18,40 @@ exports.handler = async function (event) {
       };
     }
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail', // ή Mailersend/SMTP provider
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+    const response = await fetch('https://api.mailersend.com/v1/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.MAILERSEND_API_KEY}`
+      },
+      body: JSON.stringify({
+        from: { email: 'noreply@certitrack.gr', name: 'CertiTrack' },
+        to: [{ email, name }],
+        subject: '✅ Επιβεβαίωση Εγγραφής στο CertiTrack',
+        html: `
+          <p>Αγαπητέ/ή <strong>${name}</strong>,</p>
+          <p>Η εγγραφή σας στο CertiTrack πραγματοποιήθηκε με επιτυχία.</p>
+          <p>Με την εγγραφή σας, αποδέχεστε τους όρους χρήσης του συστήματος.</p>
+          <p>Μπορείτε να συνδεθείτε μέσω του παρακάτω συνδέσμου:</p>
+          <p><a href="${process.env.BASE_URL}/general_login.html" style="color:#2563eb;">Μετάβαση στο CertiTrack</a></p>
+          <hr>
+          <p style="font-size:0.9em;color:#555;">Αυτό το email στάλθηκε αυτόματα από το σύστημα CertiTrack.</p>
+        `
+      })
     });
 
-    const htmlContent = `
-      <p>Αγαπητέ/ή <strong>${name}</strong>,</p>
-      <p>Η εγγραφή σας στο CertiTrack πραγματοποιήθηκε με επιτυχία.</p>
-      <p>Με την εγγραφή σας, αποδέχεστε τους όρους χρήσης του συστήματος.</p>
-      <p>Μπορείτε να συνδεθείτε μέσω του παρακάτω συνδέσμου:</p>
-      <p><a href="${process.env.BASE_URL}/general_login.html" style="color:#2563eb;">Μετάβαση στο CertiTrack</a></p>
-      <hr>
-      <p style="font-size:0.9em;color:#555;">Αυτό το email στάλθηκε αυτόματα από το σύστημα CertiTrack.</p>
-    `;
-
-    await transporter.sendMail({
-      from: `CertiTrack <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: '✅ Επιβεβαίωση Εγγραφής στο CertiTrack',
-      html: htmlContent
-    });
+    if (!response.ok) {
+      const txt = await response.text();
+      console.error('Mailersend error:', txt);
+      return { statusCode: 500, body: 'Email sending failed' };
+    }
 
     return {
       statusCode: 200,
       body: JSON.stringify({ success: true })
     };
   } catch (err) {
-    console.error('Email error:', err);
+    console.error('Function error:', err);
     return {
       statusCode: 500,
       body: 'Internal Server Error'
