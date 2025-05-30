@@ -11,6 +11,7 @@ exports.handler = async (event) => {
   }
 
   console.log("📤 Αποστολή email:", { email, type, subject });
+  console.log("🔹 Company Name:", companyName);
   console.log("📦 Περιβάλλον:", process.env.MAILERSEND_TOKEN ? "✔️ Token υπάρχει" : "❌ Token ΔΕΝ υπάρχει");
 
   let htmlContent = "";
