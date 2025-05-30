@@ -5,7 +5,7 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
   }
 
-  const { email, type, certificates = [], subject } = JSON.parse(event.body || '{}');
+  const { email, type, certificates = [], subject, companyName } = JSON.parse(event.body || '{}');
   if (!email || !type) {
     return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields." }) };
   }
@@ -29,10 +29,11 @@ exports.handler = async (event) => {
     case "invite":
       usedSubject = subject || "📨 Πρόσκληση Εγγραφής στο CertiTrack";
       htmlContent = `
-        <p>Σας καλούμε να εγγραφείτε στο CertiTrack για να μοιραζόμαστε εύκολα πιστοποιητικά.</p>
-        <p><a href="https://www.certitrack.gr/supplier-register.html">Εγγραφή Προμηθευτή</a></p>
+        <p>Η εταιρεία <strong>${companyName || "μια συνεργαζόμενη εταιρεία"}</strong> σας προσκαλεί να εγγραφείτε στο CertiTrack.</p>
+        <p>Με την εγγραφή σας, θα μπορείτε να ανταλλάσσετε πιστοποιητικά εύκολα και οργανωμένα.</p>
+        <p><a href="https://www.certitrack.gr/supplier-register.html">➕ Εγγραφή Προμηθευτή</a></p>
       `;
-      break;
+      break;      break;
     case "reset":
       usedSubject = subject || "🔑 Επαναφορά Κωδικού CertiTrack";
       htmlContent = `
@@ -70,3 +71,4 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: JSON.stringify({ error: "Email sending failed" }) };
   }
 };
+

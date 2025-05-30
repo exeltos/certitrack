@@ -31,16 +31,24 @@
   }
   .card-transition {
     transition: all 0.3s ease-in-out;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); /* ελαφριά σταθερή σκιά */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
   }
   .card-transition:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2); /* πιο έντονη σκιά στο hover */
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
   }
-.cert-card {
-  min-height: 180px;
-  max-width: 360px;
-}
+  .cert-card {
+    min-height: 180px;
+    max-width: 360px;
+  }
+  #certStats span {
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  #certStats span:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.5);
+  }
 </style>
 <script>
 function updateIcons() {
@@ -51,7 +59,9 @@ function updateIcons() {
     moonIcon.style.display = isDark ? 'none' : 'inline-block';
     sunIcon.style.display = isDark ? 'inline-block' : 'none';
   }
+  document.getElementById('theme-toggle')?.setAttribute('aria-pressed', isDark);
 }
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const toggleBtn = document.getElementById('theme-toggle');
@@ -78,25 +88,26 @@ document.addEventListener('DOMContentLoaded', () => {
   <header class="sticky top-0 z-50 bg-white dark:bg-gray-900 px-4 py-3 shadow-md">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
   <div class="flex items-center gap-2">
-    <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-12 w-auto">
+    <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-16 w-auto">
     <div class="relative flex items-center gap-2 text-lg font-bold text-blue-700 dark:text-teal-400">
       <span>Πιστοποιητικά</span>
       <button id="notifyBtn" class="relative focus:outline-none" title="Ειδοποιήσεις">
-        <i data-lucide="bell" class="w-5 h-5 text-gray-500 hover:text-red-500"></i>
-        <span id="notifyCount" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-1 hidden"></span>
-      </button>
+  <i data-lucide="bell" class="w-5 h-5 text-gray-500 hover:text-red-500"></i>
+  <span id="notifyCount" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-1 hidden"></span>
+</button>
+<div id="userGreeting" class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">Καλώς ήρθες, Χρήστης</div>
   
 </div>
   </div>
   <div class="flex items-center gap-3">
     <!-- Κουμπί αποστολής email αφαιρέθηκε -->
-    <button id="exportMenuBtn" class="text-gray-600 dark:text-gray-300 hover:text-blue-600" title="Εξαγωγή">
-  <i data-lucide="download" class="w-5 h-5"></i>
+    <button id="exportMenuBtn" class="text-gray-700 dark:text-white hover:text-blue-600 transition-all" title="Εξαγωγή">
+  <i data-lucide="download" class="w-5 h-5 text-gray-600 dark:text-gray-200"></i>
 </button>
     <button id="userSettingsBtn" class="text-gray-700 dark:text-white hover:text-blue-600 flex items-center gap-1 text-sm transition" title="Ρυθμίσεις Χρήστη">
       <i data-lucide="settings"></i>
     </button>
-    <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
+    <button id="theme-toggle" aria-pressed="false" aria-label="Εναλλαγή Θέματος" class="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
       <svg id="icon-moon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z" />
       </svg>
@@ -109,29 +120,26 @@ document.addEventListener('DOMContentLoaded', () => {
     </button>
   </div>
 </div>
-<div id="userGreeting" class="max-w-6xl mx-auto text-left text-xs text-gray-600 dark:text-gray-300 mt-1 pl-16"></div>
+
   </header>
 
   <!-- Main -->
   <div class="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 p-4 md:p-6">
     <main class="flex flex-col gap-4">
       <!-- Search & Add -->
-      <div class="flex flex-col sm:flex-row sm:justify-start items-center gap-4">
-  <div class="flex gap-2 items-center" id="emailActions">
-  <button id="selectAllBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
-    ☑️ Επιλογή Όλων
+      <div class="flex flex-col sm:flex-row sm:justify-between items-center gap-4">
+  <div class="flex gap-2 items-center">
+  <input id="searchInput" type="text" placeholder="Αναζήτηση με τίτλο, τύπο, ΑΦΜ..." class="w-full sm:w-72 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-300 dark:bg-gray-800 dark:text-white">
+  <button id="addCertFixed" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition transform hover:scale-105" title="Νέο Πιστοποιητικό">
+    <i data-lucide="plus" class="w-5 h-5"></i>
   </button>
-  <button id="sendEmailBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
-    📧 Αποστολή Email
-  </button>
-  <button id="downloadBtn" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition hidden">
-    📥 Λήψη
-  </button>
+  <button id="selectAllBtn" class="text-sm px-3 py-1 text-blue-600 bg-transparent dark:text-blue-400 hover:underline transition hidden">
+  ☑️ Επιλογή Όλων
+</button>
+  <button id="downloadBtn" class="text-sm px-3 py-1 text-blue-600 bg-transparent dark:text-blue-400 hover:underline transition hidden">
+  📥 Λήψη
+</button>
 </div>
-        <input id="searchInput" type="text" placeholder="Αναζήτηση με τίτλο, τύπο, ΑΦΜ..." class="w-full sm:w-72 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-300 dark:bg-gray-800 dark:text-white" oninput="loadCertificates()">
-        <button id="addCertFixed" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition" title="Νέο Πιστοποιητικό">
-          <i data-lucide="plus" class="w-5 h-5"></i>
-        </button>
       </div>
 
       <!-- Στατιστικά -->
@@ -161,9 +169,17 @@ document.addEventListener('DOMContentLoaded', () => {
     </main>
 
     <!-- Sidebar -->
-    <aside class="bg-white bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-50 p-4 rounded-xl shadow">
-      <h2 class="text-sm font-semibold text-blue-700 dark:text-teal-400 mb-2 border-b pb-1">Οι Εταιρείες μου</h2>
-      <ul id="myCompaniesList" class="text-xs text-gray-700 dark:text-gray-300 space-y-2"></ul>
+    <aside class="backdrop-blur-sm bg-white bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-50 p-4 rounded-xl shadow">
+      <h2 class="text-sm font-semibold text-blue-700 dark:text-teal-400 pb-1">Οι συνεργάτες μου</h2>
+<div class="flex text-xs text-gray-600 dark:text-gray-300 gap-4 mb-2">
+  <span class="cursor-pointer hover:underline text-red-600 font-semibold" id="filterBlocked">Αποκλεισμένοι</span>
+  <span class="cursor-pointer hover:underline text-green-700 font-semibold" id="filterActive">Ενεργοί</span>
+  <span class="cursor-pointer hover:underline text-blue-700 font-semibold" id="filterAll">Εμφάνιση όλων</span>
+</div>
+<hr class="border-b border-gray-300 dark:border-gray-600 mb-2">
+
+      
+<ul id="myCompaniesList" class="text-xs text-gray-700 dark:text-gray-300 space-y-2"></ul>
     </aside>
   </div>
 
@@ -174,15 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   <!-- JavaScript remains unchanged -->
 <script type="module">
-  import { initPage } from '../js/certificates.js';
+  import { initPage } from './js/certificates.js';
   document.addEventListener('DOMContentLoaded', initPage);
 </script>
 
 
+
 </body>
 </html>
-
-
-
-
-

@@ -51,7 +51,20 @@ exports.handler = async function (event) {
       const send = async (type, certList) => {
         if (certList.length === 0 || sentTypes.includes(type)) return;
         const subject = type === 'expired' ? 'Έχετε ληγμένα πιστοποιητικά' : 'Πιστοποιητικά προς λήξη σε 30 ημέρες';
-        const certificates = certList.map(c => ({ title: c.title, date: c.date }));
+        const message = `
+  <p>${type === 'expired'
+    ? 'Ένα ή περισσότερα από τα πιστοποιητικά σας έχουν <strong>λήξει</strong>:'
+    : 'Τα παρακάτω πιστοποιητικά σας <strong>λήγουν εντός 30 ημερών</strong>:'}</p>
+  <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr><th>Τίτλος</th><th>Ημερομηνία Λήξης</th></tr>
+    </thead>
+    <tbody>
+      ${certList.map(c => `<tr><td>${c.title}</td><td>${new Date(c.date).toLocaleDateString('el-GR')}</td></tr>`).join('')}
+    </tbody>
+  </table>
+  <p style="margin-top:12px;">Συνδεθείτε στο CertiTrack για να δείτε και να διαχειριστείτε τα πιστοποιητικά σας.</p>
+`;
 
         console.log(`[DEBUG] Αποστολή email σε ${supplier.email} για`, type);
 
@@ -59,7 +72,7 @@ exports.handler = async function (event) {
           const response = await fetch('https://www.certitrack.gr/.netlify/functions/send_email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: supplier.email, type: 'certificate', certificates, subject })
+            body: JSON.stringify({ email: supplier?.email || company?.email, subject, html: message, type: 'custom' })
           });
           const responseText = await response.text();
           console.log(`[DEBUG] Απάντηση send_email:`, response.status, responseText);
@@ -111,7 +124,20 @@ exports.handler = async function (event) {
       const send = async (type, certList) => {
         if (certList.length === 0 || sentTypes.includes(type)) return;
         const subject = type === 'expired' ? 'Έχετε ληγμένα πιστοποιητικά' : 'Πιστοποιητικά προς λήξη σε 30 ημέρες';
-        const certificates = certList.map(c => ({ title: c.title, date: c.date }));
+        const message = `
+  <p>${type === 'expired'
+    ? 'Ένα ή περισσότερα από τα πιστοποιητικά σας έχουν <strong>λήξει</strong>:'
+    : 'Τα παρακάτω πιστοποιητικά σας <strong>λήγουν εντός 30 ημερών</strong>:'}</p>
+  <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr><th>Τίτλος</th><th>Ημερομηνία Λήξης</th></tr>
+    </thead>
+    <tbody>
+      ${certList.map(c => `<tr><td>${c.title}</td><td>${new Date(c.date).toLocaleDateString('el-GR')}</td></tr>`).join('')}
+    </tbody>
+  </table>
+  <p style="margin-top:12px;">Συνδεθείτε στο CertiTrack για να δείτε και να διαχειριστείτε τα πιστοποιητικά σας.</p>
+`;
 
         console.log(`[DEBUG] Αποστολή email σε ${company.email} για`, type);
 
@@ -119,7 +145,7 @@ exports.handler = async function (event) {
           const response = await fetch('https://www.certitrack.gr/.netlify/functions/send_email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: company.email, type: 'certificate', certificates, subject })
+            body: JSON.stringify({ email: supplier?.email || company?.email, subject, html: message, type: 'custom' })
           });
           const responseText = await response.text();
           console.log(`[DEBUG] Απάντηση send_email:`, response.status, responseText);
@@ -148,3 +174,4 @@ exports.handler = async function (event) {
     };
   }
 };
+

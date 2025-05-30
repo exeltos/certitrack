@@ -30,7 +30,8 @@
 }
 </style>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script> tailwind.config = { darkMode: 'class' } </script>
+
+<script> tailwind.config = { darkMode: 'class' } </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -40,22 +41,29 @@
 <header class="fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 p-4 shadow-md fade-in z-50">
   <div class="max-w-6xl mx-auto flex justify-between items-center">
     <div class="flex items-center gap-2">
-      <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-14">
+      <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-16">
       <h1 id="companyHeader" class="text-xl font-semibold text-blue-700 dark:text-teal-400">CertiTrack - <span id="companyName"></span></h1>
     </div>
     <div class="flex items-center gap-3">
-      <button id="exportMenuBtn" title="Εξαγωγή" class="text-gray-600 dark:text-gray-300 hover:text-blue-600"><i data-lucide="download"></i></button>
+      <button id="exportMenuBtn" title="Εξαγωγή" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg" aria-pressed="false">
+  <i data-lucide="download" class="w-5 h-5"></i>
+</button>
+<button id="mailBtn" title="Προσκλήσεις" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg" aria-pressed="false">
+  <i data-lucide="mail" class="w-5 h-5"></i>
+</button>
       <a href="company_info.html" title="Ρυθμίσεις" class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"><i data-lucide="settings"></i></a>
       <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
         <svg id="icon-moon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z"/></svg>
-        <svg id="icon-sun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5z"/></svg>
+        <svg id="icon-sun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+  <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM3.03 4.97a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L3.03 6.03a.75.75 0 010-1.06zM15.85 4.97a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM2 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 012 10zM14.25 9.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM3.03 15.03a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM15.85 15.03l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06z" />
+</svg>
       </button>
       <button id="logoutBtn" class="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm transition" title="Αποσύνδεση"><i data-lucide="log-out"></i></button>
     </div>
   </div>
 </header>
 
-<main class="flex-grow p-6 max-w-6xl mx-auto fade-in pt-24">
+<main class="flex-grow p-6 max-w-6xl mx-auto fade-in pt-32">
   <div class="flex flex-wrap gap-4 mb-4 items-center justify-center">
     <button id="btnSuppliers" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white border rounded-2xl shadow hover:shadow-xl transition duration-200 focus:ring-2 focus:ring-blue-500">👥 Οι Προμηθευτές μου <span id="supplierCount" class="ml-1 text-sm"></span></button>
     <a href="company_certificates.html" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white border rounded-2xl shadow hover:shadow-xl transition duration-200 focus:ring-2 focus:ring-blue-500">📦 Τα Πιστοποιητικά μου <span id="certificateCount" class="ml-1 text-sm text-gray-500"></span></a>
@@ -63,7 +71,7 @@
 
   <!-- Controls -->
   <div class="flex items-center justify-center gap-4 mb-2 w-full">
-    <button id="deleteModeBtn" onclick="toggleDeleteMode()" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition">🗑️ Διαγραφή Προμηθευτών</button>
+    <button id="deleteModeBtn" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition" onclick="this.textContent = this.textContent.includes('Ακύρωση') ? '🗑️ Διαγραφή Προμηθευτών' : '❌ Ακύρωση Διαγραφής'">🗑️ Διαγραφή Προμηθευτών</button>
     <input id="searchInputSuppliers" type="text" placeholder="Αναζήτηση προμηθευτών..." class="p-2 border rounded-xl w-60 focus:outline-none focus:ring-2 focus:ring-indigo-400" oninput="filterData()">
     <select id="sortSelect" class="p-2 border rounded-xl">
       <option value="">Ταξινόμηση</option>
@@ -77,10 +85,11 @@
 
   <!-- Export Actions -->
   <div id="certEmailActions" class="flex items-center justify-center space-x-4 mb-6 w-full hidden">
-  <button id="deleteSelectedBtn" class="px-3 py-1 bg-red-500 text-white rounded hidden">🗑️ Διαγραφή Επιλεγμένων</button>
-    <button id="selectAllBtn" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">☑️ Επιλογή Όλων</button>
-    <button id="downloadBtn" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">📥 Λήψη</button>
-    <button id="sendEmailBtn" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">📧 Αποστολή Πρόσκλησης</button>
+  <button id="deleteSelectedBtn" class="text-sm px-3 py-1 text-red-600 bg-transparent dark:text-red-400 hover:underline transition hidden">🗑️ Διαγραφή Επιλεγμένων</button>
+    <button id="selectAllBtn" class="text-sm px-3 py-1 text-blue-600 bg-transparent dark:text-blue-400 hover:underline transition">☑️ Επιλογή Όλων</button>
+    <button id="deleteSelectedBtn" class="text-sm px-3 py-1 text-red-600 bg-transparent dark:text-red-400 hover:underline transition hidden">🗑️ Διαγραφή Επιλεγμένων</button>
+    <button id="downloadBtn" class="text-sm px-3 py-1 text-blue-600 bg-transparent dark:text-blue-400 hover:underline transition">📥 Λήψη</button>
+    <button id="sendEmailBtn" class="text-sm px-3 py-1 text-blue-600 bg-transparent dark:text-blue-400 hover:underline transition">📧 Αποστολή Πρόσκλησης</button>
   </div>
 
   <div id="loading" class="hidden">
@@ -122,5 +131,3 @@
 </footer>
 </body>
 </html>
-
-

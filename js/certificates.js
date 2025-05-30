@@ -31,13 +31,16 @@ export async function initPage() {
     const isExporting = certContainer.getAttribute('data-export-mode') === 'true';
 
     if (isExporting) {
-      certContainer.setAttribute('data-export-mode', 'false');
-      document.querySelectorAll('.export-checkbox').forEach(cb => cb.remove());
-      if (selectAllBtn) selectAllBtn.classList.add('hidden');
-      if (downloadBtn) downloadBtn.classList.add('hidden');
-      return;
-    }
-    Swal.fire({
+    certContainer.setAttribute('data-export-mode', 'false');
+    document.querySelectorAll('.export-checkbox').forEach(cb => cb.remove());
+    if (selectAllBtn) selectAllBtn.classList.add('hidden');
+    if (downloadBtn) downloadBtn.classList.add('hidden');
+    exportBtn.classList.remove('bg-blue-200/70', 'dark:bg-blue-800/40');
+    exportBtn.classList.remove('rounded-full', 'transition-all');
+    return;
+  }
+    
+Swal.fire({
       title: 'Επιλέξτε Τύπο Εξαγωγής',
       input: 'select',
       inputOptions: {
@@ -55,6 +58,8 @@ export async function initPage() {
 if (downloadBtn) downloadBtn.classList.add('hidden');
 
       exportBtn.setAttribute('data-export-type', type);
+exportBtn.classList.add('bg-blue-200/70', 'dark:bg-blue-800/40');
+      exportBtn.classList.add('rounded-full', 'transition-all');
 
       document.querySelectorAll('.cert-card').forEach(card => {
         let checkbox = card.querySelector('.export-checkbox');
@@ -64,15 +69,26 @@ if (downloadBtn) downloadBtn.classList.add('hidden');
           checkbox.className = 'export-checkbox absolute top-2 right-2 w-5 h-5 accent-blue-600';
           card.classList.add('relative');
           checkbox.addEventListener('change', () => {
-  const anyChecked = document.querySelectorAll('.export-checkbox:checked').length > 0;
-  if (downloadBtn) {
-    downloadBtn.classList.toggle('hidden', !anyChecked);
-  }
-});
-      card.appendChild(checkbox);
+            const anyChecked = document.querySelectorAll('.export-checkbox:checked').length > 0;
+            if (downloadBtn) {
+              downloadBtn.classList.toggle('hidden', !anyChecked);
+            }
+          });
+          card.appendChild(checkbox);
         } else {
           checkbox.classList.remove('hidden');
         }
+      });
+
+      // ✅ Συνδέουμε ή επανασυνδέουμε τον listener στο selectAllBtn
+      selectAllBtn?.addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('.export-checkbox');
+        if (!checkboxes.length) return;
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => {
+          cb.checked = !allChecked;
+          cb.dispatchEvent(new Event('change'));
+        });
       });
     });
   });
@@ -145,12 +161,30 @@ if (downloadBtn) downloadBtn.classList.add('hidden');
     document.getElementById('notifyBtn')?.addEventListener('click', showExpirationPopup);
     document.getElementById('userSettingsBtn')?.addEventListener('click', () => window.location.href = 'supplier_info.html');
 
-    await loadCompanies();
-    await loadCertificates();
+    document.getElementById('filterBlocked')?.addEventListener('click', () => {
+  document.getElementById('filterBlocked').classList.add('underline');
+  document.getElementById('filterActive')?.classList.remove('underline');
+  document.getElementById('filterAll')?.classList.remove('underline');
+  loadCompanies();
+});
+    document.getElementById('filterActive')?.addEventListener('click', () => {
+  document.getElementById('filterActive').classList.add('underline');
+  document.getElementById('filterBlocked')?.classList.remove('underline');
+  document.getElementById('filterAll')?.classList.remove('underline');
+  loadCompanies();
+});
+    document.getElementById('filterAll')?.addEventListener('click', () => {
+  document.getElementById('filterAll').classList.add('underline');
+  document.getElementById('filterBlocked')?.classList.remove('underline');
+  document.getElementById('filterActive')?.classList.remove('underline');
+  loadCompanies();
+});
 
-    
-    }
-   catch (err) {
+    await loadCompanies();
+document.getElementById('searchInput')?.addEventListener('input', () => loadCertificates());
+    await loadCertificates();
+  }
+  catch (err) {
     handleError(err);
   }
 }
@@ -256,7 +290,7 @@ function renderFiltered(list) {
       : '';
 
     const card = document.createElement('div');
-    card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card`;
+    card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card overflow-hidden`;
     card.innerHTML = `
       <div>
         <h3 class="font-semibold mb-1 text-gray-800 dark:text-white">${cert.title}</h3>
@@ -277,7 +311,7 @@ function renderFiltered(list) {
 
 renderFiltered(filtered);
     document.getElementById('certContainer').classList.remove('hidden');
-    bindCertificateActions();
+    /* bindCertificateActions(); */
     updateNotifications(data);
     lucide.createIcons();
 
@@ -301,6 +335,96 @@ function bindCertificateActions() {
       cb.dispatchEvent(new Event('change'));
     });
   });
+
+  function handleViewClick(btn) {
+    Swal.fire({
+      html: `<embed src="${btn.dataset.url}" type="application/pdf" width="100%" height="${window.innerWidth < 600 ? '400' : '700'}px" class="rounded border" />`,
+      showCloseButton: true,
+      showConfirmButton: false,
+      width: '90%'
+    });
+  }
+
+  function handleDeleteClick(btn) {
+    Swal.fire({
+      title: 'Διαγραφή Πιστοποιητικού',
+      text: 'Είσαι σίγουρος/η;',
+      icon: 'warning',
+      showCancelButton: true
+    }).then(async result => {
+      if (result.isConfirmed) {
+        try {
+          showLoading();
+          const fileUrl = btn.dataset.url;
+          const path = fileUrl.split('/').slice(-2).join('/');
+          await supabase.storage.from('suppliercertificates').remove([path]);
+          await supabase.from('supplier_certificates').delete().eq('id', btn.dataset.id);
+          await loadCertificates();
+          Swal.fire('Διαγραφή', 'Το πιστοποιητικό διαγράφηκε επιτυχώς', 'success');
+        } catch (err) {
+          handleError(err);
+        } finally {
+          hideLoading();
+        }
+      }
+    });
+  }
+
+  function handleEditClick(btn) {
+    supabase.from('supplier_certificates').select('*').eq('id', btn.dataset.id).then(async ({ data: certs }) => {
+      const cert = certs[0];
+      const { value } = await Swal.fire({
+        title: 'Επεξεργασία Πιστοποιητικού',
+        html: `
+          <input id="swal-title" class="swal2-input" value="${cert.title}">
+          <select id="swal-type" class="swal2-select mb-2" onchange="document.getElementById('custom-type')?.classList.toggle('hidden', this.value !== 'Άλλο')">
+            <option value="Πιστοποιητικό">Πιστοποιητικό</option>
+            <option value="Απόφαση">Απόφαση</option>
+            <option value="Νομιμοποιητικό έγγραφο">Νομιμοποιητικό έγγραφο</option>
+            <option value="Ανάλυση">Ανάλυση</option>
+            <option value="CE">CE</option>
+            <option value="Στοιχεία προϊόντος">Στοιχεία προϊόντος</option>
+            <option value="Άλλο">Άλλο</option>
+          </select>
+          <input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρησε την κατηγορία σου">
+          <input id="swal-date" type="date" class="swal2-input" value="${cert.date}">
+<input id="swal-file" type="file" accept="application/pdf" class="swal2-file mt-2" />
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        preConfirm: () => ({
+          id: cert.id,
+          title: document.getElementById('swal-title').value,
+          type: document.getElementById('swal-type').value === 'Άλλο' ? document.getElementById('custom-type').value : document.getElementById('swal-type').value,
+          date: document.getElementById('swal-date').value
+        })
+      });
+      if (value) {
+  const updates = { ...value };
+  const fileInput = Swal.getPopup().querySelector('#swal-file');
+  const file = fileInput?.files[0];
+  if (file) {
+    const ext = file.name.split('.').pop();
+    const uuid = crypto.randomUUID();
+    const path = `${currentUser.id}/${uuid}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from('suppliercertificates').upload(path, file, { upsert: true });
+    if (uploadError) throw uploadError;
+    const { data: urlData, error: urlErr } = await supabase.storage.from('suppliercertificates').getPublicUrl(path);
+    if (urlErr) throw urlErr;
+    updates.file_url = urlData.publicUrl;
+    updates.name = file.name;
+  }
+  await supabase.from('supplier_certificates').update(updates).eq('id', value.id);
+        await loadCertificates();
+      }
+    });
+  }
+
+  document.querySelectorAll('.view-btn').forEach(btn => btn.addEventListener('click', () => handleViewClick(btn)));
+  document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => handleDeleteClick(btn)));
+  document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => handleEditClick(btn)));
+};
+  ;
   document.querySelectorAll('.view-btn').forEach(btn => btn.addEventListener('click', () => {
     Swal.fire({ html: `<embed src="${btn.dataset.url}" type="application/pdf" width="100%" height="700px" class="rounded border" />`, showCloseButton: true, showConfirmButton: false, width: '90%' });
   }));
@@ -355,7 +479,7 @@ function bindCertificateActions() {
       await loadCertificates();
     }
   }));
-}
+
 
 function updateNotifications(data) {
   const fromProfile = sessionStorage.getItem('fromProfile');
@@ -410,8 +534,9 @@ async function loadCompanies() {
     // Ανάκτηση company_ids
     const { data: rels, error: relsErr } = await supabase
       .from('company_suppliers')
-      .select('company_id')
-      .eq('supplier_id', supplierId);
+      .select('company_id, access')
+      .eq('supplier_id', supplierId)
+      ;
     if (relsErr) throw relsErr;
     const companyIds = rels.map(r => r.company_id);
     if (!companyIds.length) {
@@ -425,8 +550,77 @@ async function loadCompanies() {
       .in('id', companyIds);
     if (compsErr) throw compsErr;
     // Render list
-    listEl.innerHTML = companies.map(c => `<li>• ${c.name} (${c.afm})</li>`).join('');
-  } catch (err) {
+    const isBlockedView = document.getElementById('filterBlocked')?.classList.contains('underline');
+const isActiveView = document.getElementById('filterActive')?.classList.contains('underline');
+const isAllView = document.getElementById('filterAll')?.classList.contains('underline');
+ // ✅ deduplicated
+    
+listEl.innerHTML = companies.map(c => {
+  const rel = rels.find(r => r.company_id === c.id);
+  const isBlocked = rel?.access === 'blocked';
+  if (!isAllView) {
+    if (isBlockedView && !isBlocked) return '';
+    if (isActiveView && isBlocked) return '';
+  }
+  return `
+    <li class="flex justify-between items-center py-1">
+      <span class="${isBlocked ? 'text-red-500' : ''}">• ${c.name} (${c.afm})</span>
+      <button data-id="${c.id}" class="block-btn text-xs ${isBlocked ? 'text-green-600' : 'text-red-500'} hover:underline">
+        ${isBlocked ? 'Επαναφορά' : 'Αποκλεισμός'}
+      </button>
+    </li>
+  `;
+}).join('');
+
+  document.querySelectorAll('.block-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const companyId = btn.dataset.id;
+    const isBlocked = btn.textContent.trim() === 'Επαναφορά';
+    const newAccess = isBlocked ? 'granted' : 'blocked';
+    const title = isBlocked ? 'Επαναφορά Πρόσβασης' : 'Αποκλεισμός Εταιρείας';
+    const text = isBlocked
+      ? 'Θέλεις να επαναφέρεις την πρόσβαση αυτής της εταιρείας στα πιστοποιητικά σου;'
+      : 'Θέλεις να αποκλείσεις αυτή την εταιρεία από την πρόσβαση στα πιστοποιητικά σου;';
+    const confirmButtonText = isBlocked ? 'Ναι, επαναφορά' : 'Αποκλεισμός';
+    const successMessage = isBlocked
+      ? 'Η εταιρεία έχει πλέον πρόσβαση στα πιστοποιητικά σου.'
+      : 'Η εταιρεία αποκλείστηκε από την πρόσβαση στα πιστοποιητικά σου.';
+
+    const { isConfirmed } = await Swal.fire({
+      title,
+      text,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      const { data: supRec, error: supErr } = await supabase
+        .from('suppliers')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+      if (supErr || !supRec?.id) throw supErr || new Error('Προμηθευτής δεν βρέθηκε.');
+
+      const { error } = await supabase
+        .from('company_suppliers')
+        .update({ access: newAccess })
+        .eq('company_id', companyId)
+        .eq('supplier_id', supRec.id);
+
+      if (error) throw error;
+
+      Swal.fire('Ολοκληρώθηκε', successMessage, 'success');
+      await loadCompanies();
+    } catch (err) {
+      console.error('❌ Σφάλμα:', err);
+      Swal.fire('Σφάλμα', 'Κάτι πήγε στραβά. Προσπάθησε ξανά.', 'error');
+    }
+  });
+});
+} catch (err) {
     console.error('loadCompanies error:', err);
     listEl.innerHTML = '<li class="text-red-500">Σφάλμα φόρτωσης εταιρειών.</li>';
   }
@@ -451,7 +645,7 @@ function showCreateModal() {
       <input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρησε την κατηγορία σου">
       <input id="swal-date" type="date" class="swal2-input">
       <input id="swal-file" type="file" accept="application/pdf" class="swal2-file mt-2" />
-      <div id="swal-preview" class="mt-4"></div>
+      <div id="swal-preview" class="mt-4 overflow-auto max-h-[300px] border rounded"></div>
     `,
     focusConfirm: false,
     showCancelButton: true,
@@ -477,7 +671,11 @@ function showCreateModal() {
       if (!title || !type || !date || !file) {
         Swal.showValidationMessage('Συμπλήρωσε όλα τα πεδία και ανέβασε PDF');
       }
-      return { title, type, date, file };
+      if (type === 'Άλλο' && !document.getElementById('custom-type').value.trim()) {
+  Swal.showValidationMessage('Συμπλήρωσε την προσαρμοσμένη κατηγορία σου.');
+  return false;
+}
+return { title, type, date, file };
     }
   }).then(async (res) => {
     if (res.isConfirmed) {
@@ -513,3 +711,7 @@ function showCreateModal() {
     }
   });
 }
+
+
+
+
