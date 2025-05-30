@@ -34,7 +34,7 @@ exports.handler = async function (event) {
           <p>Η εγγραφή σας στο CertiTrack πραγματοποιήθηκε με επιτυχία.</p>
           <p>Με την εγγραφή σας, αποδέχεστε τους όρους χρήσης του συστήματος.</p>
           <p>Μπορείτε να συνδεθείτε μέσω του παρακάτω συνδέσμου:</p>
-          <p><a href="${baseUrl}/general_login.html" style="color:#2563eb;">Μετάβαση στο CertiTrack</a></p>
+          <p><a href="https://www.certitrack.gr/general_login.html" style="color:#2563eb;">Μετάβαση στο CertiTrack</a></p>
           <hr>
           <p style="font-size:0.9em;color:#555;">Αυτό το email στάλθηκε αυτόματα από το σύστημα CertiTrack.</p>
         `
