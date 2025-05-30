@@ -103,39 +103,62 @@
     const spinner = document.getElementById('spinner');
 
     form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errorEl.classList.add('hidden');
-      submitBtn.disabled = true;
-      spinner.classList.remove('hidden');
+  e.preventDefault();
+  errorEl.classList.add('hidden');
+  submitBtn.disabled = true;
+  spinner.classList.remove('hidden');
 
-      const name = form.name.value.trim();
-      const email = form.email.value.trim();
-      const afm = form.afm.value.trim();
-      const afmConfirm = form.afmConfirm.value.trim();
-      const password = form.password.value;
-      const passwordConfirm = form.passwordConfirm.value;
+  const name = form.name.value.trim();
+  const email = form.email.value.trim();
+  const afm = form.afm.value.trim();
+  const afmConfirm = form.afmConfirm.value.trim();
+  const password = form.password.value;
+  const passwordConfirm = form.passwordConfirm.value;
 
-      // Basic validations
-      if (!name || !email || !afm || !afmConfirm || !password || !passwordConfirm) {
-        errorEl.textContent = 'Παρακαλώ συμπληρώστε όλα τα πεδία.';
-        spinner.classList.add('hidden');
-        submitBtn.disabled = false;
-        return errorEl.classList.remove('hidden');
-      }
-      if (afm !== afmConfirm) {
-        errorEl.textContent = 'Τα ΑΦΜ δεν ταιριάζουν.';
-        spinner.classList.add('hidden');
-        submitBtn.disabled = false;
-        return errorEl.classList.remove('hidden');
-      }
-      if (password !== passwordConfirm) {
-        errorEl.textContent = 'Οι κωδικοί δεν ταιριάζουν.';
-        spinner.classList.add('hidden');
-        submitBtn.disabled = false;
-        return errorEl.classList.remove('hidden');
-      }
+  if (!name || !email || !afm || !afmConfirm || !password || !passwordConfirm) {
+    errorEl.textContent = 'Παρακαλώ συμπληρώστε όλα τα πεδία.';
+    spinner.classList.add('hidden');
+    submitBtn.disabled = false;
+    return errorEl.classList.remove('hidden');
+  }
+  if (afm !== afmConfirm) {
+    errorEl.textContent = 'Τα ΑΦΜ δεν ταιριάζουν.';
+    spinner.classList.add('hidden');
+    submitBtn.disabled = false;
+    return errorEl.classList.remove('hidden');
+  }
+  if (password !== passwordConfirm) {
+    errorEl.textContent = 'Οι κωδικοί δεν ταιριάζουν.';
+    spinner.classList.add('hidden');
+    submitBtn.disabled = false;
+    return errorEl.classList.remove('hidden');
+  }
 
-      try {
+  // ✅ Προσθήκη SweetAlert για αποδοχή όρων
+  const result = await Swal.fire({
+    title: 'Όροι Χρήσης',
+    html: `<p class='text-sm text-left'>Για να συνεχίσετε, πρέπει να αποδεχθείτε τους όρους χρήσης.</p>
+           <label class='flex items-center mt-3'><input type='checkbox' id='termsCheckbox' class='mr-2'>Αποδέχομαι τους όρους</label>`,
+    icon: 'info',
+    confirmButtonText: 'Συνέχεια',
+    preConfirm: () => {
+      const checked = document.getElementById('termsCheckbox')?.checked;
+      if (!checked) {
+        Swal.showValidationMessage('Πρέπει να αποδεχτείτε τους όρους.');
+        return false;
+      }
+      return true;
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  });
+
+  if (!result.isConfirmed) {
+    spinner.classList.add('hidden');
+    submitBtn.disabled = false;
+    return;
+  }
+
+  try {
         // AFM uniqueness check
         const { data: existingAFM, error: afmErr } = await supabase
           .from('companies')
@@ -184,14 +207,20 @@
           .insert([{ name, email, afm, user_id: userId, timestamp }]);
         if (insertErr) throw insertErr;
 
-        Swal.fire({
-          title: 'Επιτυχία',
-          text: 'Η εγγραφή ολοκληρώθηκε.',
-          icon: 'success',
-          timer: 3000,
-          showConfirmButton: false
-        }).then(() => {
-          window.location.href = 'general_login.html';
+        await fetch('/.netlify/functions/send_registration_email', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, name })
+});
+
+Swal.fire({
+  title: 'Επιτυχία',
+  text: 'Η εγγραφή ολοκληρώθηκε. Ένας σύνδεσμος επιβεβαίωσης στάλθηκε στο email σας.',
+  icon: 'success',
+  timer: 3000,
+  showConfirmButton: false
+}).then(() => {
+  window.location.href = 'general_login.html';
         });
       } catch (err) {
         console.error('Registration error:', err);
@@ -233,6 +262,7 @@
 </script>
 </body>
 </html>
+
 
 
 

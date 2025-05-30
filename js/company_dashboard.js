@@ -163,7 +163,7 @@ async function renderSuppliers(company, search = '') {
   // Fetch supplier relations
   const { data: relations, error: relError } = await supabase
     .from('company_suppliers')
-    .select('company_name, supplier_name, supplier_id, suppliers(id, name, afm, email, user_id)')
+    .select('company_name, supplier_name, supplier_id, access, suppliers(id, name, afm, email, user_id)')
     .eq('company_id', company.id);
   if (relError) return handleError(relError);
 
@@ -198,7 +198,8 @@ async function renderSuppliers(company, search = '') {
       else stats.active++;
     });
     return {
-      id: r.supplier_id,
+    id: r.supplier_id,
+    access: r.access,
       user_id: s.user_id,
       name: s.name,
       afm: s.afm,
@@ -296,12 +297,27 @@ async function renderSuppliers(company, search = '') {
       }
     });
 
-    card.classList.add('cursor-pointer', 'hover:ring-2', 'hover:ring-blue-400');
+    if (r.access === 'blocked') {
+  card.classList.add('opacity-50');
+  const blockedLabel = document.createElement('div');
+  blockedLabel.className = 'absolute top-1 left-1 text-red-500 text-xs';
+  blockedLabel.textContent = '🚫 Μπλοκαρισμένος';
+  card.appendChild(blockedLabel);
+} else {
+      card.classList.add('cursor-pointer', 'hover:ring-2', 'hover:ring-blue-400');
+    }
     card.onclick = (e) => {
       const container = document.getElementById('dataSection');
       const isExporting = container?.getAttribute('data-export-mode') === 'true';
       const isPending = container?.getAttribute('data-pending-mode') === 'true';
-      if (isExporting || isPending || e.target.closest('.supplier-checkbox')) return;
+      const isDeleting = container?.getAttribute('data-delete-mode') === 'true';
+      const isBlocked = r.access === 'blocked';
+      if (e.target.closest('.supplier-checkbox')) return;
+      if (isBlocked && !isDeleting) {
+        Swal.fire('Περιορισμένη Πρόσβαση', `Ο προμηθευτής ${r.name} δεν επιτρέπει την πρόσβασή σας στις πληροφορίες του.`, 'info');
+        return;
+      }
+      if (isExporting || isPending || isDeleting) return;
       window.location.href = `supplier_view.html?id=${r.id}`;
     };
 
@@ -389,7 +405,8 @@ async function showPendingSuppliersOnly() {
     `;
 
     card.onclick = (e) => {
-      if (e.target.closest('.supplier-checkbox')) return;
+      const hasVisibleCheckboxes = document.querySelectorAll('.supplier-checkbox:not(.hidden)').length > 0;
+      if (hasVisibleCheckboxes || e.target.closest('.supplier-checkbox')) return;
       window.location.href = `supplier_view.html?id=${r.id}`;
     };
 
@@ -585,8 +602,8 @@ sendEmailBtn?.addEventListener('click', async () => {
         body: JSON.stringify({
           email,
           type: 'invite',
-          subject: `📨 Πρόσκληση από την εταιρεία ${company.name}`,
-          companyName: company.name
+          subject: '📨 Πρόσκληση Εγγραφής στο CertiTrack',
+          from: { email: 'noreply@certitrack.gr', name: 'CertiTrack' }
         })
       });
 
