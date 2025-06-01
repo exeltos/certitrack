@@ -208,13 +208,7 @@
           .insert([{ name, email, afm, user_id: userId, timestamp }]);
         if (insertErr) throw insertErr;
 
-        await fetch('/.netlify/functions/send_registration_email', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({ name, email })
-});
+        
 
 Swal.fire({
   title: 'Επιτυχία',
@@ -265,6 +259,7 @@ Swal.fire({
 </script>
 </body>
 </html>
+
 
 
 
