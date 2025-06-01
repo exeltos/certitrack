@@ -327,6 +327,74 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// ⚙️ Εμφάνιση και απόκρυψη popup αλλαγής κωδικού
+const userSettingsBtn = document.getElementById('userSettingsBtn');
+const passwordSettingsPanel = document.getElementById('passwordSettingsPanel');
+const closePasswordPanel = document.getElementById('closePasswordPanel');
+
+userSettingsBtn?.addEventListener('click', () => {
+  if (passwordSettingsPanel?.classList.contains('hidden')) {
+    passwordSettingsPanel.classList.remove('hidden');
+  } else {
+    passwordSettingsPanel.classList.add('hidden');
+  }
+});
+
+closePasswordPanel?.addEventListener('click', () => {
+  passwordSettingsPanel?.classList.add('hidden');
+});
+;
+
+// 👁️ Εναλλαγή εμφάνισης/απόκρυψης κωδικών
+const toggleButtons = document.querySelectorAll('.toggle-password');
+toggleButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.dataset.target;
+    const input = document.getElementById(targetId);
+    if (input) {
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+  });
+});
+
+// 🔒 Αλλαγή κωδικού με έλεγχο
+const submitPasswordChange = document.getElementById('submitPasswordChange');
+submitPasswordChange?.addEventListener('click', async () => {
+  const currentInput = document.getElementById('currentPassword');
+  const current = currentInput?.value?.trim();
+  console.log('[DEBUG] Current password input:', current);
+  const pwd = document.getElementById('newPassword')?.value;
+  const confirm = document.getElementById('confirmPassword')?.value;
+
+  if (!current || current.length < 1) {
+    currentInput?.focus();
+    Swal.fire('Σφάλμα', 'Συμπλήρωσε τον τρέχοντα κωδικό.', 'warning');
+    return;
+  }
+  if (!pwd || pwd.length < 6) {
+    Swal.fire('Σφάλμα', 'Ο νέος κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.', 'warning');
+    return;
+  }
+  if (pwd !== confirm) {
+    Swal.fire('Σφάλμα', 'Οι νέοι κωδικοί δεν ταιριάζουν.', 'warning');
+    return;
+  }
+
+  const { data: sessionData, error: signInError } = await supabase.auth.signInWithPassword({ email: 'admin@certitrack.gr', password: current });
+if (signInError || !sessionData || !sessionData.user) {
+    Swal.fire('Σφάλμα', 'Ο τρέχων κωδικός δεν είναι σωστός.', 'error');
+    return;
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({ password: pwd });
+  if (updateError) {
+    Swal.fire('Σφάλμα', 'Η αλλαγή κωδικού απέτυχε.', 'error');
+  } else {
+    Swal.fire('Επιτυχία', 'Ο κωδικός άλλαξε με επιτυχία.', 'success');
+    passwordSettingsPanel?.classList.add('hidden');
+  }
+});
+
 // 📤 Εξαγωγή σε Excel
 const exportBtn = document.getElementById('exportBtn');
 exportBtn?.addEventListener('click', () => {
