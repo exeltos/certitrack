@@ -99,7 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
+        console.log('🧪 Login response:', data);
+        if (errοr) {
           Swal.close();
           return Swal.fire({
             icon: 'error',
