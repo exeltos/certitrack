@@ -53,8 +53,12 @@
         </div>
         <button id="submitBtn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold">Είσοδος</button>
       </form>
-      <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-        <a href="forgot.html" class="hover:underline">Ξέχασα τον κωδικό;</a>
+<p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
+  Δεν έλαβα email επιβεβαίωσης
+  <a href="#" id="resend-confirmation" class="text-blue-600 hover:underline">Ξαναστείλε</a>
+</p>
+<p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
+        <a href="forgot.html" class="hover:underline">Ξέχασα τον κωδικό</a>
       </p>
     </div>
   </main>
@@ -74,6 +78,45 @@
   <script type="module" src="../js/common.js"></script>
   <script type="module" src="../js/login.js"></script>
   
+  <script type="module">
+    import { supabase } from '../js/supabaseClient.js';
+
+    const resendBtn = document.getElementById('resend-confirmation');
+    resendBtn?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const { value: afm } = await Swal.fire({
+        title: 'Εισάγετε το ΑΦΜ',
+        input: 'text',
+        inputLabel: 'Θα σας στείλουμε νέο σύνδεσμο επιβεβαίωσης.',
+        inputPlaceholder: 'ΑΦΜ',
+        confirmButtonText: 'Αποστολή',
+        showCancelButton: true
+      });
+
+      if (!afm) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('companies')
+          .select('email')
+          .eq('afm', afm)
+          .maybeSingle();
+
+        if (error || !data?.email) {
+          return Swal.fire('Σφάλμα', 'Δεν βρέθηκε email για αυτό το ΑΦΜ.', 'error');
+        }
+
+        const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email: data.email });
+        if (resendErr) throw resendErr;
+
+        Swal.fire('Έτοιμο', 'Σας στείλαμε νέο σύνδεσμο επιβεβαίωσης.', 'success');
+      } catch (err) {
+        console.error(err);
+        Swal.fire('Σφάλμα', 'Αποτυχία αποστολής email. Προσπαθήστε ξανά.', 'error');
+      }
+    });
+  </script>
 </body>
 </html>
+
 

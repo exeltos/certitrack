@@ -108,6 +108,15 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
 
+        if (data?.user && !data.user.email_confirmed_at) {
+          Swal.close();
+          return Swal.fire({
+            icon: 'info',
+            title: 'Ανεπιβεβαίωτο Email',
+            text: 'Παρακαλώ επιβεβαιώστε το email σας μέσω του συνδέσμου που σας στείλαμε.'
+          });
+        }
+
         if (!data.session) {
           Swal.close();
           return Swal.fire({

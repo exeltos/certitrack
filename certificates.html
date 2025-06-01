@@ -49,6 +49,24 @@
     filter: brightness(1.05);
     box-shadow: 0 0 0 2px rgba(59,130,246,0.5);
   }
+  .filter-active i {
+    color: #2563eb !important;
+  }
+  #myCompaniesList button i {
+    transition: color 0.2s ease;
+  }
+  .filter-icon {
+    transition: color 0.2s ease;
+  }
+  .filter-active-red i {
+    color: #dc2626 !important;
+  }
+  .filter-active-green i {
+    color: #16a34a !important;
+  }
+  .filter-active-blue i {
+    color: #2563eb !important;
+  }
 </style>
 <script>
 function updateIcons() {
@@ -171,15 +189,23 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- Sidebar -->
     <aside class="backdrop-blur-sm bg-white bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-50 p-4 rounded-xl shadow">
       <h2 class="text-sm font-semibold text-blue-700 dark:text-teal-400 pb-1">Οι συνεργάτες μου</h2>
-<div class="flex text-xs text-gray-600 dark:text-gray-300 gap-4 mb-2">
-  <span class="cursor-pointer hover:underline text-red-600 font-semibold" id="filterBlocked">Αποκλεισμένοι</span>
-  <span class="cursor-pointer hover:underline text-green-700 font-semibold" id="filterActive">Ενεργοί</span>
-  <span class="cursor-pointer hover:underline text-blue-700 font-semibold" id="filterAll">Εμφάνιση όλων</span>
+<div class="flex items-center gap-4 text-gray-600 dark:text-gray-300 mb-2">
+  <button id="filterBlocked" class="text-gray-600 hover:text-red-600 filter-icon" title="Αποκλεισμένοι">
+    <i data-lucide="user-x" class="w-4 h-4" title="Αποκλεισμένοι"></i>
+  </button>
+  <button id="filterActive" class="text-gray-600 hover:text-green-600 filter-icon" title="Ενεργοί">
+    <i data-lucide="check-circle" class="w-4 h-4" title="Ενεργοί"></i>
+  </button>
+  <button id="filterAll" class="text-gray-600 hover:text-blue-600 filter-icon" title="Εμφάνιση όλων">
+    <i data-lucide="list" class="w-4 h-4" title="Όλοι"></i>
+  </button>
 </div>
 <hr class="border-b border-gray-300 dark:border-gray-600 mb-2">
 
       
-<ul id="myCompaniesList" class="text-xs text-gray-700 dark:text-gray-300 space-y-2"></ul>
+<ul id="myCompaniesList" class="text-xs text-gray-700 dark:text-gray-300 space-y-2">
+  <!-- Η λίστα εταιρειών θα γεμίσει δυναμικά μέσω JS -->
+</ul>
     </aside>
   </div>
 
@@ -198,3 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
+
+

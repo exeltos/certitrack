@@ -162,25 +162,32 @@ exportBtn.classList.add('bg-blue-200/70', 'dark:bg-blue-800/40');
     document.getElementById('userSettingsBtn')?.addEventListener('click', () => window.location.href = 'supplier_info.html');
 
     document.getElementById('filterBlocked')?.addEventListener('click', () => {
-  document.getElementById('filterBlocked').classList.add('underline');
-  document.getElementById('filterActive')?.classList.remove('underline');
-  document.getElementById('filterAll')?.classList.remove('underline');
+  ['filterBlocked', 'filterActive', 'filterAll'].forEach(id => {
+    document.getElementById(id)?.classList.remove('underline', 'text-red-600', 'text-green-600', 'text-blue-600');
+  });
+  const btn = document.getElementById('filterBlocked');
+  btn?.classList.add('underline', 'text-red-600');
   loadCompanies();
-});
+});;
     document.getElementById('filterActive')?.addEventListener('click', () => {
-  document.getElementById('filterActive').classList.add('underline');
-  document.getElementById('filterBlocked')?.classList.remove('underline');
-  document.getElementById('filterAll')?.classList.remove('underline');
+  ['filterBlocked', 'filterActive', 'filterAll'].forEach(id => {
+    document.getElementById(id)?.classList.remove('underline', 'text-red-600', 'text-green-600', 'text-blue-600');
+  });
+  const btn = document.getElementById('filterActive');
+  btn?.classList.add('underline', 'text-green-600');
   loadCompanies();
-});
+});;
     document.getElementById('filterAll')?.addEventListener('click', () => {
-  document.getElementById('filterAll').classList.add('underline');
-  document.getElementById('filterBlocked')?.classList.remove('underline');
-  document.getElementById('filterActive')?.classList.remove('underline');
+  ['filterBlocked', 'filterActive', 'filterAll'].forEach(id => {
+    document.getElementById(id)?.classList.remove('underline', 'text-red-600', 'text-green-600', 'text-blue-600');
+  });
+  const btn = document.getElementById('filterAll');
+  btn?.classList.add('underline', 'text-blue-600');
   loadCompanies();
-});
+});;
 
     await loadCompanies();
+lucide.createIcons();
 document.getElementById('searchInput')?.addEventListener('input', () => loadCertificates());
     await loadCertificates();
   }
@@ -429,6 +436,9 @@ function bindCertificateActions() {
     Swal.fire({ html: `<embed src="${btn.dataset.url}" type="application/pdf" width="100%" height="700px" class="rounded border" />`, showCloseButton: true, showConfirmButton: false, width: '90%' });
   }));
   document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', async () => {
+  console.log('📌 ΠΑΤΗΘΗΚΕ ΚΟΥΜΠΙ ΓΙΑ ΕΤΑΙΡΕΙΑ:', btn.dataset.id);
+  console.log('➤ current access:', btn.getAttribute('data-access'));
+  console.log('➤ icon:', btn.querySelector('i')?.getAttribute('data-lucide'));
     const result = await Swal.fire({ title: 'Διαγραφή Πιστοποιητικού', text: 'Είσαι σίγουρος/η;', icon: 'warning', showCancelButton: true });
     if (result.isConfirmed) {
       try {
@@ -565,26 +575,29 @@ listEl.innerHTML = companies.map(c => {
   return `
     <li class="flex justify-between items-center py-1">
       <span class="${isBlocked ? 'text-red-500' : ''}">• ${c.name} (${c.afm})</span>
-      <button data-id="${c.id}" class="block-btn text-xs ${isBlocked ? 'text-green-600' : 'text-red-500'} hover:underline">
-        ${isBlocked ? 'Επαναφορά' : 'Αποκλεισμός'}
+      <button data-id="${c.id}" data-access="${rel?.access}" class="block-btn text-xs ${isBlocked ? 'text-green-600' : 'text-red-500'} hover:opacity-80" title="${isBlocked ? 'Επαναφορά Πρόσβασης' : 'Αποκλεισμός Εταιρείας'}">
+        <i data-lucide="${isBlocked ? 'rotate-ccw' : 'user-x'}" class="w-4 h-4"></i>
       </button>
     </li>
   `;
 }).join('');
+lucide.createIcons();
 
   document.querySelectorAll('.block-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
     const companyId = btn.dataset.id;
-    const isBlocked = btn.textContent.trim() === 'Επαναφορά';
-    const newAccess = isBlocked ? 'granted' : 'blocked';
-    const title = isBlocked ? 'Επαναφορά Πρόσβασης' : 'Αποκλεισμός Εταιρείας';
-    const text = isBlocked
-      ? 'Θέλεις να επαναφέρεις την πρόσβαση αυτής της εταιρείας στα πιστοποιητικά σου;'
-      : 'Θέλεις να αποκλείσεις αυτή την εταιρεία από την πρόσβαση στα πιστοποιητικά σου;';
-    const confirmButtonText = isBlocked ? 'Ναι, επαναφορά' : 'Αποκλεισμός';
-    const successMessage = isBlocked
-      ? 'Η εταιρεία έχει πλέον πρόσβαση στα πιστοποιητικά σου.'
-      : 'Η εταιρεία αποκλείστηκε από την πρόσβαση στα πιστοποιητικά σου.';
+    const icon = btn.querySelector('i');
+const currentAccess = btn.getAttribute('data-access');
+const isBlocked = currentAccess === 'blocked';
+const newAccess = isBlocked ? 'granted' : 'blocked';
+const title = isBlocked ? 'Επαναφορά Πρόσβασης' : 'Αποκλεισμός Εταιρείας';
+const text = isBlocked
+  ? 'Θέλεις να επαναφέρεις την πρόσβαση αυτής της εταιρείας στα πιστοποιητικά σου;'
+  : 'Θέλεις να αποκλείσεις αυτή την εταιρεία από την πρόσβαση στα πιστοποιητικά σου;';
+const confirmButtonText = isBlocked ? 'Ναι, επαναφορά' : 'Αποκλεισμός';
+const successMessage = isBlocked
+  ? 'Η εταιρεία έχει πλέον πρόσβαση στα πιστοποιητικά σου.'
+  : 'Η εταιρεία αποκλείστηκε από την πρόσβαση στα πιστοποιητικά σου.';
 
     const { isConfirmed } = await Swal.fire({
       title,
@@ -613,7 +626,15 @@ listEl.innerHTML = companies.map(c => {
       if (error) throw error;
 
       Swal.fire('Ολοκληρώθηκε', successMessage, 'success');
-      await loadCompanies();
+console.log('✅ Νέο access:', newAccess);
+
+// Ενημέρωση κουμπιού χωρίς reload
+btn.setAttribute('data-access', newAccess);
+const icon = btn.querySelector('i');
+icon.setAttribute('data-lucide', newAccess === 'granted' ? 'user-x' : 'rotate-ccw');
+btn.classList.toggle('text-red-500', newAccess === 'granted');
+btn.classList.toggle('text-green-600', newAccess === 'blocked');
+lucide.createIcons();
     } catch (err) {
       console.error('❌ Σφάλμα:', err);
       Swal.fire('Σφάλμα', 'Κάτι πήγε στραβά. Προσπάθησε ξανά.', 'error');
