@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateIcons();
   }
 
-  // Initialize theme on page load
   if (
     localStorage.theme === 'dark' ||
     (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -34,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (darkToggle) darkToggle.addEventListener('click', toggleDarkMode);
 
-  // Password Visibility Toggle
   const pwdToggle = document.getElementById('togglePwd');
   const pwdInput = document.getElementById('password');
   if (pwdToggle && pwdInput) {
@@ -43,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Login Form Submission
   const loginForm = document.getElementById('loginForm');
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
@@ -64,24 +61,26 @@ document.addEventListener('DOMContentLoaded', () => {
           email = 'admin@certitrack.gr';
           redirectTo = 'admin_dashboard.html';
         } else {
-          // Check in companies
           const { data: comp, error: compErr } = await supabase
             .from('companies')
             .select('email')
             .eq('afm', username)
             .maybeSingle();
+
           if (compErr) throw compErr;
+
           if (comp?.email) {
             email = comp.email;
             redirectTo = 'company_dashboard.html';
           } else {
-            // Check in suppliers
             const { data: sup, error: supErr } = await supabase
               .from('suppliers')
               .select('email')
               .eq('afm', username)
               .maybeSingle();
+
             if (supErr) throw supErr;
+
             if (sup?.email) {
               email = sup.email;
               redirectTo = 'certificates.html';
@@ -99,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        console.log('🧪 Login response:', data);
+
         if (error) {
           Swal.close();
           return Swal.fire({
@@ -127,13 +126,38 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
 
+        // Έλεγχος αν ο χρήστης είναι μπλοκαρισμένος
+        const table = redirectTo.includes('company') ? 'companies' : 'suppliers';
+        const { data: blockedUser, error: blockedErr } = await supabase
+          .from(table)
+          .select('blocked')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (blockedErr) {
+          console.error('Σφάλμα κατά τον έλεγχο blocked:', blockedErr);
+        }
+
+        if (blockedUser?.blocked) {
+          await supabase.auth.signOut();
+          Swal.close();
+          return Swal.fire({
+            icon: 'warning',
+            title: 'Αποκλεισμένος Χρήστης',
+            text: 'Η συνδρομή σας έχει λήξει ή έχετε αποκλειστεί από το σύστημα.'
+          });
+        }
+
         Swal.fire({
           icon: 'success',
           title: 'Επιτυχία',
           text: 'Συνδεθήκατε με επιτυχία!',
           timer: 1500,
           showConfirmButton: false
-        }).then(() => window.location.href = redirectTo);
+        }).then(() => {
+          window.location.href = redirectTo;
+        });
+
       } catch (err) {
         console.error('Login error:', err);
         Swal.close();
