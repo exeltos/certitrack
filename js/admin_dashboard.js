@@ -22,8 +22,8 @@ function updateUserStats() {
       const expiry = new Date(grace);
       expiry.setFullYear(expiry.getFullYear() + 1);
       const now = new Date();
-      if (now < expiry) counts.active++;
-      else counts.inactive++;
+      if (now < expiry && !user.blocked) counts.active++;
+      else if (!user.blocked) counts.inactive++;
     } else {
       counts.inactive++;
     }
@@ -97,7 +97,7 @@ export async function loadAllUsers() {
   const companies = companiesRes.data || [];
   const suppliers = suppliersRes.data || [];
 
-  allUsersCache = [...companies.map(u => ({ ...u, role: 'Εταιρεία' })),
+  allUsersCache = [...companies.map(u => ({ ...u, role: 'Εταιρεία', status: '✅ Εγγεγραμμένος' })),
                    ...suppliers.map(u => ({ ...u, role: 'Προμηθευτής' }))];
 
   renderUsers(allUsersCache);
@@ -115,7 +115,7 @@ function renderUsers(users) {
     const name = user.name || '-';
     const afm = user.afm || '-';
     const email = user.email || '-';
-    const role = user.role;
+        const role = user.role;
     const status = user.status === '✅ Εγγεγραμμένος' ? 'Εγγεγραμμένος' : 'Εκκρεμής';
 
     const signupDate = user.timestamp ? new Date(user.timestamp) : null;
@@ -136,19 +136,21 @@ function renderUsers(users) {
     }
 
     const now = new Date();
-    const isActive = signupDate && now < new Date(new Date(signupDate).setDate(signupDate.getDate() + 7 + 365)) ? 'Ναι' : 'Όχι';
+    const isActive = user.blocked ? 'Μπλοκαρισμένος' : (signupDate && now < new Date(new Date(signupDate).setDate(signupDate.getDate() + 7 + 365)) ? 'Ναι' : 'Όχι');
 
     const row = document.createElement('tr');
+    row.classList.add('transition', 'duration-200', 'hover:bg-blue-50', 'dark:hover:bg-blue-900');
     if (user.blocked) row.classList.add('bg-red-50', 'dark:bg-red-900');
     row.innerHTML = `
-      <td class="px-4 py-2 whitespace-nowrap">${name}</td>
-      <td class="px-4 py-2 whitespace-nowrap">${afm}</td>
-      <td class="px-4 py-2 whitespace-nowrap">${role}</td>
-      <td class="px-4 py-2 whitespace-nowrap">${status}</td>
-      <td class="px-4 py-2 whitespace-nowrap">${displayDate}</td>
-      <td class="px-4 py-2 whitespace-nowrap">${renewalDate}</td>
-      <td class="px-4 py-2 whitespace-nowrap">${expiryDate}</td>
-      <td class="px-4 py-2 whitespace-nowrap">${isActive}</td>
+      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${name}</td>
+      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${email}</td>
+            <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${afm}</td>
+      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${role}</td>
+      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${status}</td>
+      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${displayDate}</td>
+      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${renewalDate}</td>
+      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${expiryDate}</td>
+      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${isActive}</td>
       <td class="px-4 py-2 whitespace-nowrap flex gap-2">
   ${user.blocked ? `
     <button class="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded unblock-user-btn" title="Επαναφορά" data-afm="${afm}" data-role="${role}">🔁</button>
@@ -395,17 +397,19 @@ if (signInError || !sessionData || !sessionData.user) {
   }
 });
 
+
+
 // 📤 Εξαγωγή σε Excel
 const exportBtn = document.getElementById('exportBtn');
 exportBtn?.addEventListener('click', () => {
   const table = document.getElementById('userTableBody');
   if (!table) return;
 
-  const headers = ["Επωνυμία", "ΑΦΜ", "Ρόλος", "Κατάσταση", "Ημ/νία Εγγραφής", "Ανανέωση", "Λήξη", "Ενεργός"];
+  const headers = ["Επωνυμία", "Email", "ΑΦΜ", "Ρόλος", "Κατάσταση", "Ημ/νία Εγγραφής", "Ανανέωση", "Λήξη", "Ενεργός"];
   let csv = headers.map(h => `"${h}"`).join(';') + '\n';
 
   for (const row of table.children) {
-    const cols = [...row.querySelectorAll('td')].slice(0, 8).map(td => td.textContent.trim());
+    const cols = [...row.querySelectorAll('td')].slice(0, 9).map(td => td.textContent.trim());
     csv += cols.map(val => `"${val}"`).join(';') + '\n';
   }
 
