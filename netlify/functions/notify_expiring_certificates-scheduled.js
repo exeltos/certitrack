@@ -13,6 +13,10 @@ exports.handler = async function () {
 
     const grouped = {};
     for (const cert of allCerts.data) {
+      if (!cert.supplier_afm || typeof cert.supplier_afm !== 'string' || cert.supplier_afm.trim() === '') {
+        console.warn(`[SKIP] Πιστοποιητικό χωρίς έγκυρο AFM:`, cert);
+        continue;
+      }
       const expDate = new Date(cert.date);
       const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
       
