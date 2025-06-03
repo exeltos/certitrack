@@ -257,13 +257,20 @@ if (searchTerm) {
         <td class="px-4 py-2 dark:text-white">${r.status}</td>
         <td class="px-4 py-2">—</td>`;
 
+    if (r.access !== 'blocked') {
     row.classList.add('hover:bg-blue-50', 'dark:hover:bg-gray-800');
+    row.classList.add('cursor-pointer');
     row.addEventListener('click', (e) => {
       const anyChecked = document.querySelectorAll('.supplier-checkbox:checked').length > 0;
       const isCheckbox = e.target.closest('input[type="checkbox"]');
       if (anyChecked || isCheckbox) return;
       window.location.href = `supplier_view.html?id=${r.id}`;
     });
+  } else {
+    row.classList.add('opacity-50');
+    const cells = row.querySelectorAll('td');
+    if (cells[1]) cells[1].innerHTML += ' <span class="text-red-500 ml-1">(Blocked)</span>';
+  }
     container.appendChild(row);
   }
 

@@ -586,7 +586,7 @@ lucide.createIcons();
   document.querySelectorAll('.block-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
     const companyId = btn.dataset.id;
-    const icon = btn.querySelector('i');
+    const iconEl = btn.querySelector('i');
 const currentAccess = btn.getAttribute('data-access');
 const isBlocked = currentAccess === 'blocked';
 const newAccess = isBlocked ? 'granted' : 'blocked';
@@ -630,8 +630,19 @@ console.log('✅ Νέο access:', newAccess);
 
 // Ενημέρωση κουμπιού χωρίς reload
 btn.setAttribute('data-access', newAccess);
-const icon = btn.querySelector('i');
-icon.setAttribute('data-lucide', newAccess === 'granted' ? 'user-x' : 'rotate-ccw');
+btn.setAttribute('data-access', newAccess);
+const parentLi = btn.closest('li');
+const nameSpan = parentLi?.querySelector('span');
+if (nameSpan) {
+  nameSpan.classList.remove('text-red-500');
+  if (newAccess === 'blocked') nameSpan.classList.add('text-red-500');
+}
+btn.innerHTML = `<i data-lucide="${newAccess === 'granted' ? 'user-x' : 'rotate-ccw'}" class="w-4 h-4"></i>`;
+btn.classList.remove('text-red-500', 'text-green-600');
+btn.classList.add(newAccess === 'granted' ? 'text-red-500' : 'text-green-600');
+btn.classList.toggle('text-red-500', newAccess === 'granted');
+btn.classList.toggle('text-green-600', newAccess === 'blocked');
+lucide.createIcons();
 btn.classList.toggle('text-red-500', newAccess === 'granted');
 btn.classList.toggle('text-green-600', newAccess === 'blocked');
 lucide.createIcons();
