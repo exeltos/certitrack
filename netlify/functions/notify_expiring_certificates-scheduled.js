@@ -13,8 +13,10 @@ exports.handler = async function () {
 
     const grouped = {};
     for (const cert of allCerts.data) {
-      console.log(`[DEBUG] Certificate: ${cert.title} | Date: ${cert.date} | Days Left: ${daysLeft}`);
-  console.log(`[DEBUG] Certificate: ${cert.title} | Date: ${cert.date} | Days Left: ${daysLeft}`);
+      const expDate = new Date(cert.date);
+      const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+      
+  
       const status = daysLeft < 0 ? 'expired' : daysLeft <= 30 ? 'soon' : null;
 
       if (!status) continue;
