@@ -237,16 +237,33 @@ if (searchTerm) {
 
   for (const r of list) {
     const row = document.createElement('tr');
-    row.innerHTML = `
-      <td class="px-4 py-2 text-center align-middle dark:text-white">
-        <input type="checkbox" class="supplier-checkbox w-4 h-4" data-id="${r.id}" data-status="${r.status}">
-      </td>
-      <td class="px-4 py-2 dark:text-white">${r.name}</td>
-      <td class="px-4 py-2 dark:text-white">${r.afm}</td>
-      <td class="px-4 py-2 dark:text-white">${r.email}</td>
-      <td class="px-4 py-2 dark:text-white">${r.status}</td>
-      <td class="px-4 py-2 dark:text-white">${r.stats.total} (Ενεργά: ${r.stats.active}, Προς λήξη: ${r.stats.soon}, Ληγμένα: ${r.stats.expired})</td>
-    `;
+    row.innerHTML = r.user_id
+      ? `
+        <td class="px-4 py-2 text-center align-middle dark:text-white">
+          <input type="checkbox" class="supplier-checkbox w-4 h-4" data-id="${r.id}" data-status="${r.status}">
+        </td>
+        <td class="px-4 py-2 dark:text-white">${r.name}</td>
+        <td class="px-4 py-2 dark:text-white">${r.afm}</td>
+        <td class="px-4 py-2 dark:text-white">${r.email}</td>
+        <td class="px-4 py-2 dark:text-white">${r.status}</td>
+        <td class="px-4 py-2 dark:text-white">${r.stats.total} (Ενεργά: ${r.stats.active}, Προς λήξη: ${r.stats.soon}, Ληγμένα: ${r.stats.expired})</td>`
+      : `
+        <td class="px-4 py-2 text-center align-middle dark:text-white">
+          <input type="checkbox" class="supplier-checkbox w-4 h-4" data-id="${r.id}" data-status="${r.status}">
+        </td>
+        <td class="px-4 py-2 dark:text-white">${r.name}</td>
+        <td class="px-4 py-2 dark:text-white">${r.afm}</td>
+        <td class="px-4 py-2 dark:text-white">${r.email}</td>
+        <td class="px-4 py-2 dark:text-white">${r.status}</td>
+        <td class="px-4 py-2">—</td>`;
+
+    row.classList.add('hover:bg-blue-50', 'dark:hover:bg-gray-800');
+    row.addEventListener('click', (e) => {
+      const anyChecked = document.querySelectorAll('.supplier-checkbox:checked').length > 0;
+      const isCheckbox = e.target.closest('input[type="checkbox"]');
+      if (anyChecked || isCheckbox) return;
+      window.location.href = `supplier_view.html?id=${r.id}`;
+    });
     container.appendChild(row);
   }
 

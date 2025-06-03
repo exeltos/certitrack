@@ -28,10 +28,10 @@ export async function initPage() {
   const certContainer = document.getElementById('certContainer');
 
   exportBtn?.addEventListener('click', () => {
-    const isExporting = certContainer.getAttribute('data-export-mode') === 'true';
+    const isExporting = certContainer?.getAttribute('data-export-mode') === 'true';
 
     if (isExporting) {
-    certContainer.setAttribute('data-export-mode', 'false');
+    if (certContainer) certContainer.setAttribute('data-export-mode', 'false');
     document.querySelectorAll('.export-checkbox').forEach(cb => cb.remove());
     if (selectAllBtn) selectAllBtn.classList.add('hidden');
     if (downloadBtn) downloadBtn.classList.add('hidden');
@@ -53,11 +53,11 @@ Swal.fire({
     }).then(result => {
       if (!result.isConfirmed) return;
       const type = result.value;
-      certContainer.setAttribute('data-export-mode', 'true');
+      if (certContainer) if (certContainer) certContainer.setAttribute('data-export-mode', 'true');
       if (selectAllBtn) selectAllBtn.classList.remove('hidden');
 if (downloadBtn) downloadBtn.classList.add('hidden');
 
-      exportBtn.setAttribute('data-export-type', type);
+      if (exportBtn) exportBtn.setAttribute('data-export-type', type);
 exportBtn.classList.add('bg-blue-200/70', 'dark:bg-blue-800/40');
       exportBtn.classList.add('rounded-full', 'transition-all');
 
@@ -732,6 +732,7 @@ return { title, type, date, file };
     }
   });
 }
+
 
 
 
