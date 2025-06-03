@@ -70,11 +70,14 @@ exports.handler = async function () {
 
           console.log(`[NOTIFIED] ${supplier.email} | Type: ${type}`);
 
-          await supabase.from('supplier_notifications').insert({
-            supplier_id: supplier.id,
-            type,
-            sent_at: new Date().toISOString()
-          });
+          const { error: insertErr } = await supabase.from('supplier_notifications').insert({
+  supplier_id: supplier.id,
+  type,
+  sent_at: new Date().toISOString()
+});
+if (insertErr) {
+  console.error(`[INSERT ERROR] ${supplier.email}:`, insertErr);
+}
         } catch (mailErr) {
           console.error(`[MAIL EXCEPTION] ${supplier.email}:`, mailErr);
         }
@@ -90,3 +93,4 @@ exports.handler = async function () {
     return { statusCode: 500, body: 'Internal Server Error' };
   }
 };
+

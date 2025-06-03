@@ -218,13 +218,17 @@ document.addEventListener('DOMContentLoaded', () => {
   <!-- JavaScript remains unchanged -->
 <script type="module">
   import { initPage } from './js/certificates.js';
-  document.addEventListener('DOMContentLoaded', initPage);
+  document.addEventListener('DOMContentLoaded', () => {
+  if (window.lucide) lucide.createIcons();
+  initPage();
+});
 </script>
 
 
 
 </body>
 </html>
+
 
 
 

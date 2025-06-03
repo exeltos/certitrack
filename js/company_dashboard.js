@@ -268,6 +268,14 @@ if (searchTerm) {
     });
   } else {
     row.classList.add('opacity-50');
+    row.classList.add('cursor-pointer');
+    row.addEventListener('click', () => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Πρόσβαση Απορρίφθηκε',
+        text: 'Ο συγκεκριμένος προμηθευτής δεν επιτρέπει την πρόσβασή σας στα αρχεία του.'
+      });
+    });
     const cells = row.querySelectorAll('td');
     if (cells[1]) cells[1].innerHTML += ' <span class="text-red-500 ml-1">(Blocked)</span>';
   }
@@ -717,4 +725,5 @@ function showAddSupplierForm() {
   }
 });
 }
+
 

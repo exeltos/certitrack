@@ -89,8 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!email) {
-          Swal.close();
-          return Swal.fire({
+  Swal.close();
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  return Swal.fire({
             icon: 'warning',
             title: 'Σφάλμα',
             text: 'Δεν βρέθηκε χρήστης με αυτά τα στοιχεία.'
@@ -100,17 +102,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
-          Swal.close();
-          return Swal.fire({
+  Swal.close();
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  return Swal.fire({
             icon: 'error',
             title: 'Λάθος στοιχεία',
-            text: 'Ο συνδυασμός email και κωδικού είναι λανθασμένος.'
+            text: 'Ο συνδυασμός Α.Φ.Μ. και κωδικού είναι λανθασμένος.'
           });
         }
 
         if (data?.user && !data.user.email_confirmed_at) {
-          Swal.close();
-          return Swal.fire({
+  Swal.close();
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  return Swal.fire({
             icon: 'info',
             title: 'Ανεπιβεβαίωτο Email',
             text: 'Παρακαλώ επιβεβαιώστε το email σας μέσω του συνδέσμου που σας στείλαμε.'
@@ -118,8 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!data.session) {
-          Swal.close();
-          return Swal.fire({
+  Swal.close();
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  return Swal.fire({
             icon: 'error',
             title: 'Αποτυχία',
             text: 'Η σύνδεση απέτυχε. Προσπαθήστε ξανά.'
@@ -139,9 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (blockedUser?.blocked) {
-          await supabase.auth.signOut();
-          Swal.close();
-          return Swal.fire({
+  await supabase.auth.signOut();
+  Swal.close();
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  return Swal.fire({
             icon: 'warning',
             title: 'Αποκλεισμένος Χρήστης',
             text: 'Η συνδρομή σας έχει λήξει ή έχετε αποκλειστεί από το σύστημα.'
@@ -161,12 +171,15 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.error('Login error:', err);
         Swal.close();
-        Swal.fire({
-          icon: 'error',
-          title: 'Σφάλμα',
-          text: 'Κάτι πήγε στραβά κατά τη σύνδεση. Προσπαθήστε ξανά.'
+        document.getElementById('username').value = '';
+document.getElementById('password').value = '';
+Swal.fire({
+  icon: 'error',
+  title: 'Σφάλμα',
+  text: 'Κάτι πήγε στραβά κατά τη σύνδεση. Προσπαθήστε ξανά.'
         });
       }
     });
   }
 });
+

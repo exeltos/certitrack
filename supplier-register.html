@@ -22,6 +22,7 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
     .fade-in { animation: fadeIn 0.8s ease-out; }
   </style>
+<script src="https://unpkg.com/lucide@latest" defer></script>
 </head>
 <body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col">
 
@@ -57,11 +58,11 @@
         <input id="afmConfirm" name="afmConfirm" type="text" placeholder="Επιβεβαίωση ΑΦΜ" required class="w-full p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
         <div class="relative">
           <input id="password" name="password" type="password" placeholder="Κωδικός" required class="w-full p-3 pr-10 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-3 flex items-center text-gray-400 dark:text-gray-300">👁️</button>
+          <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-3 flex items-center text-gray-400 dark:text-gray-300"><i data-lucide="eye"></i></button>
         </div>
         <div class="relative">
           <input id="passwordConfirm" name="passwordConfirm" type="password" placeholder="Επιβεβαίωση Κωδικού" required class="w-full p-3 pr-10 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <button type="button" onclick="togglePassword('passwordConfirm')" class="absolute inset-y-0 right-3 flex items-center text-gray-400 dark:text-gray-300">👁️</button>
+          <button type="button" onclick="togglePassword('passwordConfirm')" class="absolute inset-y-0 right-3 flex items-center text-gray-400 dark:text-gray-300"><i data-lucide="eye"></i></button>
         </div>
         <p id="errorMsg" class="text-red-500 text-sm hidden"></p>
         <button id="submitBtn" type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg flex justify-center items-center">
@@ -278,6 +279,7 @@
   </script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+  if (window.lucide) lucide.createIcons();
     const toggleBtn = document.getElementById('theme-toggle');
     const moonIcon = document.getElementById('icon-moon');
     const sunIcon = document.getElementById('icon-sun');
@@ -305,6 +307,7 @@
 </script>
 </body>
 </html>
+
 
 
 

@@ -26,14 +26,14 @@
     <div class="flex items-center gap-3">
       
       
-      <a href="company_info.html" title="Ρυθμίσεις" class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"><i data-lucide="settings"></i></a>
-      <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
+      <a href="company_info.html" title="Ρυθμίσεις" class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"><i data-lucide="settings" aria-hidden="true"></i></a>
+      <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
         <svg id="icon-moon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z"/></svg>
         <svg id="icon-sun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
   <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM3.03 4.97a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L3.03 6.03a.75.75 0 010-1.06zM15.85 4.97a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM2 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 012 10zM14.25 9.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM3.03 15.03a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM15.85 15.03l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06z" />
 </svg>
       </button>
-      <button id="logoutBtn" class="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm transition" title="Αποσύνδεση"><i data-lucide="log-out"></i></button>
+      <button id="logoutBtn" class="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm transition" title="Αποσύνδεση"><i data-lucide="log-out" aria-hidden="true"></i></button>
     </div>
   </div>
 </header>
@@ -46,9 +46,9 @@
 
   <!-- Controls -->
   <div class="flex items-center justify-start gap-3 mb-2 w-full px-4">
-  <button id="deleteSelectedBtn" class="hidden flex items-center gap-1 text-sm text-red-600 hover:text-red-700 transition"><i data-lucide="trash" class="w-4 h-4"></i>Διαγραφή</button>
-  <button id="sendInviteBtn" class="hidden flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition"><i data-lucide="send" class="w-4 h-4"></i>Πρόσκληση</button>
-  <button id="downloadSelectedBtn" class="hidden flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 transition"><i data-lucide="download" class="w-4 h-4"></i>Λήψη</button>
+  <button id="deleteSelectedBtn" class="hidden flex items-center gap-1 text-sm text-red-600 hover:text-red-700 transition"><i data-lucide="trash" class="w-4 h-4" aria-hidden="true"></i>Διαγραφή</button>
+  <button id="sendInviteBtn" class="hidden flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition"><i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>Πρόσκληση</button>
+  <button id="downloadSelectedBtn" class="hidden flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 transition"><i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>Λήψη</button>
   <input id="searchInputSuppliers" type="text" placeholder="Αναζήτηση προμηθευτών..." class="p-2 border rounded-xl w-60 focus:outline-none focus:ring-2 focus:ring-indigo-400" oninput="filterData()">
     <select id="sortSelect" class="p-2 border rounded-xl">
       <option value="">Ταξινόμηση</option>
@@ -57,7 +57,7 @@
       <option value="registered">Εγγεγραμμένος</option>
       <option value="pending">Εκκρεμής</option>
     </select>
-    <button onclick="showAddSupplierForm()" class="w-10 h-10 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center shadow hover:shadow-lg transition" title="Προσθήκη Προμηθευτή"><i data-lucide="plus"></i></button>
+    <button onclick="showAddSupplierForm()" class="w-10 h-10 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center shadow hover:shadow-lg transition" title="Προσθήκη Προμηθευτή"><i data-lucide="plus" aria-hidden="true"></i></button>
   </div>
 
   <div id="dataSection" class="w-full px-4">
@@ -65,10 +65,10 @@
     <thead class="bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 text-xs uppercase">
       <tr>
         <th scope="col" class="px-4 py-2 text-center dark:text-white"><input type="checkbox" id="selectAllSuppliers" class="w-4 h-4"></th>
-        <th scope="col" class="px-4 py-2 dark:text-white">Επωνυμία</th>
-        <th scope="col" class="px-4 py-2 dark:text-white">ΑΦΜ</th>
-        <th scope="col" class="px-4 py-2 dark:text-white">Email</th>
-        <th scope="col" class="px-4 py-2 dark:text-white">Κατάσταση</th>
+        <th scope="col" class="px-4 py-2 text-left dark:text-white">Επωνυμία</th>
+        <th scope="col" class="px-4 py-2 text-left dark:text-white">ΑΦΜ</th>
+        <th scope="col" class="px-4 py-2 text-left dark:text-white">Email</th>
+        <th scope="col" class="px-4 py-2 text-left dark:text-white">Κατάσταση</th>
         <th scope="col" class="px-4 py-2 dark:text-white">Πιστοποιητικά</th>
       </tr>
     </thead>
@@ -87,6 +87,7 @@
     document.getElementById('icon-sun')?.classList.toggle('hidden', !isDark);
   }
   document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide) lucide.createIcons();
     const toggleBtn = document.getElementById('theme-toggle');
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
@@ -104,5 +105,6 @@
 </footer>
 </body>
 </html>
+
 
 
