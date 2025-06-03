@@ -145,6 +145,12 @@ exportBtn.classList.add('bg-blue-200/70', 'dark:bg-blue-800/40');
           hideLoading();
           return;
         }
+
+        if (!profile?.afm || profile.afm.trim() === '') {
+          Swal.fire('Σφάλμα', 'Το προφίλ σου δεν έχει δηλωμένο ΑΦΜ. Δεν μπορεί να αποθηκευτεί το πιστοποιητικό.', 'error');
+          hideLoading();
+          return;
+        }
     const displayName = profile?.name || currentUser.email;
     document.getElementById('userGreeting').textContent = `Καλώς ήρθες, ${displayName}`;
 
@@ -749,9 +755,3 @@ return { title, type, date, file };
     }
   });
 }
-
-
-
-
-
-
