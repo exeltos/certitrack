@@ -490,14 +490,19 @@ document.getElementById('sendInviteBtn')?.addEventListener('click', async () => 
 
   showLoading();
   try {
-    const res = await fetch('/.netlify/functions/send_signup_invite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        companyId: company.id,
-        supplierIds: pending.map(p => p.id)
-      })
-    });
+    for (const p of pending) {
+  const res = await fetch('/.netlify/functions/send_signup_invite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: p.name,
+      email: p.email,
+      afm: company.afm,
+      type: 'supplier'
+    })
+  });
+  if (!res.ok) throw new Error(`Αποτυχία αποστολής για ${p.email}`);
+}
     if (!res.ok) throw new Error('Σφάλμα κατά την αποστολή.');
 
     await Swal.fire({
