@@ -503,7 +503,7 @@ document.getElementById('sendInviteBtn')?.addEventListener('click', async () => 
   });
   if (!res.ok) throw new Error(`Αποτυχία αποστολής για ${p.email}`);
 }
-    if (!res.ok) throw new Error('Σφάλμα κατά την αποστολή.');
+    
 
     await Swal.fire({
       icon: 'success',
