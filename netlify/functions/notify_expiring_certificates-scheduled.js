@@ -13,6 +13,8 @@ exports.handler = async function () {
 
     const grouped = {};
     for (const cert of allCerts.data) {
+      const expDate = new Date(cert.date);
+      const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
       
       console.log(`[DEBUG] Cert: ${cert.title} | AFM: ${cert.supplier_afm} | Date: ${cert.date} | Days Left: ${daysLeft}`);
       
