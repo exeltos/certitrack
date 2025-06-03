@@ -490,27 +490,41 @@ document.getElementById('sendInviteBtn')?.addEventListener('click', async () => 
 
   showLoading();
   try {
+    const failed = [];
     for (const p of pending) {
-  const res = await fetch('/.netlify/functions/send_signup_invite', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: p.name,
-      email: p.email,
-      afm: company.afm,
-      type: 'supplier'
-    })
-  });
-  if (!res.ok) throw new Error(`Αποτυχία αποστολής για ${p.email}`);
-}
-    
+      try {
+        const res = await fetch('/.netlify/functions/send_email-express', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: p.email, type: 'invite', subject: '📨 Πρόσκληση Εγγραφής στο CertiTrack' })
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          console.warn(`⚠️ Σφάλμα για ${p.email}: ${errText}`);
+          failed.push(`${p.name} (${p.email})`);
+        }
+      } catch (err) {
+        console.error(`❌ Αποτυχία αποστολής για ${p.email}`, err);
+        failed.push(`${p.name} (${p.email})`);
+      }
+    }
 
-    await Swal.fire({
+    if (failed.length) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Ολοκληρώθηκε μερικώς',
+        html: `Απεστάλησαν ${pending.length - failed.length} προσκλήσεις.<br><br>Απέτυχαν:<ul style="text-align:left">` +
+          failed.map(e => `<li>• ${e}</li>`).join('') + '</ul>',
+        confirmButtonText: 'OK'
+      });
+    } else {
+      await Swal.fire({
       icon: 'success',
       title: '✅ Εστάλησαν',
       text: `Απεστάλησαν ${pending.length} προσκλήσεις.`,
       confirmButtonText: 'OK'
     });
+  }
   } catch (err) {
     handleError(err);
   } finally {
@@ -675,8 +689,8 @@ function showAddSupplierForm() {
     } catch (err) {
       handleError(err);
     } finally {
-      hideLoading();
-    }
-  });
+    hideLoading();
+  }
+});
 }
 
