@@ -1,3 +1,4 @@
+import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -5,101 +6,131 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-exports.handler = async function () {
+export async function handler(event) {
+  console.log('[CertiTrack] Έναρξη ειδοποίησης ληγμένων/προς λήξη πιστοποιητικών');
+
   try {
     const today = new Date();
-    const allCerts = await supabase.from('supplier_certificates').select('*');
-    if (allCerts.error) throw allCerts.error;
 
-    const grouped = {};
-    for (const cert of allCerts.data) {
-      if (!cert.supplier_afm || typeof cert.supplier_afm !== 'string' || cert.supplier_afm.trim() === '') {
-        console.warn(`[SKIP] Πιστοποιητικό χωρίς έγκυρο AFM:`, cert);
-        continue;
-      }
-      const expDate = new Date(cert.date);
-      const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-      
-      console.log(`[DEBUG] Cert: ${cert.title} | AFM: ${cert.supplier_afm} | Date: ${cert.date} | Days Left: ${daysLeft}`);
-      
-      
-  
-      const status = daysLeft < 0 ? 'expired' : daysLeft <= 30 ? 'soon' : null;
+    // ----------- 🔹 Επεξεργασία Πιστοποιητικών Προμηθευτών
+    const { data: supplierCerts, error: certErr } = await supabase.from('supplier_certificates').select('*');
+    if (certErr) throw certErr;
 
+    const groupedSuppliers = {};
+    for (const cert of supplierCerts) {
+      const exp = new Date(cert.date);
+      if (!cert.date || isNaN(exp)) continue;
+      const days = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+      const status = days < 0 ? 'expired' : days <= 30 ? 'soon' : null;
       if (!status) continue;
 
-      if (!grouped[cert.supplier_afm]) grouped[cert.supplier_afm] = { expired: [], soon: [] };
-      grouped[cert.supplier_afm][status].push(cert);
+      if (!groupedSuppliers[cert.supplier_afm]) groupedSuppliers[cert.supplier_afm] = { expired: [], soon: [] };
+      groupedSuppliers[cert.supplier_afm][status].push(cert);
     }
 
-    console.log('[DEBUG] Grouped suppliers:', grouped);
-
-    for (const afm of Object.keys(grouped)) {
+    for (const afm of Object.keys(groupedSuppliers)) {
       const { data: supplier, error } = await supabase.from('suppliers').select('id, email').eq('afm', afm).maybeSingle();
-      if (error || !supplier?.email) {
-        console.warn(`[SKIP] No supplier for AFM ${afm}`);
-        continue;
+      if (error || !supplier?.email) continue;
+
+      const { data: notifications } = await supabase.from('supplier_notifications').select('type').eq('supplier_id', supplier.id);
+      const sent = notifications?.map(n => n.type) || [];
+
+      for (const type of ['expired', 'soon']) {
+        const certs = groupedSuppliers[afm][type];
+        if (!certs.length || sent.includes(type)) continue;
+
+        const subject = type === 'expired' ? 'Έχετε ληγμένα πιστοποιητικά' : 'Πιστοποιητικά προς λήξη σε 30 ημέρες';
+        const html = generateHtmlMessage(certs, type);
+
+        await sendEmail(supplier.email, subject, html);
+        await supabase.from('supplier_notifications').insert({ supplier_id: supplier.id, type, sent_at: new Date().toISOString() });
       }
-
-      console.log(`[PROCESSING] Supplier: ${supplier.email} | AFM: ${afm}`);
-
-      const notifications = await supabase.from('supplier_notifications')
-        .select('type')
-        .eq('supplier_id', supplier.id);
-
-      const sentTypes = notifications.data?.map(n => n.type) || [];
-
-      const send = async (type, certList) => {
-        if (certList.length === 0 || sentTypes.includes(type)) {
-          console.log(`[SKIP] Already notified: ${supplier.email} [${type}]`);
-          return;
-        }
-
-        const subject = type === 'expired'
-          ? 'Έχετε ληγμένα πιστοποιητικά'
-          : 'Πιστοποιητικά προς λήξη σε 30 ημέρες';
-
-        const message = `${subject}:
-` + certList.map(c => `• ${c.title} - Λήγει: ${c.date}`).join('\n');
-
-        console.log(`[SENDING] To: ${supplier.email} | Subject: ${subject}`);
-
-        try {
-          const res = await fetch('https://www.certitrack.gr/.netlify/functions/send_email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: supplier.email, subject, message })
-          });
-
-          if (!res.ok) {
-            const errText = await res.text();
-            console.error(`[MAIL ERROR] ${supplier.email}: ${errText}`);
-            return;
-          }
-
-          console.log(`[NOTIFIED] ${supplier.email} | Type: ${type}`);
-
-          const { error: insertErr } = await supabase.from('supplier_notifications').insert({
-  supplier_id: supplier.id,
-  type,
-  sent_at: new Date().toISOString()
-});
-if (insertErr) {
-  console.error(`[INSERT ERROR] ${supplier.email}:`, insertErr);
-}
-        } catch (mailErr) {
-          console.error(`[MAIL EXCEPTION] ${supplier.email}:`, mailErr);
-        }
-      };
-
-      await send('expired', grouped[afm].expired);
-      await send('soon', grouped[afm].soon);
     }
 
-    return { statusCode: 200, body: 'Notifications sent.' };
+    // ----------- 🔹 Επεξεργασία Πιστοποιητικών Εταιρειών
+    const { data: companyCerts, error: compErr } = await supabase.from('company_certificates').select('*');
+    if (compErr) throw compErr;
+
+    const groupedCompanies = {};
+    for (const cert of companyCerts) {
+      const exp = new Date(cert.date);
+      if (!cert.date || isNaN(exp)) continue;
+      const days = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+      const status = days < 0 ? 'expired' : days <= 30 ? 'soon' : null;
+      if (!status) continue;
+
+      if (!groupedCompanies[cert.company_afm]) groupedCompanies[cert.company_afm] = { expired: [], soon: [] };
+      groupedCompanies[cert.company_afm][status].push(cert);
+    }
+
+    for (const afm of Object.keys(groupedCompanies)) {
+      const { data: company, error } = await supabase.from('companies').select('id, email').eq('afm', afm).maybeSingle();
+      if (error || !company?.email) continue;
+
+      const { data: notifications } = await supabase.from('company_notifications').select('type').eq('company_id', company.id);
+      const sent = notifications?.map(n => n.type) || [];
+
+      for (const type of ['expired', 'soon']) {
+        const certs = groupedCompanies[afm][type];
+        if (!certs.length || sent.includes(type)) continue;
+
+        const subject = type === 'expired' ? 'Έχετε ληγμένα πιστοποιητικά' : 'Πιστοποιητικά προς λήξη σε 30 ημέρες';
+        const html = generateHtmlMessage(certs, type);
+
+        await sendEmail(company.email, subject, html);
+        await supabase.from('company_notifications').insert({ company_id: company.id, type, sent_at: new Date().toISOString() });
+      }
+    }
+
+    console.log('[CertiTrack] Ολοκληρώθηκε επιτυχώς');
+    return { statusCode: 200, body: 'Notifications sent successfully' };
+
   } catch (err) {
     console.error('[CertiTrack] Σφάλμα ειδοποίησης:', err);
-    return { statusCode: 500, body: 'Internal Server Error' };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message })
+    };
   }
-};
+}
 
+// ✉️ HTML generator
+function generateHtmlMessage(certs, type) {
+  return `
+    <p>${type === 'expired'
+      ? 'Ένα ή περισσότερα από τα πιστοποιητικά σας έχουν <strong>λήξει</strong>:'
+      : 'Τα παρακάτω πιστοποιητικά σας <strong>λήγουν εντός 30 ημερών</strong>:'}</p>
+    <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; margin-top: 10px;">
+      <thead><tr><th>Τίτλος</th><th>Ημερομηνία Λήξης</th></tr></thead>
+      <tbody>
+        ${certs.map(c => `<tr><td>${c.title}</td><td>${new Date(c.date).toLocaleDateString('el-GR')}</td></tr>`).join('')}
+      </tbody>
+    </table>
+    <p style="margin-top:12px;">Συνδεθείτε στο CertiTrack για να δείτε και να διαχειριστείτε τα πιστοποιητικά σας.</p>
+  `;
+}
+
+// 📬 Mailersend
+async function sendEmail(to, subject, html) {
+  const res = await fetch('https://api.mailersend.com/v1/email', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.MAILERSEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: {
+        email: process.env.MAIL_FROM || 'info@exeltos.com',
+        name: 'CertiTrack'
+      },
+      to: [{ email: to }],
+      subject,
+      html
+    })
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`[Mail Error] ${to}: ${error}`);
+  }
+}
