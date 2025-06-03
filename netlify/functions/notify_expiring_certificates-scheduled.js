@@ -10,21 +10,12 @@ export async function handler() {
     const { data, error } = await supabase.from('supplier_certificates').select('*').limit(5);
 
     console.log('[TEST] error:', error);
-    console.log('[TEST] data:', data);
     console.log('[TEST] count:', data?.length);
-    if (Array.isArray(data)) {
-      data.forEach(c => {
-        console.log('📄 Τίτλος:', c.title);
-        console.log('📅 Ημερομηνία:', c.date);
-        console.log('🔢 AFM:', c.supplier_afm);
-      });
-    }
+    console.log('[ENV] KEY START:', process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 5));
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        count: data?.length || 0
-      })
+      body: JSON.stringify({ count: data?.length, key: process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 5) })
     };
   } catch (err) {
     console.error('[❌ ERROR]', err);
