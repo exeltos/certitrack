@@ -8,27 +8,25 @@ const supabase = createClient(
 
 export async function handler() {
   try {
-    const today = new Date();
-    console.log('[DEBUG] Σήμερα:', today.toISOString());
+    const { data, error } = await supabase.from('supplier_certificates').select('*');
 
-    const { data: certs, error } = await supabase.from('supplier_certificates').select('*');
-    if (error) throw error;
+    console.log('[CHECK] error:', error);
+    console.log('[CHECK] data is array?', Array.isArray(data));
+    console.log('[CHECK] data:', data);
 
-    console.log(`[DEBUG] Πλήθος πιστοποιητικών: ${certs.length}`);
-
-    for (const cert of certs) {
-      console.log('------------------------------');
-      console.log('📄 Τίτλος:', cert.title);
-      console.log('📅 Ημερομηνία string:', cert.date);
-      console.log('🧪 typeof date:', typeof cert.date);
-
-      const parsed = new Date(cert.date);
-      console.log('✅ Date object:', parsed.toISOString());
-    }
-
-    return { statusCode: 200, body: '✅ Test Done. Check logs' };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        length: data?.length || 0,
+        isArray: Array.isArray(data),
+        raw: data
+      })
+    };
   } catch (err) {
     console.error('[ERROR]', err);
-    return { statusCode: 500, body: '❌ Σφάλμα: ' + err.message };
+    return {
+      statusCode: 500,
+      body: '❌ Σφάλμα: ' + err.message
+    };
   }
 }
