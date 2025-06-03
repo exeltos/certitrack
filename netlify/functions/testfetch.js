@@ -24,3 +24,6 @@ export async function handler(event) {
     };
   }
 }
+
+console.log('[ENV] URL:', process.env.SUPABASE_URL);
+console.log('[ENV] KEY START:', process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 5));
