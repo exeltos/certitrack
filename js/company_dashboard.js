@@ -9,6 +9,7 @@ lucide.createIcons();
 dashboardInit();
 
 async function dashboardInit() {
+  console.log('🏁 ΕΝΑΡΞΗ dashboardInit');
   lucide.createIcons();
   try {
     const { data: { session: sess } } = await supabase.auth.getSession();
@@ -27,6 +28,7 @@ async function dashboardInit() {
     if (compErr) return logout();
 
     company = comp;
+    console.log('🏢 Εταιρεία:', company);
     await updateCertificateCount();
     setActiveTab('btnSuppliers');
     await showSuppliers(company);
@@ -152,22 +154,22 @@ async function showSuppliers(company) {
   document.getElementById('loading')?.classList.remove('hidden');
   document.getElementById('supplierControls')?.classList.remove('hidden');
   await renderSuppliers(company);
-  toggleSendDownloadButtons();
+  
   document.getElementById('loading')?.classList.add('hidden');
 }
 
 async function renderSuppliers(company, search = '') {
+  const deleteBtn = document.getElementById('deleteSelectedBtn');
   const sort = document.getElementById('sortSelect')?.value || '';
   showLoading();
 
-  // Fetch supplier relations
   const { data: relations, error: relError } = await supabase
     .from('company_suppliers')
     .select('company_name, supplier_name, supplier_id, access, suppliers(id, name, afm, email, user_id)')
     .eq('company_id', company.id);
+  console.log('📋 Suppliers fetched:', relations);
   if (relError) return handleError(relError);
 
-  // Batch fetch certificates for all suppliers
   const userIds = relations.map(r => r.suppliers?.user_id).filter(Boolean);
   let certsBySupplier = {};
   if (userIds.length) {
@@ -185,163 +187,131 @@ async function renderSuppliers(company, search = '') {
     }
   }
 
-  // Build list with stats
   let list = relations.map(r => {
-    const s = r.suppliers || { name: r.supplier_name, afm: '', email: '', user_id: null }; 
-    const certs = certsBySupplier[s.user_id] || [];
-    const now = new Date();
-    const stats = { total: certs.length, active: 0, soon: 0, expired: 0 };
-    certs.forEach(cert => {
-      const days = Math.ceil((new Date(cert.date) - now) / (1000 * 60 * 60 * 24));
-      if (days < 0) stats.expired++;
-      else if (days <= 30) stats.soon++;
-      else stats.active++;
-    });
-    return {
+  const s = r.suppliers || { name: r.supplier_name, afm: '', email: '', user_id: null };
+  const certs = certsBySupplier[s.user_id] || [];
+  const now = new Date();
+  const stats = { total: certs.length, active: 0, soon: 0, expired: 0 };
+  certs.forEach(cert => {
+    const days = Math.ceil((new Date(cert.date) - now) / (1000 * 60 * 60 * 24));
+    if (days < 0) stats.expired++;
+    else if (days <= 30) stats.soon++;
+    else stats.active++;
+  });
+  return {
     id: r.supplier_id,
     access: r.access,
-      user_id: s.user_id,
-      name: s.name,
-      afm: s.afm,
-      email: s.email,
-      status: s.user_id ? '✅ Εγγεγραμμένος' : '🕓 Εκκρεμή εγγραφή',
-      stats
-    };
-  }).filter(r => r.name.toLowerCase().includes(search.toLowerCase()));
+    user_id: s.user_id,
+    name: s.name,
+    afm: s.afm,
+    email: s.email,
+    status: s.user_id ? '✅ Εγγεγραμμένος' : '🕓 Εκκρεμή εγγραφή',
+    stats
+  };
+});
 
-  if (sort === 'afm') {
-    list.sort((a, b) => a.afm.localeCompare(b.afm));
-  } else if (sort === 'name') {
-    list.sort((a, b) => a.name.localeCompare(b.name));
-  } else if (sort === 'registered') {
-    list.sort((a, b) => (b.status === '✅ Εγγεγραμμένος') - (a.status === '✅ Εγγεγραμμένος'));
-  } else if (sort === 'pending') {
-    list.sort((a, b) => (b.status === '🕓 Εκκρεμή εγγραφή') - (a.status === '🕓 Εκκρεμή εγγραφή'));
-  }
+const searchTerm = search.trim().toLowerCase();
+if (searchTerm) {
+  list = list.filter(r => r.name.toLowerCase().includes(searchTerm));
+}
 
-  // Continue with stats-rendered list
-  const container = document.getElementById('dataSection');
-  container.className = 'grid gap-4 grid-cols-1 sm:grid-cols-2';
+  if (sort === 'afm') list.sort((a, b) => a.afm.localeCompare(b.afm));
+  else if (sort === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === 'registered') list.sort((a, b) => (b.status === '✅ Εγγεγραμμένος') - (a.status === '✅ Εγγεγραμμένος'));
+  else if (sort === 'pending') list.sort((a, b) => (b.status === '🕓 Εκκρεμή εγγραφή') - (a.status === '🕓 Εκκρεμή εγγραφή'));
+
+  const container = document.getElementById('supplierTableBody');
   container.innerHTML = '';
 
   if (!list.length) {
-    container.innerHTML = '<p class="text-center">Δεν βρέθηκαν προμηθευτές.</p>';
+    container.innerHTML = '<tr><td colspan="6" class="text-center py-4">Δεν βρέθηκαν προμηθευτές.</td></tr>';
     hideLoading();
+  // Εμφάνιση κουμπιού διαγραφής αν υπάρχουν επιλεγμένα checkbox
+  const checkboxes = document.querySelectorAll('.supplier-checkbox');
+  updateDeleteButtonVisibility();
+  checkboxes.forEach(cb => cb.addEventListener('change', () => {
+    updateDeleteButtonVisibility();
+  }));
     return;
   }
 
   for (const r of list) {
-    // Use precomputed stats
-    const stats = r.stats;
-
-    const card = document.createElement('div');
-    card.className = 'bg-white bg-gray-100 px-8 py-6 rounded-2xl shadow hover:shadow-xl transition fade-in flex justify-between items-center w-full max-w-7xl self-center relative';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'supplier-checkbox w-5 h-5 absolute top-2 right-2 z-10 rounded-full accent-purple-600 border border-purple-300 hidden';
-    checkbox.dataset.id = r.id;
-    checkbox.dataset.status = r.status;
-    checkbox.addEventListener('change', () => {
-  const container = document.getElementById('dataSection');
-  const selected = document.querySelectorAll('.supplier-checkbox:checked');
-  const isPending = container.getAttribute('data-pending-mode') === 'true';
-  const isExporting = container.getAttribute('data-export-mode') === 'true';
-  const isDeleting = container.getAttribute('data-delete-mode') === 'true';
-
-  if (selected.length > 0) {
-    if (isPending) document.getElementById('sendEmailBtn')?.classList.remove('hidden');
-    if (isExporting) document.getElementById('downloadBtn')?.classList.remove('hidden');
-    if (isDeleting) document.getElementById('deleteSelectedBtn')?.classList.remove('hidden');
-  } else {
-    document.getElementById('sendEmailBtn')?.classList.add('hidden');
-    document.getElementById('downloadBtn')?.classList.add('hidden');
-    document.getElementById('deleteSelectedBtn')?.classList.add('hidden');
-  }
-});
-    // μεταφέρεται το checkbox μέσα στο innerHTML
-
-    const isExporting = container.getAttribute('data-export-mode') === 'true';
-    if (isExporting) {
-      checkbox.classList.remove('hidden');
-    }
-
-      card.innerHTML = `
-      <input type="checkbox" class="supplier-checkbox w-5 h-5 absolute top-2 right-2 z-10 rounded-full accent-purple-600 border border-purple-300 ${isExporting ? '' : 'hidden'}" data-id="${r.id}" data-status="${r.status}" />
-      <div>
-        <h3 class="font-semibold text-lg">${r.name}</h3>
-        <p class="text-sm">ΑΦΜ: ${r.afm || '—'}</p>
-        <p class="text-sm">Email: ${r.email || '—'}</p>
-        <p class="text-xs mt-2 text-gray-600">
-          Πιστοποιητικά: ${r.stats.total} (Ενεργά: ${r.stats.active}, Προς λήξη: ${r.stats.soon}, Ληγμένα: ${r.stats.expired})
-        </p>
-      </div>
-      <div class="text-xs font-medium mt-1 ${r.status === '✅ Εγγεγραμμένος' ? 'text-green-500' : 'text-yellow-500'}">${r.status}</div>`;
-
-    // ✅ Προσθέτουμε event listener στο δυναμικό checkbox
-    card.querySelector('.supplier-checkbox')?.addEventListener('change', () => {
-      const container = document.getElementById('dataSection');
-      const selected = document.querySelectorAll('.supplier-checkbox:checked');
-      const isPending = container.getAttribute('data-pending-mode') === 'true';
-      const isExporting = container.getAttribute('data-export-mode') === 'true';
-      const isDeleting = container.getAttribute('data-delete-mode') === 'true';
-
-      if (selected.length > 0) {
-        if (isPending) document.getElementById('sendEmailBtn')?.classList.remove('hidden');
-        if (isExporting) document.getElementById('downloadBtn')?.classList.remove('hidden');
-        if (isDeleting) document.getElementById('deleteSelectedBtn')?.classList.remove('hidden');
-      } else {
-        document.getElementById('sendEmailBtn')?.classList.add('hidden');
-        document.getElementById('downloadBtn')?.classList.add('hidden');
-        document.getElementById('deleteSelectedBtn')?.classList.add('hidden');
-      }
-    });
-
-    if (r.access === 'blocked') {
-  card.classList.add('opacity-50');
-  const blockedLabel = document.createElement('div');
-  blockedLabel.className = 'absolute top-1 left-1 text-red-500 text-xs';
-  blockedLabel.textContent = '🚫 Μπλοκαρισμένος';
-  card.appendChild(blockedLabel);
-} else {
-      card.classList.add('cursor-pointer', 'hover:ring-2', 'hover:ring-blue-400');
-    }
-    card.onclick = (e) => {
-      const container = document.getElementById('dataSection');
-      const isExporting = container?.getAttribute('data-export-mode') === 'true';
-      const isPending = container?.getAttribute('data-pending-mode') === 'true';
-      const isDeleting = container?.getAttribute('data-delete-mode') === 'true';
-      const isBlocked = r.access === 'blocked';
-      if (e.target.closest('.supplier-checkbox')) return;
-      if (isBlocked && !isDeleting) {
-        Swal.fire('Περιορισμένη Πρόσβαση', `Ο προμηθευτής ${r.name} δεν επιτρέπει την πρόσβασή σας στις πληροφορίες του.`, 'info');
-        return;
-      }
-      if (isExporting || isPending || isDeleting) return;
-      window.location.href = `supplier_view.html?id=${r.id}`;
-    };
-
-    container.appendChild(card);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="px-4 py-2 text-center align-middle dark:text-white">
+        <input type="checkbox" class="supplier-checkbox w-4 h-4" data-id="${r.id}" data-status="${r.status}">
+      </td>
+      <td class="px-4 py-2 dark:text-white">${r.name}</td>
+      <td class="px-4 py-2 dark:text-white">${r.afm}</td>
+      <td class="px-4 py-2 dark:text-white">${r.email}</td>
+      <td class="px-4 py-2 dark:text-white">${r.status}</td>
+      <td class="px-4 py-2 dark:text-white">${r.stats.total} (Ενεργά: ${r.stats.active}, Προς λήξη: ${r.stats.soon}, Ληγμένα: ${r.stats.expired})</td>
+    `;
+    container.appendChild(row);
   }
 
   document.getElementById('supplierCount').textContent = list.length;
-  lucide.createIcons();
   hideLoading();
 }
+  
+
+  
+
 
 
 window.filterData = filterData;
 document.getElementById('sortSelect')?.addEventListener('change', () => renderSuppliers(company));
 window.showAddSupplierForm = showAddSupplierForm;
 
-function toggleSendDownloadButtons() {
+// Εμφάνιση/Απόκρυψη κουμπιών ανάλογα με επιλεγμένα checkbox
+function updateDeleteButtonVisibility() {
   const selected = document.querySelectorAll('.supplier-checkbox:checked');
-  document.getElementById('sendEmailBtn')?.classList.toggle('hidden', selected.length === 0);
+  const sendBtn = document.getElementById('sendInviteBtn');
+  const deleteBtn = document.getElementById('deleteSelectedBtn');
+  const downloadBtn = document.getElementById('downloadSelectedBtn');
+
+  const anyPending = Array.from(selected).some(cb => cb.dataset.status?.includes('Εκκρεμή'));
+
+  deleteBtn?.classList.toggle('hidden', selected.length === 0);
+  sendBtn?.classList.toggle('hidden', !(anyPending && selected.length > 0));
+  downloadBtn?.classList.toggle('hidden', selected.length === 0);
 }
 
+document.addEventListener('change', (e) => {
+  if (e.target.classList.contains('supplier-checkbox') || e.target.id === 'selectAllSuppliers') {
+    updateDeleteButtonVisibility();
+  }
+});
+
+document.getElementById('selectAllSuppliers')?.addEventListener('change', (e) => {
+  const checked = e.target.checked;
+  document.querySelectorAll('.supplier-checkbox').forEach(cb => {
+    cb.checked = checked;
+    cb.dispatchEvent(new Event('change'));
+  });
+
+  // Αν έγινε μαζική επιλογή, να φαίνεται μόνο το κουμπί διαγραφής
+  const deleteBtn = document.getElementById('deleteSelectedBtn');
+  const sendBtn = document.getElementById('sendInviteBtn');
+  const selected = document.querySelectorAll('.supplier-checkbox:checked');
+  const anyPending = Array.from(selected).some(cb => cb.dataset.status?.includes('Εκκρεμή'));
+
+  deleteBtn?.classList.toggle('hidden', selected.length === 0);
+  sendBtn?.classList.add('hidden');
+});
+;
+
+// 📧 Mail button: εμφάνιση μόνο εκκρεμών & εμφάνιση κουμπιού πρόσκλησης
+const mailBtn = document.getElementById('mailBtn');
+mailBtn?.addEventListener('click', async () => {
+  await showPendingSuppliersOnly();
+  document.getElementById('sendInviteBtn')?.classList.remove('hidden');
+});
+;
+
+
+
 async function showPendingSuppliersOnly() {
-  document.getElementById('certControls')?.classList.add('hidden');
-  document.getElementById('supplierControls')?.classList.remove('hidden');
   showLoading();
   const { data, error } = await supabase
     .from('company_suppliers')
@@ -350,7 +320,7 @@ async function showPendingSuppliersOnly() {
 
   if (error) return handleError(error);
 
-  const container = document.getElementById('dataSection');
+  const container = document.getElementById('supplierTableBody');
   container.innerHTML = '';
 
   const filtered = data
@@ -367,56 +337,26 @@ async function showPendingSuppliersOnly() {
     })
     .filter(r => !r.user_id);
 
+  if (!filtered.length) {
+    container.innerHTML = '<tr><td colspan="6" class="text-center py-4">Δεν υπάρχουν εκκρεμείς προμηθευτές.</td></tr>';
+    hideLoading();
+    return;
+  }
+
   for (const r of filtered) {
-    const card = document.createElement('div');
-    card.className = 'bg-white bg-gray-100 px-8 py-6 rounded-2xl shadow hover:shadow-xl transition fade-in flex justify-between items-center w-full max-w-7xl self-center relative';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'supplier-checkbox w-5 h-5 absolute top-2 right-2 rounded-full accent-purple-600 border border-purple-300';
-    checkbox.dataset.id = r.id;
-    checkbox.dataset.status = r.status;
-    checkbox.addEventListener('change', () => {
-  const container = document.getElementById('dataSection');
-  const selected = document.querySelectorAll('.supplier-checkbox:checked');
-  const isPending = container.getAttribute('data-pending-mode') === 'true';
-  const isExporting = container.getAttribute('data-export-mode') === 'true';
-  const isDeleting = container.getAttribute('data-delete-mode') === 'true';
-
-  if (selected.length > 0) {
-    if (isPending) document.getElementById('sendEmailBtn')?.classList.remove('hidden');
-    if (isExporting) document.getElementById('downloadBtn')?.classList.remove('hidden');
-    if (isDeleting) document.getElementById('deleteSelectedBtn')?.classList.remove('hidden');
-  } else {
-    document.getElementById('sendEmailBtn')?.classList.add('hidden');
-    document.getElementById('downloadBtn')?.classList.add('hidden');
-    document.getElementById('deleteSelectedBtn')?.classList.add('hidden');
-  }
-});
-    card.appendChild(checkbox);
-
-    card.innerHTML += `
-      <div>
-        <h3 class="font-semibold text-lg">${r.name}</h3>
-        <p class="text-sm">ΑΦΜ: ${r.afm || '—'}</p>
-        <p class="text-sm">Email: ${r.email || '—'}</p>
-      </div>
-      <div class="text-xs font-medium mt-1 text-yellow-500">${r.status}</div>
-    `;
-
-    card.onclick = (e) => {
-      const hasVisibleCheckboxes = document.querySelectorAll('.supplier-checkbox:not(.hidden)').length > 0;
-      if (hasVisibleCheckboxes || e.target.closest('.supplier-checkbox')) return;
-      window.location.href = `supplier_view.html?id=${r.id}`;
-    };
-
-    container.appendChild(card);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="px-4 py-2 text-center">
+        <input type="checkbox" class="supplier-checkbox w-4 h-4" data-id="${r.id}" data-status="${r.status}">
+      </td>
+      <td class="px-4 py-2">${r.name}</td>
+      <td class="px-4 py-2">${r.afm}</td>
+      <td class="px-4 py-2 dark:text-white">${r.email}</td>
+      <td class="px-4 py-2 dark:text-white">${r.status}</td>
+      <td class="px-4 py-2">—</td>`;
+    container.appendChild(row);
   }
 
-  document.getElementById('certEmailActions')?.classList.remove('hidden');
-  document.getElementById('sendEmailBtn')?.classList.add('hidden');
-  document.getElementById('selectAllBtn')?.classList.remove('hidden');
-  document.getElementById('downloadBtn')?.classList.add('hidden');
   document.getElementById('supplierCount').textContent = filtered.length;
   hideLoading();
 }
@@ -424,283 +364,162 @@ async function showPendingSuppliersOnly() {
 // Ενέργειες για το κουμπί Εξαγωγή
 // ✅ Καθαρισμός λογικής mailBtn & exportBtn χωρίς επικαλύψεις
 
-function resetExportPendingUI() {
-  const container = document.getElementById('dataSection');
-  container.removeAttribute('data-delete-mode');
-  container.removeAttribute('data-export-mode');
-  container.removeAttribute('data-pending-mode');
-  document.querySelectorAll('.supplier-checkbox').forEach(cb => {
-    cb.classList.add('hidden');
-    cb.checked = false;
-  });
-  document.getElementById('certEmailActions')?.classList.add('hidden');
-  document.getElementById('sendEmailBtn')?.classList.add('hidden');
-  document.getElementById('downloadBtn')?.classList.add('hidden');
-  document.getElementById('selectAllBtn')?.classList.add('hidden');
-}
 
-function toggleHighlight(el, active) {
-  if (!el) return;
-  el.classList.toggle('bg-blue-100', active);
-  el.classList.toggle('text-blue-800', active);
-  el.classList.toggle('dark:bg-blue-800', active);
-  el.classList.toggle('dark:text-white', active);
-  el.classList.toggle('rounded-full', active);
-  el.classList.toggle('shadow-sm', active);
-  const icon = el.querySelector('i');
-  if (icon) {
-    icon.classList.toggle('stroke-[3]', active);
-    icon.classList.toggle('scale-110', active);
-  }
-}
-
-const mailBtn = document.getElementById('mailBtn');
-if (mailBtn && !mailBtn.hasAttribute('data-listener')) {
-  mailBtn.setAttribute('data-listener', 'true');
-  mailBtn.addEventListener('click', () => {
-    const container = document.getElementById('dataSection');
-    const isPending = container.getAttribute('data-pending-mode') === 'true';
-    toggleHighlight(mailBtn, !isPending);
-    toggleHighlight(document.getElementById('exportMenuBtn'), false);
-
-    if (isPending) {
-      resetExportPendingUI();
-      showSuppliers(company);
-    } else {
-      container.setAttribute('data-pending-mode', 'true');
-      showPendingSuppliersOnly();
-    }
-  });
-}
-
-const exportBtn = document.getElementById('exportMenuBtn');
-const deleteModeBtn = document.getElementById('deleteModeBtn');
-if (deleteModeBtn && !deleteModeBtn.hasAttribute('data-listener')) {
-  deleteModeBtn.setAttribute('data-listener', 'true');
-  deleteModeBtn.addEventListener('click', () => {
-    const container = document.getElementById('dataSection');
-    const isDeleting = container.getAttribute('data-delete-mode') === 'true';
-    toggleHighlight(deleteModeBtn, !isDeleting);
-
-    if (isDeleting) {
-      resetExportPendingUI();
-      showSuppliers(company);
-      deleteModeBtn.textContent = '🗑️ Διαγραφή Προμηθευτών';
-    } else {
-      container.setAttribute('data-delete-mode', 'true');
-      container.removeAttribute('data-export-mode');
-      container.removeAttribute('data-pending-mode');
-      document.getElementById('certEmailActions')?.classList.remove('hidden');
-      document.getElementById('selectAllBtn')?.classList.remove('hidden');
-      document.querySelectorAll('.supplier-checkbox').forEach(cb => cb.classList.remove('hidden'));
-      document.getElementById('downloadBtn')?.classList.add('hidden');
-      document.getElementById('sendEmailBtn')?.classList.add('hidden');
-      document.getElementById('deleteSelectedBtn')?.classList.add('hidden');
-      deleteModeBtn.textContent = '❌ Ακύρωση Διαγραφής';
-    }
-  });
-}
-document.getElementById('selectAllBtn')?.addEventListener('click', () => {
-  const checkboxes = document.querySelectorAll('.supplier-checkbox');
-  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-  checkboxes.forEach(cb => {
-    cb.classList.remove('hidden');
-    cb.checked = !allChecked;
-    cb.dispatchEvent(new Event('change'));
-  });
-
-  const container = document.getElementById('dataSection');
-  const isPending = container.getAttribute('data-pending-mode') === 'true';
-  const isExporting = container.getAttribute('data-export-mode') === 'true';
-  const isDeleting = container.getAttribute('data-delete-mode') === 'true';
-
-  document.getElementById('sendEmailBtn')?.classList.toggle('hidden', !(isPending && Array.from(checkboxes).some(cb => cb.checked)));
-  document.getElementById('downloadBtn')?.classList.toggle('hidden', !(isExporting && Array.from(checkboxes).some(cb => cb.checked)));
-  document.getElementById('deleteSelectedBtn')?.classList.toggle('hidden', !(isDeleting && Array.from(checkboxes).some(cb => cb.checked)));
-});
 
 // ✅ Εξαγωγή Excel από επιλεγμένους
 
-// ✅ Διαγραφή επιλεγμένων προμηθευτών
-const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-deleteSelectedBtn?.addEventListener('click', async () => {
-  const selected = [...document.querySelectorAll('.supplier-checkbox:checked')];
-  if (!selected.length) return;
-
-  const confirm = await Swal.fire({
-    title: 'Επιβεβαίωση Διαγραφής',
-    html: `<p>Για να επιβεβαιώσεις τη διαγραφή, πληκτρολόγησε το ΑΦΜ της εταιρείας σου και τον κωδικό πρόσβασης.</p>
-           <input id="afmConfirm" class="swal2-input" placeholder="ΑΦΜ">
-           <input id="passwordConfirm" type="password" class="swal2-input" placeholder="Κωδικός Πρόσβασης">`,
-    icon: 'warning',
-    focusConfirm: false,
-    showCancelButton: true,
-    confirmButtonText: 'Διαγραφή',
-    cancelButtonText: 'Ακύρωση',
-    preConfirm: async () => {
-      const afmInput = document.getElementById('afmConfirm').value.trim();
-      const passwordInput = document.getElementById('passwordConfirm').value.trim();
-
-      if (!afmInput || !passwordInput) {
-        Swal.showValidationMessage('Συμπλήρωσε και τα δύο πεδία.');
-        return false;
-      }
-
-      if (afmInput !== company.afm) {
-        Swal.showValidationMessage('Λανθασμένο ΑΦΜ.');
-        return false;
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: session.user.email,
-        password: passwordInput
-      });
-
-      if (error) {
-        Swal.showValidationMessage('Λανθασμένος κωδικός πρόσβασης.');
-        return false;
-      }
-
-      return true;
-    }
-  });
-
-  if (!confirm.isConfirmed) return;
-
-  for (const cb of selected) {
-    const supplierId = cb.dataset.id;
-    if (!supplierId) continue;
-    await supabase
-      .from('company_suppliers')
-      .delete()
-      .eq('company_id', company.id)
-      .eq('supplier_id', supplierId);
-  }
-
-  Swal.fire('Ολοκληρώθηκε', 'Οι επιλεγμένοι προμηθευτές διαγράφηκαν.', 'success');
-  await showSuppliers(company);
-});
-
-// ✅ Αποστολή προσκλήσεων εγγραφής σε επιλεγμένους
-const sendEmailBtn = document.getElementById('sendEmailBtn');
-sendEmailBtn?.addEventListener('click', async () => {
-  const selected = [...document.querySelectorAll('.supplier-checkbox:checked')];
-  if (!selected.length) return;
-
-  let sentCount = 0;
-  for (const cb of selected) {
-    const card = cb.closest('div');
-    const email = card.querySelector('p:nth-of-type(2)')?.textContent?.replace('Email: ', '').trim();
-    const afm = card.querySelector('p:nth-of-type(1)')?.textContent?.replace('ΑΦΜ: ', '').trim();
-
-    if (!email || !email.includes('@') || !afm) continue;
-
-    try {
-      const res = await fetch('/.netlify/functions/send_email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          type: 'invite',
-          subject: '📨 Πρόσκληση Εγγραφής στο CertiTrack',
-          from: { email: 'noreply@certitrack.gr', name: 'CertiTrack' }
-        })
-      });
-
-      if (res.ok) {
-        sentCount++;
-        const { data: supplier, error } = await supabase
-          .from('suppliers')
-          .select('id')
-          .eq('afm', afm)
-          .maybeSingle();
-        if (!error && supplier?.id) {
-          await supabase.from('supplier_invitation').insert({
-            supplier_id: supplier.id,
-            email,
-            sent_by: company?.id ?? userId,
-            sent_at: new Date().toISOString()
-          });
-        }
-      } else {
-        const txt = await res.text();
-        console.error('❌ Αποτυχία αποστολής:', res.status, txt);
-      }
-    } catch (err) {
-      console.error('Invite error:', err);
-    }
-  }
-
-  Swal.fire('Ολοκληρώθηκε', `Στάλθηκαν ${sentCount} προσκλήσεις.`, 'success');
-});
-const downloadBtn = document.getElementById('downloadBtn');
-downloadBtn?.addEventListener('click', () => {
+document.getElementById('downloadSelectedBtn')?.addEventListener('click', () => {
   const selected = document.querySelectorAll('.supplier-checkbox:checked');
   if (!selected.length) return;
 
-  const rows = [['Επωνυμία', 'ΑΦΜ', 'Email']];
-  selected.forEach(cb => {
-    const card = cb.closest('div');
-    const name = card.querySelector('h3')?.textContent || '';
-    const afm = card.querySelector('p:nth-of-type(1)')?.textContent.replace('ΑΦΜ: ', '') || '';
-    const email = card.querySelector('p:nth-of-type(2)')?.textContent.replace('Email: ', '') || '';
-    rows.push([name, afm, email]);
+  const rows = Array.from(selected).map(cb => {
+    const row = cb.closest('tr');
+    const cells = row.querySelectorAll('td');
+    return {
+      Επωνυμία: cells[1].innerText.trim(),
+      ΑΦΜ: cells[2].innerText.trim(),
+      Email: cells[3].innerText.trim(),
+      Κατάσταση: cells[4].innerText.trim(),
+      Πιστοποιητικά: cells[5].innerText.trim(),
+    };
   });
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Προμηθευτές');
-  XLSX.writeFile(wb, 'certitrack_suppliers.xlsx');
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Προμηθευτές');
+
+  const now = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(workbook, `suppliers_export_${now}.xlsx`);
 });
 
-  const container = document.getElementById('dataSection');
-  const isPending = container.getAttribute('data-pending-mode') === 'true';
-  const isExporting = container.getAttribute('data-export-mode') === 'true';
-  const isDeleting = container.getAttribute('data-delete-mode') === 'true';
+// ✅ Διαγραφή επιλεγμένων προμηθευτών
 
-  document.getElementById('sendEmailBtn')?.classList.toggle('hidden', !(isPending && Array.from(checkboxes).some(cb => cb.checked)));
-  document.getElementById('downloadBtn')?.classList.toggle('hidden', !(isExporting && Array.from(checkboxes).some(cb => cb.checked)));
-  document.getElementById('deleteSelectedBtn')?.classList.toggle('hidden', !(isDeleting && Array.from(checkboxes).some(cb => cb.checked)));
-;
+document.getElementById('deleteSelectedBtn')?.addEventListener('click', async () => {
+  const selectedCheckboxes = document.querySelectorAll('.supplier-checkbox:checked');
+  if (selectedCheckboxes.length === 0) return;
 
-  // ✅ Η μεταβλητή checkboxes δεν είναι ορατή εδώ — μεταφέρθηκε εντός block ή δηλώθηκε εκτός
-// Γι' αυτό, αφαιρούμε αυτό το block γιατί η λογική υπάρχει ήδη νωρίτερα μέσα στον ίδιο listener
-;
-if (exportBtn && !exportBtn.hasAttribute('data-listener')) {
-  exportBtn.setAttribute('data-listener', 'true');
-  exportBtn.addEventListener('click', () => {
-    const container = document.getElementById('dataSection');
-    const isExporting = container.getAttribute('data-export-mode') === 'true';
-    toggleHighlight(exportBtn, !isExporting);
-    toggleHighlight(document.getElementById('mailBtn'), false);
+  const { value: formValues } = await Swal.fire({
+    title: 'Επιβεβαίωση Διαγραφής',
+    html:
+      '<input id="swal-username" class="swal2-input" placeholder="ΑΦΜ">' +
+      '<input id="swal-password" type="password" class="swal2-input" placeholder="Κωδικός">',
+    focusConfirm: false,
+    preConfirm: () => {
+      const username = document.getElementById('swal-username').value.trim();
+      const password = document.getElementById('swal-password').value.trim();
+      if (!username || !password) {
+        Swal.showValidationMessage('Συμπλήρωσε και τα δύο πεδία.');
+        return false;
+      }
+      return { username, password };
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Επιβεβαίωση',
+    cancelButtonText: 'Άκυρο'
+  });
 
-    if (isExporting) {
-      resetExportPendingUI();
-      showSuppliers(company);
+  if (!formValues) return;
+
+  try {
+    showLoading();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: `${company.afm}@confirm.local`,
+      password: formValues.password
+    });
+
+    if (error || data.user.id !== session.user.id) {
+      throw new Error('Μη έγκυρα στοιχεία επιβεβαίωσης.');
+    }
+
+    const idsToDelete = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+    const { error: delErr } = await supabase
+      .from('company_suppliers')
+      .delete()
+      .in('supplier_id', idsToDelete)
+      .eq('company_id', company.id);
+
+    if (delErr) throw delErr;
+
+    Swal.fire('Ολοκληρώθηκε', 'Οι προμηθευτές αφαιρέθηκαν από τη λίστα σας.', 'success');
+    await showSuppliers(company);
+  } catch (err) {
+    handleError(err);
+  } finally {
+    hideLoading();
+  }
+});
+
+// ✅ Αποστολή προσκλήσεων εγγραφής σε επιλεγμένους
+
+document.getElementById('sendInviteBtn')?.addEventListener('click', async () => {
+  const selected = document.querySelectorAll('.supplier-checkbox:checked');
+  if (!selected.length) return;
+
+  const pending = [], registered = [];
+
+  selected.forEach(cb => {
+    const row = cb.closest('tr');
+    const status = cb.dataset.status || '';
+    const name = row?.querySelectorAll('td')[1]?.innerText || '—';
+    const email = row?.querySelectorAll('td')[3]?.innerText || '—';
+    if (status.includes('Εγγεγραμμένος')) {
+      registered.push(`${name} (${email})`);
     } else {
-      Swal.fire({
-        title: 'Επιλέξτε Τύπο Εξαγωγής',
-        input: 'select',
-        inputOptions: {
-          excel: 'Excel (.xlsx)',
-          pdf: 'PDF (.pdf)'
-        },
-        inputPlaceholder: 'Τύπος αρχείου',
-        showCancelButton: true,
-        confirmButtonText: 'Συνέχεια'
-      }).then(result => {
-        if (!result.isConfirmed) return;
-        container.setAttribute('data-export-mode', 'true');
-        container.removeAttribute('data-pending-mode');
-        document.getElementById('certEmailActions')?.classList.remove('hidden');
-        document.getElementById('selectAllBtn')?.classList.remove('hidden');
-        document.querySelectorAll('.supplier-checkbox').forEach(cb => cb.classList.remove('hidden'));
-        document.getElementById('downloadBtn')?.classList.add('hidden');
-        showSuppliers(company);
-      });
+      pending.push({ id: cb.dataset.id, name, email });
     }
   });
-}
+
+  if (registered.length) {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Προσοχή',
+      html: `Έχεις επιλέξει ${registered.length} ήδη εγγεγραμμένο(ους):<br><ul style="text-align:left;margin-top:6px">` +
+        registered.map(r => `<li>• ${r}</li>`).join('') +
+        '</ul><br>Μόνο οι εκκρεμείς θα λάβουν πρόσκληση.',
+      showCancelButton: true,
+      confirmButtonText: 'Συνέχεια',
+      cancelButtonText: 'Ακύρωση'
+    });
+    if (!result.isConfirmed) return;
+  }
+
+  if (!pending.length) {
+    await Swal.fire('Δεν υπάρχουν εκκρεμείς', 'Δεν επιλέχθηκαν προμηθευτές με εκκρεμή εγγραφή.', 'info');
+    return;
+  }
+
+  showLoading();
+  try {
+    const res = await fetch('/.netlify/functions/send_signup_invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        companyId: company.id,
+        supplierIds: pending.map(p => p.id)
+      })
+    });
+    if (!res.ok) throw new Error('Σφάλμα κατά την αποστολή.');
+
+    await Swal.fire({
+      icon: 'success',
+      title: '✅ Εστάλησαν',
+      text: `Απεστάλησαν ${pending.length} προσκλήσεις.`,
+      confirmButtonText: 'OK'
+    });
+  } catch (err) {
+    handleError(err);
+  } finally {
+    hideLoading();
+  }
+});
+
+// ✅ Η μεταβλητή checkboxes δεν είναι ορατή εδώ — μεταφέρθηκε εντός block ή δηλώθηκε εκτός
+// Γι' αυτό, αφαιρούμε αυτό το block γιατί η λογική υπάρχει ήδη νωρίτερα μέσα στον ίδιο listener
+;
+
+    
+  ;
+
 
 
 function showAddSupplierForm() {
@@ -816,12 +635,15 @@ function showAddSupplierForm() {
         if (existing) {
           supplierId = existing.id;
         } else {
-          const { data: newSupplierData, error: insertErr } = await supabase.from('suppliers').insert([{ name, email, afm, status: '🕓 Μη Εγγεγραμμένος' }]).select();
+          const { data: newSupplierData, error: insertErr } = await supabase
+            .from('suppliers')
+            .insert([{ name, email, afm, status: '🕓 Μη Εγγεγραμμένος' }])
+            .select();
+
           if (insertErr) throw insertErr;
           supplierId = newSupplierData[0].id;
         }
 
-        // check if company_suppliers entry exists
         const { data: existingLink, error: linkErr } = await supabase
           .from('company_suppliers')
           .select('id')
@@ -832,49 +654,19 @@ function showAddSupplierForm() {
         if (linkErr) throw linkErr;
 
         if (!existingLink) {
-          await supabase.from('company_suppliers').insert([{ company_id: company.id, supplier_id: supplierId, status: '🕓 Μη Εγγεγραμμένος', timestamp: new Date().toISOString(), company_name: company.name, supplier_name: name }]);
+          await supabase.from('company_suppliers').insert([{
+            company_id: company.id,
+            supplier_id: supplierId,
+            status: '🕓 Μη Εγγεγραμμένος',
+            timestamp: new Date().toISOString(),
+            company_name: company.name,
+            supplier_name: name
+          }]);
         }
 
         Swal.fire('Επιτυχία', 'Ο προμηθευτής προστέθηκε ή συνδέθηκε.', 'success');
-        await showSuppliers(company);
-        return;
+                await showSuppliers(company);
       }
-
-      let supplierId;
-      const { data: existing, error: existingErr } = await supabase
-        .from('suppliers')
-        .select('id')
-        .eq('afm', afm)
-        .maybeSingle();
-
-      if (existingErr) throw existingErr;
-
-      if (existing) {
-        supplierId = existing.id;
-      } else {
-        const { data: newSupplierData, error: insertErr } = await supabase.from('suppliers').insert([{ name, email, afm, status: '🕓 Μη Εγγεγραμμένος' }]).select();
-
-        if (insertErr) throw insertErr;
-        supplierId = newSupplierData[0].id;
-      }
-
-      // check if company_suppliers entry exists
-      const { data: existingLink, error: linkErr } = await supabase
-        .from('company_suppliers')
-        .select('id')
-        .eq('company_id', company.id)
-        .eq('supplier_id', supplierId)
-        .maybeSingle();
-
-      if (linkErr) throw linkErr;
-
-      if (!existingLink) {
-        await supabase.from('company_suppliers').insert([{ company_id: company.id, supplier_id: supplierId, status: '🕓 Μη Εγγεγραμμένος', timestamp: new Date().toISOString(), company_name: company.name, supplier_name: name }]);
-        
-      }
-
-      Swal.fire('Επιτυχία', 'Ο προμηθευτής προστέθηκε ή συνδέθηκε.', 'success');
-      await showSuppliers(company);
     } catch (err) {
       handleError(err);
     } finally {

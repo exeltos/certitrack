@@ -6,28 +6,7 @@
   <title>CertiTrack - Εταιρεία</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
-    .fade-in { animation: fadeIn 0.6s ease-in-out; }
-    .skeleton { background-color: #374151; border-radius: 0.75rem; animation: pulse 1.5s ease-in-out infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
-    .expired { border: 2px solid #dc2626 !important; }
-    .near-expire { border: 2px solid #f59e0b !important; }
-    .card {
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    border-radius: 0.75rem;
-    background-color: white;
-    width: 100%;
-    max-width: 320px; /* σταθερό πλάτος καρτών */
-    min-height: 200px; /* σταθερό ύψος για να μην μικραίνει */
-}
-
-    .dark .card { background-color: #1f2937; }
-    .card:hover { transform: translateY(-6px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); }
-  .card {
-  animation: fadeIn 0.4s ease-in-out;
-}
+  body { font-family: 'Inter', sans-serif; }
 </style>
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -45,12 +24,8 @@
       <h1 id="companyHeader" class="text-xl font-semibold text-blue-700 dark:text-teal-400">CertiTrack - <span id="companyName"></span></h1>
     </div>
     <div class="flex items-center gap-3">
-      <button id="exportMenuBtn" title="Εξαγωγή" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg" aria-pressed="false">
-  <i data-lucide="download" class="w-5 h-5"></i>
-</button>
-<button id="mailBtn" title="Προσκλήσεις" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg" aria-pressed="false">
-  <i data-lucide="mail" class="w-5 h-5"></i>
-</button>
+      
+      
       <a href="company_info.html" title="Ρυθμίσεις" class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"><i data-lucide="settings"></i></a>
       <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300">
         <svg id="icon-moon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z"/></svg>
@@ -63,16 +38,18 @@
   </div>
 </header>
 
-<main class="flex-grow p-6 max-w-6xl mx-auto fade-in pt-32">
+<main class="flex-grow p-6 w-full max-w-[1440px] mx-auto fade-in pt-32">
   <div class="flex flex-wrap gap-4 mb-4 items-center justify-center">
     <button id="btnSuppliers" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white border rounded-2xl shadow hover:shadow-xl transition duration-200 focus:ring-2 focus:ring-blue-500">👥 Οι Προμηθευτές μου <span id="supplierCount" class="ml-1 text-sm"></span></button>
     <a href="company_certificates.html" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white border rounded-2xl shadow hover:shadow-xl transition duration-200 focus:ring-2 focus:ring-blue-500">📦 Τα Πιστοποιητικά μου <span id="certificateCount" class="ml-1 text-sm text-gray-500"></span></a>
   </div>
 
   <!-- Controls -->
-  <div class="flex items-center justify-center gap-4 mb-2 w-full">
-    <button id="deleteModeBtn" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition" onclick="this.textContent = this.textContent.includes('Ακύρωση') ? '🗑️ Διαγραφή Προμηθευτών' : '❌ Ακύρωση Διαγραφής'">🗑️ Διαγραφή Προμηθευτών</button>
-    <input id="searchInputSuppliers" type="text" placeholder="Αναζήτηση προμηθευτών..." class="p-2 border rounded-xl w-60 focus:outline-none focus:ring-2 focus:ring-indigo-400" oninput="filterData()">
+  <div class="flex items-center justify-start gap-3 mb-2 w-full px-4">
+  <button id="deleteSelectedBtn" class="hidden flex items-center gap-1 text-sm text-red-600 hover:text-red-700 transition"><i data-lucide="trash" class="w-4 h-4"></i>Διαγραφή</button>
+  <button id="sendInviteBtn" class="hidden flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition"><i data-lucide="send" class="w-4 h-4"></i>Πρόσκληση</button>
+  <button id="downloadSelectedBtn" class="hidden flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 transition"><i data-lucide="download" class="w-4 h-4"></i>Λήψη</button>
+  <input id="searchInputSuppliers" type="text" placeholder="Αναζήτηση προμηθευτών..." class="p-2 border rounded-xl w-60 focus:outline-none focus:ring-2 focus:ring-indigo-400" oninput="filterData()">
     <select id="sortSelect" class="p-2 border rounded-xl">
       <option value="">Ταξινόμηση</option>
       <option value="afm">ΑΦΜ</option>
@@ -83,27 +60,23 @@
     <button onclick="showAddSupplierForm()" class="w-10 h-10 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center shadow hover:shadow-lg transition" title="Προσθήκη Προμηθευτή"><i data-lucide="plus"></i></button>
   </div>
 
-  <!-- Export Actions -->
-  <div id="certEmailActions" class="flex items-center justify-center space-x-4 mb-6 w-full hidden">
-  <button id="deleteSelectedBtn" class="text-sm px-3 py-1 text-red-600 bg-transparent dark:text-red-400 hover:underline transition hidden">🗑️ Διαγραφή Επιλεγμένων</button>
-    <button id="selectAllBtn" class="text-sm px-3 py-1 text-blue-600 bg-transparent dark:text-blue-400 hover:underline transition">☑️ Επιλογή Όλων</button>
-    <button id="deleteSelectedBtn" class="text-sm px-3 py-1 text-red-600 bg-transparent dark:text-red-400 hover:underline transition hidden">🗑️ Διαγραφή Επιλεγμένων</button>
-    <button id="downloadBtn" class="text-sm px-3 py-1 text-blue-600 bg-transparent dark:text-blue-400 hover:underline transition">📥 Λήψη</button>
-    <button id="sendEmailBtn" class="text-sm px-3 py-1 text-blue-600 bg-transparent dark:text-blue-400 hover:underline transition">📧 Αποστολή Πρόσκλησης</button>
-  </div>
-
-  <div id="loading" class="hidden">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-      <div class="h-32 skeleton"></div>
-      <div class="h-32 skeleton"></div>
-      <div class="h-32 skeleton"></div>
-      <div class="h-32 skeleton"></div>
-      <div class="h-32 skeleton"></div>
-      <div class="h-32 skeleton"></div>
-    </div>
-  </div>
-
-  <div id="dataSection" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 text-gray-900 dark:text-gray-100 items-start"></div>
+  <div id="dataSection" class="w-full px-4">
+  <table class="w-full table-auto bg-white dark:bg-gray-900 text-sm border border-gray-200 dark:border-gray-700 rounded-xl shadow-md">
+    <thead class="bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 text-xs uppercase">
+      <tr>
+        <th scope="col" class="px-4 py-2 text-center dark:text-white"><input type="checkbox" id="selectAllSuppliers" class="w-4 h-4"></th>
+        <th scope="col" class="px-4 py-2 dark:text-white">Επωνυμία</th>
+        <th scope="col" class="px-4 py-2 dark:text-white">ΑΦΜ</th>
+        <th scope="col" class="px-4 py-2 dark:text-white">Email</th>
+        <th scope="col" class="px-4 py-2 dark:text-white">Κατάσταση</th>
+        <th scope="col" class="px-4 py-2 dark:text-white">Πιστοποιητικά</th>
+      </tr>
+    </thead>
+    <tbody id="supplierTableBody" class="cursor-pointer divide-y divide-gray-200 dark:divide-gray-700 hover:[&>tr]:bg-blue-50 dark:hover:[&>tr]:bg-gray-700 transition-all duration-300">
+      <!-- Οι γραμμές θα προστεθούν δυναμικά από JS -->
+    </tbody>
+  </table>
+</div>
 </main>
 
 <script type="module" src="../js/company_dashboard.js"></script>
@@ -131,7 +104,5 @@
 </footer>
 </body>
 </html>
-
-
 
 

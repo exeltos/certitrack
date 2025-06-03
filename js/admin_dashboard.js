@@ -112,6 +112,7 @@ function renderUsers(users) {
   tableBody.innerHTML = '';
 
   for (const user of users) {
+    const checkbox = `<td><input type="checkbox" class="admin-checkbox w-4 h-4" data-afm="${user.afm}" data-role="${user.role}"></td>`;
     const name = user.name || '-';
     const afm = user.afm || '-';
     const email = user.email || '-';
@@ -142,24 +143,18 @@ function renderUsers(users) {
     row.classList.add('transition', 'duration-200', 'hover:bg-blue-50', 'dark:hover:bg-blue-900');
     if (user.blocked) row.classList.add('bg-red-50', 'dark:bg-red-900');
     row.innerHTML = `
-      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${name}</td>
-      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${email}</td>
-            <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${afm}</td>
-      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${role}</td>
-      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${status}</td>
-      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${displayDate}</td>
-      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${renewalDate}</td>
-      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${expiryDate}</td>
-      <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${isActive}</td>
-      <td class="px-4 py-2 whitespace-nowrap flex gap-2">
-  ${user.blocked ? `
-    <button class="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded unblock-user-btn" title="Επαναφορά" data-afm="${afm}" data-role="${role}">🔁</button>
-  ` : `
-    <button class="text-yellow-600 hover:text-yellow-800 text-sm font-medium px-2 py-1 rounded block-user-btn" title="Μπλοκάρισμα" data-afm="${afm}" data-role="${role}">🚫</button>
-  `}
-  <button class="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 rounded delete-user-btn" title="Διαγραφή" data-afm="${afm}" data-role="${role}">🗑️</button>
-</td>
-    `;
+    <td class="px-4 py-2 text-center"><input type="checkbox" class="admin-checkbox w-4 h-4" data-afm="${afm}" data-role="${role}"></td>
+    <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${name}</td>
+    <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${email}</td>
+    <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${afm}</td>
+    <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${role}</td>
+    <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${status}</td>
+    <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${displayDate}</td>
+    <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${renewalDate}</td>
+    <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${expiryDate}</td>
+    <td class="px-4 py-2 whitespace-nowrap text-gray-900 dark:text-white">${isActive}</td>
+    <td></td>
+  `;
 
     tableBody.appendChild(row);
   }
@@ -399,23 +394,94 @@ if (signInError || !sessionData || !sessionData.user) {
 
 
 
-// 📤 Εξαγωγή σε Excel
+// ✅ Μαζικές ενέργειες admin
+function updateBulkActionVisibility() {
+  const selected = document.querySelectorAll('.admin-checkbox:checked');
+  document.getElementById('adminBulkActions')?.classList.toggle('hidden', selected.length === 0);
+}
+
+document.addEventListener('change', e => {
+  if (e.target.classList.contains('admin-checkbox')) updateBulkActionVisibility();
+});
+
+document.getElementById('selectAllAdmin')?.addEventListener('change', (e) => {
+  const checked = e.target.checked;
+  document.querySelectorAll('.admin-checkbox').forEach(cb => { cb.checked = checked; });
+  updateBulkActionVisibility();
+});
+
+document.getElementById('blockSelectedBtn')?.addEventListener('click', async () => {
+  const selected = [...document.querySelectorAll('.admin-checkbox:checked')];
+  for (const cb of selected) {
+    const afm = cb.dataset.afm;
+    const role = cb.dataset.role;
+    const table = role === 'Εταιρεία' ? 'companies' : 'suppliers';
+    await supabase.from(table).update({ blocked: true }).eq('afm', afm);
+  }
+  Swal.fire('Έγινε', 'Οι χρήστες μπλοκαρίστηκαν.', 'success');
+  loadAllUsers();
+});
+
+document.getElementById('unblockSelectedBtn')?.addEventListener('click', async () => {
+  const selected = [...document.querySelectorAll('.admin-checkbox:checked')];
+  for (const cb of selected) {
+    const afm = cb.dataset.afm;
+    const role = cb.dataset.role;
+    const table = role === 'Εταιρεία' ? 'companies' : 'suppliers';
+    await supabase.from(table).update({ blocked: false }).eq('afm', afm);
+  }
+  Swal.fire('Έγινε', 'Η πρόσβαση επανήλθε.', 'success');
+  loadAllUsers();
+});
+
+document.getElementById('deleteSelectedBtn')?.addEventListener('click', async () => {
+  const selected = [...document.querySelectorAll('.admin-checkbox:checked')];
+  const confirm = await Swal.fire({
+    title: 'Διαγραφή',
+    text: `Θα διαγραφούν ${selected.length} χρήστες. Συνέχεια;`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ναι',
+    cancelButtonText: 'Όχι'
+  });
+  if (!confirm.isConfirmed) return;
+
+  for (const cb of selected) {
+    const afm = cb.dataset.afm;
+    const role = cb.dataset.role;
+    const table = role === 'Εταιρεία' ? 'companies' : 'suppliers';
+    await supabase.from(table).delete().eq('afm', afm);
+  }
+  Swal.fire('Ολοκληρώθηκε', 'Οι χρήστες διαγράφηκαν.', 'success');
+  loadAllUsers();
+});
+
+// 📤 Εξαγωγή μόνο επιλεγμένων σε Excel
 const exportBtn = document.getElementById('exportBtn');
 exportBtn?.addEventListener('click', () => {
-  const table = document.getElementById('userTableBody');
-  if (!table) return;
-
-  const headers = ["Επωνυμία", "Email", "ΑΦΜ", "Ρόλος", "Κατάσταση", "Ημ/νία Εγγραφής", "Ανανέωση", "Λήξη", "Ενεργός"];
-  let csv = headers.map(h => `"${h}"`).join(';') + '\n';
-
-  for (const row of table.children) {
-    const cols = [...row.querySelectorAll('td')].slice(0, 9).map(td => td.textContent.trim());
-    csv += cols.map(val => `"${val}"`).join(';') + '\n';
+  const selected = document.querySelectorAll('.admin-checkbox:checked');
+  if (!selected.length) {
+    Swal.fire('Καμία Επιλογή', 'Επίλεξε πρώτα χρήστες με checkbox.', 'info');
+    return;
   }
 
-  const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+  const headers = ["Επωνυμία", "Email", "ΑΦΜ", "Ρόλος", "Κατάσταση", "Ημ/νία Εγγραφής", "Ανανέωση", "Λήξη", "Ενεργός"];
+ let csv = headers.map(h => `"${h}"`).join(';') + '\n';
+
+
+  for (const cb of selected) {
+    const row = cb.closest('tr');
+    if (!row) continue;
+    const cols = [...row.querySelectorAll('td')].slice(1, 10).map(td => td.textContent.trim());
+   csv += cols.map(val => `"${val}"`).join(';') + '\n';
+
+  }
+
+  const blob = new Blob(["﻿" + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = 'users_export.csv';
   link.click();
 });
+;
+
