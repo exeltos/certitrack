@@ -134,11 +134,17 @@ exportBtn.classList.add('bg-blue-200/70', 'dark:bg-blue-800/40');
     if (!currentUser) throw new Error('Μη έγκυρη συνεδρία.');
 
     const { data: profile, error: profileErr } = await supabase
-      .from('suppliers')
-      .select('name, afm')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
-    if (profileErr) throw profileErr;
+          .from('suppliers')
+          .select('name, afm')
+          .eq('user_id', currentUser.id)
+          .maybeSingle();
+        if (profileErr) throw profileErr;
+
+        if (!profile?.afm || profile.afm.trim() === '') {
+          Swal.fire('Σφάλμα', 'Το προφίλ σου δεν έχει δηλωμένο ΑΦΜ. Δεν μπορεί να αποθηκευτεί το πιστοποιητικό.', 'error');
+          hideLoading();
+          return;
+        }
     const displayName = profile?.name || currentUser.email;
     document.getElementById('userGreeting').textContent = `Καλώς ήρθες, ${displayName}`;
 
@@ -743,6 +749,7 @@ return { title, type, date, file };
     }
   });
 }
+
 
 
 
