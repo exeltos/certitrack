@@ -14,31 +14,19 @@ export async function handler() {
     const { data: certs, error } = await supabase.from('supplier_certificates').select('*');
     if (error) throw error;
 
-    console.log(`[DEBUG] Βρέθηκαν: ${certs.length} πιστοποιητικά.`);
-
-    const grouped = {};
+    console.log(`[DEBUG] Πλήθος πιστοποιητικών: ${certs.length}`);
 
     for (const cert of certs) {
-      if (!cert?.date || !cert?.supplier_afm) {
-        console.warn('[SKIP] Άκυρη εγγραφή:', cert);
-        continue;
-      }
+      console.log('------------------------------');
+      console.log('📄 Τίτλος:', cert.title);
+      console.log('📅 Ημερομηνία string:', cert.date);
+      console.log('🧪 typeof date:', typeof cert.date);
 
-      const expDate = new Date(cert.date);
-      const daysLeft = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-      console.log(`[CHECK] ${cert.title} | ${cert.date} | ${daysLeft} ημέρες`);
-
-      const status = daysLeft < 0 ? 'expired' : daysLeft <= 30 ? 'soon' : null;
-      if (!status) continue;
-
-      if (!grouped[cert.supplier_afm]) grouped[cert.supplier_afm] = { expired: [], soon: [] };
-      grouped[cert.supplier_afm][status].push(cert);
+      const parsed = new Date(cert.date);
+      console.log('✅ Date object:', parsed.toISOString());
     }
 
-    console.log('[DEBUG] Grouped suppliers:', grouped);
-
-    return { statusCode: 200, body: '✅ Done. Check logs.' };
+    return { statusCode: 200, body: '✅ Test Done. Check logs' };
   } catch (err) {
     console.error('[ERROR]', err);
     return { statusCode: 500, body: '❌ Σφάλμα: ' + err.message };
