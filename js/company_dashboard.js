@@ -493,10 +493,10 @@ document.getElementById('sendInviteBtn')?.addEventListener('click', async () => 
     const failed = [];
     for (const p of pending) {
       try {
-        const res = await fetch('/.netlify/functions/send_email-express', {
+        const res = await fetch('/.netlify/functions/send_email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: p.email, type: 'invite', subject: '📨 Πρόσκληση Εγγραφής στο CertiTrack' })
+          body: JSON.stringify({ email: p.email, type: 'invite', subject: '📨 Πρόσκληση Εγγραφής στο CertiTrack', companyName: company.name })
         });
         if (!res.ok) {
           const errText = await res.text();
