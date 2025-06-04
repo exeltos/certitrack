@@ -5,6 +5,9 @@
 [functions]
   node_bundler = "esbuild"
 
+[functions.environment]
+  MAILERSEND_TOKEN = ""
+
 [[redirects]]
   from = "/reset-password"
   to = "/reset-password.html"
