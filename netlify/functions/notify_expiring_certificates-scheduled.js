@@ -8,6 +8,38 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+// 🔹 TEST EMAIL FUNCTION για έλεγχο αν δουλεύει η αποστολή
+export async function testEmailHandler() {
+  try {
+    if (!process.env.MAILERSEND_API_KEY) {
+      return { statusCode: 500, body: '❌ Missing MAILERSEND_API_KEY' };
+    }
+
+    const res = await fetch('https://api.mailersend.com/v1/email', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.MAILERSEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: { email: 'info@certitrack.gr', name: 'CertiTrack' },
+        to: [{ email: 'info@exeltos.com' }],
+        subject: '✅ Δοκιμαστικό email από CertiTrack',
+        html: '<p>Αυτό είναι ένα δοκιμαστικό email προς προμηθευτή (info@exeltos.com)</p>'
+      })
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      return { statusCode: 500, body: `❌ Failed: ${text}` };
+    }
+
+    return { statusCode: 200, body: '✅ Test email sent to info@exeltos.com!' };
+  } catch (err) {
+    return { statusCode: 500, body: '❌ Exception: ' + err.message };
+  }
+}
+
 export async function handler() {
   try {
     const today = new Date();
@@ -114,7 +146,6 @@ async function sendEmail(to, subject, html) {
 
   console.log('[DEBUG] Όλο το env:', JSON.stringify(process.env));
   console.log('[DEBUG] Mailer token starts with:', process.env.MAILERSEND_API_KEY?.slice(0, 8));
-  // console.log('[DEBUG] Mailer token starts with:', process.env.MAILERSEND_TOKEN?.slice(0, 5));
 
   const res = await fetch('https://api.mailersend.com/v1/email', {
     method: 'POST',
@@ -123,7 +154,7 @@ async function sendEmail(to, subject, html) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      from: { email: 'info@exeltos.com', name: 'CertiTrack' },
+      from: { email: 'info@certitrack.gr', name: 'CertiTrack' },
       to: [{ email: to }],
       subject,
       html
