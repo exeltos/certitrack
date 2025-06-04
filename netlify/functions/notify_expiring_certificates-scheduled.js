@@ -60,17 +60,27 @@ async function handler() {
     }
 
     for (const afm of Object.keys(groupedSuppliers)) {
+  console.log('[DEBUG] Ελέγχεται supplier με ΑΦΜ:', afm);
       const { data: supplier, error } = await supabase.from('suppliers').select('id, email').eq('afm', afm).maybeSingle();
       if (error || !supplier?.email) continue;
       const { data: notifications } = await supabase.from('supplier_notifications').select('type').eq('supplier_id', supplier.id);
+  console.log('[DEBUG] Notifications για supplier', supplier.email, ':', notifications);
       const sent = notifications?.map(n => n.type) || [];
       for (const type of ['expired', 'soon']) {
         const certs = groupedSuppliers[afm][type];
         if (!certs.length || sent.includes(type)) continue;
         const subject = type === 'expired' ? 'Έχετε ληγμένα πιστοποιητικά' : 'Πιστοποιητικά προς λήξη σε 30 ημέρες';
         const html = buildEmailTable(certs, type);
-        await sendEmail(supplier.email, subject, html);
-        await supabase.from('supplier_notifications').insert({ supplier_id: supplier.id, type, sent_at: new Date().toISOString() });
+        try {
+          await sendEmail(supplier.email, subject, html);
+        } catch (e) {
+          console.error('[❌ ERROR] Αποτυχία αποστολής email στον supplier:', supplier.email, e.message);
+        }
+        try {
+          await supabase.from('supplier_notifications').insert({ supplier_id: supplier.id, type, sent_at: new Date().toISOString() });
+        } catch (e) {
+          console.error('[❌ ERROR] Αποτυχία καταγραφής supplier_notification:', e.message);
+        }
       }
     }
 
@@ -99,8 +109,16 @@ async function handler() {
         if (!certs.length || sent.includes(type)) continue;
         const subject = type === 'expired' ? 'Έχετε ληγμένα πιστοποιητικά' : 'Πιστοποιητικά προς λήξη σε 30 ημέρες';
         const html = buildEmailTable(certs, type);
-        await sendEmail(company.email, subject, html);
-        await supabase.from('company_notifications').insert({ company_id: company.id, type, sent_at: new Date().toISOString() });
+        try {
+          await sendEmail(company.email, subject, html);
+        } catch (e) {
+          console.error('[❌ ERROR] Αποτυχία αποστολής email στην εταιρεία:', company.email, e.message);
+        }
+        try {
+          await supabase.from('company_notifications').insert({ company_id: company.id, type, sent_at: new Date().toISOString() });
+        } catch (e) {
+          console.error('[❌ ERROR] Αποτυχία καταγραφής company_notification:', e.message);
+        }
       }
     }
 
