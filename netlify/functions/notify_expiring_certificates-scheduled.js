@@ -127,6 +127,8 @@ function buildEmailTable(certs, type) {
 }
 
 async function sendEmail(to, subject, html) {
+  console.log('[DEBUG] Προσπάθεια αποστολής email σε:', to);
+  console.log('[DEBUG] Χρήση MAILERSEND_API_KEY:', process.env.MAILERSEND_API_KEY?.slice(0, 8));
   if (!process.env.MAILERSEND_API_KEY) {
     throw new Error('❌ Δεν έχει οριστεί το MAILERSEND_API_KEY στο περιβάλλον!');
   }
