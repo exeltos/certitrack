@@ -76,11 +76,7 @@ async function handler() {
         } catch (e) {
           console.error('[❌ ERROR] Αποτυχία αποστολής email στον supplier:', supplier.email, e.message);
         }
-        try {
-          await supabase.from('supplier_notifications').insert({ supplier_id: supplier.id, type, sent_at: new Date().toISOString() });
-        } catch (e) {
-          console.error('[❌ ERROR] Αποτυχία καταγραφής supplier_notification:', e.message);
-        }
+        // 🔸 Παράκαμψη καταγραφής σε supplier_notifications
       }
     }
 
@@ -114,11 +110,7 @@ async function handler() {
         } catch (e) {
           console.error('[❌ ERROR] Αποτυχία αποστολής email στην εταιρεία:', company.email, e.message);
         }
-        try {
-          await supabase.from('company_notifications').insert({ company_id: company.id, type, sent_at: new Date().toISOString() });
-        } catch (e) {
-          console.error('[❌ ERROR] Αποτυχία καταγραφής company_notification:', e.message);
-        }
+        // 🔸 Παράκαμψη καταγραφής σε company_notifications
       }
     }
 
