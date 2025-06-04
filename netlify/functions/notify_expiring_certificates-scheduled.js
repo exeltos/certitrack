@@ -22,10 +22,10 @@ export async function testEmailHandler() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: { email: 'info@certitrack.gr', name: 'CertiTrack' },
-        to: [{ email: 'info@exeltos.com' }],
+        from: { email: 'info@certitrack.gr', name: 'CertiTrack' }, // ✅ verified domain
+        to: [{ email: 'info@exeltos.com' }], // ✅ τρέχων παραλήπτης
         subject: '✅ Δοκιμαστικό email από CertiTrack',
-        html: '<p>Αυτό είναι ένα δοκιμαστικό email προς προμηθευτή (info@exeltos.com)</p>'
+        html: '<p>Αυτό είναι ένα δοκιμαστικό email προς τον προμηθευτή info@exeltos.com</p>'
       })
     });
 
@@ -46,14 +46,7 @@ export async function handler() {
 
     // ---------- 🔹 SUPPLIERS ----------
     const { data: supplierCerts, error: supplierErr } = await supabase.from('supplier_certificates').select('*');
-    console.log('[DEBUG] ΟΛΑ τα supplier_certificates:', supplierCerts);
-    if (!supplierCerts || supplierCerts.length === 0) {
-      console.warn('[⚠️ supplierCerts είναι άδειο ή undefined]');
-    }
-    if (supplierErr) {
-  console.error('[❌ supplierErr]', supplierErr);
-  throw supplierErr;
-}
+    if (supplierErr) throw supplierErr;
 
     const groupedSuppliers = {};
     for (const cert of supplierCerts) {
@@ -65,8 +58,6 @@ export async function handler() {
       if (!groupedSuppliers[cert.supplier_afm]) groupedSuppliers[cert.supplier_afm] = { expired: [], soon: [] };
       groupedSuppliers[cert.supplier_afm][status].push(cert);
     }
-
-    console.log('[DEBUG] groupedSuppliers:', JSON.stringify(groupedSuppliers, null, 2));
 
     for (const afm of Object.keys(groupedSuppliers)) {
       const { data: supplier, error } = await supabase.from('suppliers').select('id, email').eq('afm', afm).maybeSingle();
@@ -98,8 +89,6 @@ export async function handler() {
       groupedCompanies[cert.company_afm][status].push(cert);
     }
 
-    console.log('[DEBUG] groupedCompanies:', JSON.stringify(groupedCompanies, null, 2));
-
     for (const afm of Object.keys(groupedCompanies)) {
       const { data: company, error } = await supabase.from('companies').select('id, email').eq('afm', afm).maybeSingle();
       if (error || !company?.email) continue;
@@ -117,7 +106,6 @@ export async function handler() {
 
     return { statusCode: 200, body: '✅ Emails sent to suppliers & companies' };
   } catch (err) {
-    console.error('[❌ ERROR]', err);
     return { statusCode: 500, body: '❌ Σφάλμα: ' + err.message };
   }
 }
@@ -140,12 +128,8 @@ function buildEmailTable(certs, type) {
 
 async function sendEmail(to, subject, html) {
   if (!process.env.MAILERSEND_API_KEY) {
-    console.error('❌ Δεν έχει οριστεί το MAILERSEND_API_KEY στο περιβάλλον!');
-    throw new Error('Missing MAILERSEND_API_KEY');
+    throw new Error('❌ Δεν έχει οριστεί το MAILERSEND_API_KEY στο περιβάλλον!');
   }
-
-  console.log('[DEBUG] Όλο το env:', JSON.stringify(process.env));
-  console.log('[DEBUG] Mailer token starts with:', process.env.MAILERSEND_API_KEY?.slice(0, 8));
 
   const res = await fetch('https://api.mailersend.com/v1/email', {
     method: 'POST',
@@ -166,3 +150,5 @@ async function sendEmail(to, subject, html) {
     throw new Error(`Mail error: ${txt}`);
   }
 }
+
+// ... υπόλοιπος κώδικας ...
