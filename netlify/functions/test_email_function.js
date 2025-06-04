@@ -1,8 +1,11 @@
 // netlify/functions/test_email_function.js
-import { testEmailHandler } from './notify_expiring_certificates-scheduled.js';
+import fetch from 'node-fetch';
 
-export const handler = testEmailHandler;
-  
+export const handler = async () => {
+  if (!process.env.MAILERSEND_API_KEY) {
+    return { statusCode: 500, body: '❌ Missing MAILERSEND_API_KEY' };
+  }
+
   const res = await fetch('https://api.mailersend.com/v1/email', {
     method: 'POST',
     headers: {
@@ -11,7 +14,7 @@ export const handler = testEmailHandler;
     },
     body: JSON.stringify({
       from: { email: 'info@certitrack.gr', name: 'CertiTrack' },
-      to: [{ email: 'info@exeltos.com' }], // ← δικό σου email
+      to: [{ email: 'info@exeltos.com' }],
       subject: '✅ Test Email από CertiTrack',
       html: '<p>Αυτό είναι ένα δοκιμαστικό email</p>'
     })
@@ -23,4 +26,4 @@ export const handler = testEmailHandler;
   }
 
   return { statusCode: 200, body: '✅ Test email sent!' };
-
+};
