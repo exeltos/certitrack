@@ -51,27 +51,27 @@ async function handler() {
 
     const groupedSuppliers = {};
     for (const cert of supplierCerts) {
-      if (!cert?.date || !cert?.supplier_afm) continue;
+      if (!cert?.date || !cert?.supplier_user_id) continue;
       const exp = new Date(cert.date);
       const days = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
       const status = days < 0 ? 'expired' : days <= 30 ? 'soon' : null;
       if (!status) continue;
-      if (!groupedSuppliers[cert.supplier_afm]) groupedSuppliers[cert.supplier_afm] = { expired: [], soon: [] };
-      groupedSuppliers[cert.supplier_afm][status].push(cert);
+      if (!groupedSuppliers[cert.supplier_user_id]) groupedSuppliers[cert.supplier_user_id] = { expired: [], soon: [] };
+      groupedSuppliers[cert.supplier_user_id][status].push(cert);
     }
 
-    for (const afm of Object.keys(groupedSuppliers)) {
+    for (const userId of Object.keys(groupedSuppliers)) {
       console.log('[DEBUG] Ελέγχεται supplier με ΑΦΜ:', afm);
-      const { data: supplier, error } = await supabase.from('suppliers').select('id, email').eq('afm', afm).maybeSingle();
+      const { data: supplier, error } = await supabase.from('suppliers').select('id, email').eq('user_id', userId).maybeSingle();
       if (error || !supplier?.email) {
-        console.warn(`[⚠️ SKIP] Supplier not found or missing email for ΑΦΜ: ${afm}`);
+        console.warn(`[⚠️ SKIP] Supplier not found or missing email for user_id: ${userId}`);
         continue;
       }
       const { data: notifications } = await supabase.from('supplier_notifications').select('type').eq('supplier_id', supplier.id);
       console.log('[DEBUG] Notifications για supplier', supplier.email, ':', notifications);
       const sent = notifications?.map(n => n.type) || [];
       for (const type of ['expired', 'soon']) {
-        const certs = groupedSuppliers[afm][type];
+        const certs = groupedSuppliers[userId][type];
         if (!certs.length || sent.includes(type)) continue;
         const subject = type === 'expired' ? 'Έχετε ληγμένα πιστοποιητικά' : 'Πιστοποιητικά προς λήξη σε 30 ημέρες';
         const html = buildEmailTable(certs, type);
