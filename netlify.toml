@@ -6,7 +6,9 @@
   node_bundler = "esbuild"
 
 [functions.environment]
-  MAILERSEND_TOKEN = ""
+  MAILERSEND_API_KEY = ""
+  SUPABASE_URL = ""
+  SUPABASE_SERVICE_ROLE_KEY = ""
 
 [[redirects]]
   from = "/reset-password"
@@ -14,4 +16,4 @@
   status = 200
 
 [functions."notify_expiring_certificates-scheduled"]
-  schedule = "0 9 * * *" # εκτέλεση κάθε μέρα 12:00 ώρα Ελλάδας
+  schedule = "0 9 * * *"
