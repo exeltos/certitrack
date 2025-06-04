@@ -117,7 +117,7 @@ async function handler() {
   } catch (err) {
     console.error('❌ Σφάλμα:', err);
     console.log('FULL ERROR OBJECT:', err);
-    return { statusCode: 500, body: '❌ Σφάλμα: ' + err.message + '\n' + err.stack };
+    throw err;
   }
 }
 
