@@ -15,6 +15,9 @@ export async function handler() {
     // ---------- 🔹 SUPPLIERS ----------
     const { data: supplierCerts, error: supplierErr } = await supabase.from('supplier_certificates').select('*');
     console.log('[DEBUG] ΟΛΑ τα supplier_certificates:', supplierCerts);
+    if (!supplierCerts || supplierCerts.length === 0) {
+      console.warn('[⚠️ supplierCerts είναι άδειο ή undefined]');
+    }
     if (supplierErr) {
   console.error('[❌ supplierErr]', supplierErr);
   throw supplierErr;
