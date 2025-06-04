@@ -22,8 +22,8 @@ async function testEmailHandler() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: { email: 'info@certitrack.gr', name: 'CertiTrack' }, // ✅ verified domain
-        to: [{ email: 'info@exeltos.com' }], // ✅ τρέχων παραλήπτης
+        from: { email: 'info@certitrack.gr', name: 'CertiTrack' },
+        to: [{ email: 'info@exeltos.com' }],
         subject: '✅ Δοκιμαστικό email από CertiTrack',
         html: '<p>Αυτό είναι ένα δοκιμαστικό email προς τον προμηθευτή info@exeltos.com</p>'
       })
@@ -116,6 +116,7 @@ async function handler() {
     return { statusCode: 200, body: '✅ Emails sent to suppliers & companies' };
   } catch (err) {
     console.error('❌ Σφάλμα:', err);
+    console.log('FULL ERROR OBJECT:', err);
     return { statusCode: 500, body: '❌ Σφάλμα: ' + err.message + '\n' + err.stack };
   }
 }
