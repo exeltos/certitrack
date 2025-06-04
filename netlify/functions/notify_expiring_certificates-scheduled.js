@@ -107,7 +107,7 @@ function buildEmailTable(certs, type) {
 }
 
 async function sendEmail(to, subject, html) {
-  console.log('[DEBUG] Mailer token starts with:', process.env.MAILERSEND_TOKEN?.slice(0, 8));
+  console.log('[DEBUG] Mailer token starts with:', process.env.MAILERSEND_API_KEY?.slice(0, 8));
   console.log('[DEBUG] Mailer token starts with:', process.env.MAILERSEND_TOKEN?.slice(0, 5));
   const res = await fetch('https://api.mailersend.com/v1/email', {
     method: 'POST',
