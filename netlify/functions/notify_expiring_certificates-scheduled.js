@@ -42,6 +42,7 @@ async function testEmailHandler() {
 
 async function handler() {
   try {
+    console.log('🚀 ΕΝΑΡΞΗ notify_expiring_certificates');
     const today = new Date();
 
     // ---------- 🔹 SUPPLIERS ----------
@@ -60,11 +61,11 @@ async function handler() {
     }
 
     for (const afm of Object.keys(groupedSuppliers)) {
-  console.log('[DEBUG] Ελέγχεται supplier με ΑΦΜ:', afm);
+      console.log('[DEBUG] Ελέγχεται supplier με ΑΦΜ:', afm);
       const { data: supplier, error } = await supabase.from('suppliers').select('id, email').eq('afm', afm).maybeSingle();
       if (error || !supplier?.email) continue;
       const { data: notifications } = await supabase.from('supplier_notifications').select('type').eq('supplier_id', supplier.id);
-  console.log('[DEBUG] Notifications για supplier', supplier.email, ':', notifications);
+      console.log('[DEBUG] Notifications για supplier', supplier.email, ':', notifications);
       const sent = notifications?.map(n => n.type) || [];
       for (const type of ['expired', 'soon']) {
         const certs = groupedSuppliers[afm][type];
@@ -76,7 +77,6 @@ async function handler() {
         } catch (e) {
           console.error('[❌ ERROR] Αποτυχία αποστολής email στον supplier:', supplier.email, e.message);
         }
-        // 🔸 Παράκαμψη καταγραφής σε supplier_notifications
       }
     }
 
@@ -110,13 +110,13 @@ async function handler() {
         } catch (e) {
           console.error('[❌ ERROR] Αποτυχία αποστολής email στην εταιρεία:', company.email, e.message);
         }
-        // 🔸 Παράκαμψη καταγραφής σε company_notifications
       }
     }
 
     return { statusCode: 200, body: '✅ Emails sent to suppliers & companies' };
   } catch (err) {
-    return { statusCode: 500, body: '❌ Σφάλμα: ' + err.message };
+    console.error('❌ Σφάλμα:', err);
+    return { statusCode: 500, body: '❌ Σφάλμα: ' + err.message + '\n' + err.stack };
   }
 }
 
