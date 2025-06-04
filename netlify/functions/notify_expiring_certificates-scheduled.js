@@ -112,7 +112,7 @@ async function sendEmail(to, subject, html) {
   const res = await fetch('https://api.mailersend.com/v1/email', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${process.env.MAILERSEND_TOKEN}`,
+      Authorization: `Bearer ${process.env.MAILERSEND_API_KEY}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
