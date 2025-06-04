@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 // 🔹 TEST EMAIL FUNCTION για έλεγχο αν δουλεύει η αποστολή
-export async function testEmailHandler() {
+async function testEmailHandler() {
   try {
     if (!process.env.MAILERSEND_API_KEY) {
       return { statusCode: 500, body: '❌ Missing MAILERSEND_API_KEY' };
@@ -40,7 +40,7 @@ export async function testEmailHandler() {
   }
 }
 
-export async function handler() {
+async function handler() {
   try {
     const today = new Date();
 
@@ -153,4 +153,7 @@ async function sendEmail(to, subject, html) {
   }
 }
 
-// ... υπόλοιπος κώδικας ...
+module.exports = {
+  handler,
+  testEmailHandler
+};
