@@ -107,9 +107,15 @@ function buildEmailTable(certs, type) {
 }
 
 async function sendEmail(to, subject, html) {
+  if (!process.env.MAILERSEND_API_KEY) {
+    console.error('❌ Δεν έχει οριστεί το MAILERSEND_API_KEY στο περιβάλλον!');
+    throw new Error('Missing MAILERSEND_API_KEY');
+  }
+
   console.log('[DEBUG] Όλο το env:', JSON.stringify(process.env));
   console.log('[DEBUG] Mailer token starts with:', process.env.MAILERSEND_API_KEY?.slice(0, 8));
-  console.log('[DEBUG] Mailer token starts with:', process.env.MAILERSEND_TOKEN?.slice(0, 5));
+  // console.log('[DEBUG] Mailer token starts with:', process.env.MAILERSEND_TOKEN?.slice(0, 5));
+
   const res = await fetch('https://api.mailersend.com/v1/email', {
     method: 'POST',
     headers: {
