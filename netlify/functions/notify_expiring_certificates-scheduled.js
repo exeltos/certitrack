@@ -14,6 +14,7 @@ export async function handler() {
 
     // ---------- 🔹 SUPPLIERS ----------
     const { data: supplierCerts, error: supplierErr } = await supabase.from('supplier_certificates').select('*');
+    console.log('[DEBUG] ΟΛΑ τα supplier_certificates:', supplierCerts);
     if (supplierErr) throw supplierErr;
 
     const groupedSuppliers = {};
