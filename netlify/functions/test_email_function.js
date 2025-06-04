@@ -1,10 +1,8 @@
-import fetch from 'node-fetch';
+// netlify/functions/test_email_function.js
+import { testEmailHandler } from './notify_expiring_certificates-scheduled.js';
 
-export async function handler() {
-  if (!process.env.MAILERSEND_API_KEY) {
-    return { statusCode: 500, body: '❌ Missing MAILERSEND_API_KEY' };
-  }
-
+export const handler = testEmailHandler;
+  
   const res = await fetch('https://api.mailersend.com/v1/email', {
     method: 'POST',
     headers: {
@@ -25,4 +23,4 @@ export async function handler() {
   }
 
   return { statusCode: 200, body: '✅ Test email sent!' };
-}
+
