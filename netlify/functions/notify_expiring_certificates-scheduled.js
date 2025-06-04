@@ -63,7 +63,10 @@ async function handler() {
     for (const afm of Object.keys(groupedSuppliers)) {
       console.log('[DEBUG] Ελέγχεται supplier με ΑΦΜ:', afm);
       const { data: supplier, error } = await supabase.from('suppliers').select('id, email').eq('afm', afm).maybeSingle();
-      if (error || !supplier?.email) continue;
+      if (error || !supplier?.email) {
+        console.warn(`[⚠️ SKIP] Supplier not found or missing email for ΑΦΜ: ${afm}`);
+        continue;
+      }
       const { data: notifications } = await supabase.from('supplier_notifications').select('type').eq('supplier_id', supplier.id);
       console.log('[DEBUG] Notifications για supplier', supplier.email, ':', notifications);
       const sent = notifications?.map(n => n.type) || [];
