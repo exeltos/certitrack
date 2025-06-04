@@ -12,7 +12,7 @@ export async function handler() {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      from: { email: 'info@exeltos.com', name: 'CertiTrack' },
+      from: { email: 'info@certitrack.gr', name: 'CertiTrack' },
       to: [{ email: 'info@exeltos.com' }], // ← δικό σου email
       subject: '✅ Test Email από CertiTrack',
       html: '<p>Αυτό είναι ένα δοκιμαστικό email</p>'
