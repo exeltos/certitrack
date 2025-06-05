@@ -5,6 +5,28 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+async function sendEmail(to, subject, html) {
+  try {
+    const response = await fetch('https://api.mailersend.com/v1/email', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.MAILERSEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: { email: 'info@certitrack.gr', name: 'CertiTrack' },
+        to: [{ email: to }],
+        subject,
+        html
+      })
+    });
+    return response;
+  } catch (err) {
+    console.error('[SEND_EMAIL FUNCTION ERROR]', err);
+    throw err;
+  }
+}
+
 exports.handler = async function () {
   try {
     const today = new Date();
@@ -56,11 +78,8 @@ exports.handler = async function () {
         console.log(`[SENDING] To: ${supplier.email} | Subject: ${subject}`);
 
         try {
-          const res = await fetch('https://www.certitrack.gr/.netlify/functions/send_email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: supplier.email, subject, html: `<p>${message.replace(/\n/g, '<br>')}</p>` })
-          });
+     const res = await sendEmail(supplier.email, subject, `<p>${message.replace(/\n/g, '<br>')}</p>`);
+
 
           if (!res.ok) {
             const errText = await res.text();
