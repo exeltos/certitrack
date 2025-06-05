@@ -82,6 +82,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (supErr) throw supErr;
 
             if (sup?.email) {
+              const { data: valid, error: validErr } = await supabase
+                .from('suppliers')
+                .select('id')
+                .eq('email', sup.email)
+                .eq('afm', username)
+                .not('user_id', 'is', null)
+                .maybeSingle();
+
+              if (!valid || validErr) {
+                Swal.close();
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                return Swal.fire({
+                  icon: 'warning',
+                  title: 'Σφάλμα',
+                  text: 'Δεν βρέθηκε χρήστης με αυτά τα στοιχεία.'
+                });
+              }
               email = sup.email;
               redirectTo = 'certificates.html';
             }
