@@ -43,11 +43,13 @@ exports.handler = async function (event) {
 
     const grouped = {};
     for (const cert of allCerts.data) {
+      console.log('[CHECK]', cert.title, cert.date);
       if (!cert.date || !cert.supplier_afm) continue;
       const expDate = new Date(cert.date);
       if (isNaN(expDate)) continue;
 
       const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+      console.log('[DAYS LEFT]', cert.title, daysLeft);
       const status = daysLeft < 0 ? 'expired' : daysLeft <= 30 ? 'soon' : null;
       if (!status) continue;
 
