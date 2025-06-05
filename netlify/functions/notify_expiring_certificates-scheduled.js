@@ -51,7 +51,9 @@ exports.handler = async function (event) {
     for (const cert of allCerts.data) {
       console.log('[RAW CERT]', cert);
       const rawDate = cert.date;
+      console.log('[DATE TYPE]', rawDate, typeof rawDate);
       const expDate = new Date(rawDate);
+      console.log('[EXP DATE PARSE]', expDate.toString());
       const isValid = !isNaN(expDate);
       const parsedDateStr = isValid ? expDate.toISOString() : 'Invalid Date';
       console.log('[DEBUG] Checking cert:', {
