@@ -1,3 +1,4 @@
+
 // suppliers_view.js
 import { supabase } from './supabaseClient.js';
 import { showLoading, hideLoading, handleError } from './common.js';
@@ -440,7 +441,8 @@ async function loadSupplierCertificates(supplier) {
     const { data, error } = await supabase
       .from('supplier_certificates')
       .select('*')
-      .eq('supplier_user_id', supplier.user_id);
+      .eq('supplier_user_id', supplier.user_id)
+      .eq('is_private', false);
     if (error) throw error;
 
     if (!data.length) {

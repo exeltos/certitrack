@@ -175,11 +175,12 @@ async function renderSuppliers(company, search = '') {
   if (userIds.length) {
     const { data: allCerts, error: certErr } = await supabase
       .from('supplier_certificates')
-      .select('supplier_user_id, date')
+      .select('supplier_user_id, date, is_private')
       .in('supplier_user_id', userIds);
 
     if (!certErr && allCerts) {
       allCerts.forEach(cert => {
+        if (cert.is_private) return;
         const sid = cert.supplier_user_id;
         certsBySupplier[sid] = certsBySupplier[sid] || [];
         certsBySupplier[sid].push(cert);
@@ -725,5 +726,6 @@ function showAddSupplierForm() {
   }
 });
 }
+
 
 

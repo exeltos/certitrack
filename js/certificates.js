@@ -233,6 +233,7 @@ export async function loadCertificates() {
       .from('supplier_certificates')
       .select('*')
       .eq('supplier_user_id', currentUser.id)
+      
       .order('date', { ascending: false });
 
     
@@ -324,7 +325,10 @@ function renderFiltered(list) {
     card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card overflow-hidden`;
     card.innerHTML = `
       <div>
-        <h3 class="font-semibold mb-1 text-gray-800 dark:text-white">${cert.title}</h3>
+        <h3 class="font-semibold mb-1 text-gray-800 dark:text-white flex items-center gap-2">
+  ${cert.title}
+  ${cert.is_private ? '<span class="text-blue-500 text-sm italic">🔒 Προσωπικό</span>' : ''}
+</h3>
         <p class="text-sm text-gray-700 dark:text-gray-300">${cert.type}</p>
         <p class="text-sm text-gray-700 dark:text-gray-300">${expDate.toLocaleDateString('el-GR')} <span class="ml-2">${label}</span></p>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Από: ${cert.supplier_name || 'Άγνωστος'}</p>
@@ -405,6 +409,10 @@ function bindCertificateActions() {
     supabase.from('supplier_certificates').select('*').eq('id', btn.dataset.id).then(async ({ data: certs }) => {
       const cert = certs[0];
       const { value } = await Swal.fire({
+        didOpen: () => {
+          const checkbox = document.getElementById('swal-private');
+          if (checkbox) checkbox.checked = cert.is_private;
+        },
         title: 'Επεξεργασία Πιστοποιητικού',
         html: `
           <input id="swal-title" class="swal2-input" value="${cert.title}">
@@ -420,6 +428,12 @@ function bindCertificateActions() {
           <input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρησε την κατηγορία σου">
           <input id="swal-date" type="date" class="swal2-input" value="${cert.date}">
 <input id="swal-file" type="file" accept="application/pdf" class="swal2-file mt-2" />
+<div class="mt-4 text-center text-base font-bold underline text-blue-600 dark:text-blue-300">
+  <label>
+    <input type="checkbox" id="swal-private" class="mr-2 w-5 h-5">
+    Προσωπικό έγγραφο (ορατό μόνο σε εσένα)
+  </label>
+</div>
         `,
         focusConfirm: false,
         showCancelButton: true,
@@ -700,7 +714,14 @@ function showCreateModal() {
       </select>
       <input id="custom-type" class="swal2-input hidden" placeholder="Καταχώρησε την κατηγορία σου">
       <input id="swal-date" type="date" class="swal2-input">
+
       <input id="swal-file" type="file" accept="application/pdf" class="swal2-file mt-2" />
+<div class="mt-4 text-center text-base font-bold underline text-blue-600 dark:text-blue-300">
+  <label>
+    <input type="checkbox" id="swal-private" class="mr-2 w-5 h-5">
+    Προσωπικό έγγραφο (ορατό μόνο σε εσένα)
+  </label>
+</div>
       <div id="swal-preview" class="mt-4 overflow-auto max-h-[300px] border rounded"></div>
     `,
     focusConfirm: false,
@@ -731,13 +752,14 @@ function showCreateModal() {
   Swal.showValidationMessage('Συμπλήρωσε την προσαρμοσμένη κατηγορία σου.');
   return false;
 }
-return { title, type, date, file };
+const is_private = document.getElementById('swal-private').checked;
+return { title, type, date, file, is_private };
     }
   }).then(async (res) => {
     if (res.isConfirmed) {
       try {
         showLoading();
-        const { title, type, date, file } = res.value;
+        const { title, type, date, file, is_private } = res.value;
         const ext = file.name.split('.').pop();
         const uuid = crypto.randomUUID();
         const path = `${currentUser.id}/${uuid}.${ext}`;
@@ -755,7 +777,7 @@ return { title, type, date, file };
 
         const { error: insertErr } = await supabase
           .from('supplier_certificates')
-          .insert([{ supplier_user_id: currentUser.id, title, type, date, file_url: urlData.publicUrl, supplier_email: currentUser.email, name: file.name, supplier_name: profile?.name || currentUser.email, supplier_afm: profile?.afm || '', created_at: new Date().toISOString() }]);
+          .insert([{ supplier_user_id: currentUser.id, title, type, date, file_url: urlData.publicUrl, supplier_email: currentUser.email, name: file.name, supplier_name: profile?.name || currentUser.email, supplier_afm: profile?.afm || '', created_at: new Date().toISOString(), is_private: is_private }]);
         if (insertErr) throw insertErr;
         await loadCertificates();
         Swal.fire('Επιτυχία', 'Το πιστοποιητικό αποθηκεύτηκε επιτυχώς', 'success');
@@ -767,3 +789,4 @@ return { title, type, date, file };
     }
   });
 }
+
