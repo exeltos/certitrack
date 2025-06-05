@@ -79,6 +79,7 @@ exports.handler = async function (event) {
     for (const afm of Object.keys(grouped)) {
       const { data: supplier, error } = await supabase.from('suppliers').select('id, email').eq('afm', afm).maybeSingle();
       if (error || !supplier?.email) {
+        console.warn(`[SKIP] No supplier for AFM: ${afm}`);
         console.warn(`[SKIP] No supplier for AFM ${afm}`);
         continue;
       }
