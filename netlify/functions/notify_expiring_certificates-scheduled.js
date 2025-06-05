@@ -5,12 +5,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const MAILERSEND_API_KEY = 'mlsn.9e5839d966e740cc02c2b2689b3ce802d0cb20cd62d8587c6961b8a0a47bbc35';
+
 async function sendEmail(to, subject, html) {
   try {
     const response = await fetch('https://api.mailersend.com/v1/email', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.MAILERSEND_API_KEY}`,
+        Authorization: `Bearer ${MAILERSEND_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -36,6 +38,10 @@ exports.handler = async function () {
     const grouped = {};
     for (const cert of allCerts.data) {
       const expDate = new Date(cert.date);
+      if (!cert.date || isNaN(expDate)) {
+        console.warn(`[SKIP CERT] Invalid date for cert:`, cert);
+        continue;
+      }
       const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
       const status = daysLeft < 0 ? 'expired' : daysLeft <= 30 ? 'soon' : null;
 
@@ -78,12 +84,11 @@ exports.handler = async function () {
         console.log(`[SENDING] To: ${supplier.email} | Subject: ${subject}`);
 
         try {
-     const res = await sendEmail(supplier.email, subject, `<p>${message.replace(/\n/g, '<br>')}</p>`);
-
+          const res = await sendEmail(supplier.email, subject, `<p>${message.replace(/\n/g, '<br>')}</p>`);
 
           if (!res.ok) {
             const errText = await res.text();
-            console.error(`[MAIL ERROR] ${supplier.email}: ${errText}`);
+            console.error(`[MAIL ERROR ${res.status}] ${supplier.email}: ${errText}`);
             return;
           }
 
