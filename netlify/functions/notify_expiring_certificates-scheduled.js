@@ -48,7 +48,17 @@ exports.handler = async function (event) {
 
     const grouped = {};
     for (const cert of allCerts.data) {
-      const expDate = new Date(cert.date);
+      const rawDate = cert.date;
+      const expDate = new Date(rawDate);
+      const isValid = !isNaN(expDate);
+      const parsedDateStr = isValid ? expDate.toISOString() : 'Invalid Date';
+      console.log('[DEBUG] Checking cert:', {
+        title: cert.title,
+        date: rawDate,
+        parsedDate: parsedDateStr,
+        isValid
+      });
+      // ήδη ορίστηκε παραπάνω η expDate
       if (!cert.date || isNaN(expDate)) {
         console.warn(`[SKIP CERT] Invalid date for cert:`, cert);
         continue;
