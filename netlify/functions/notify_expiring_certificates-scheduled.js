@@ -59,7 +59,7 @@ exports.handler = async function () {
           const res = await fetch('https://www.certitrack.gr/.netlify/functions/send_email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: supplier.email, subject, message })
+            body: JSON.stringify({ to: supplier.email, subject, html: `<p>${message.replace(/\n/g, '<br>')}</p>` })
           });
 
           if (!res.ok) {
