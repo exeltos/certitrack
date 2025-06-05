@@ -22,6 +22,7 @@ async function sendEmail(to, subject, html) {
         html
       })
     });
+    console.log(`[MAILERSEND RESPONSE] Status: ${response.status}`);
     return response;
   } catch (err) {
     console.error('[SEND_EMAIL FUNCTION ERROR]', err);
@@ -48,6 +49,7 @@ exports.handler = async function (event) {
 
     const grouped = {};
     for (const cert of allCerts.data) {
+      console.log('[RAW CERT]', cert);
       const rawDate = cert.date;
       const expDate = new Date(rawDate);
       const isValid = !isNaN(expDate);
