@@ -55,6 +55,8 @@ exports.handler = async function (event) {
       grouped[cert.supplier_afm][status].push(cert);
     }
 
+    console.log('[DEBUG] Grouped suppliers:', grouped);
+
     for (const afm of Object.keys(grouped)) {
       const { data: supplier, error } = await supabase
         .from('suppliers')
