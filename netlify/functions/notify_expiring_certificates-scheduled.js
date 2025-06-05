@@ -39,6 +39,7 @@ exports.handler = async function (event) {
   try {
     const today = new Date();
     const allCerts = await supabase.from('supplier_certificates').select('*');
+    console.log('[RAW DATA]', allCerts);
     if (allCerts.error) throw allCerts.error;
 
     const grouped = {};
