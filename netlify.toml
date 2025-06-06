@@ -15,3 +15,7 @@
 
 [functions."notify_expiring_certificates-scheduled"]
   schedule = "0 9 * * *" # εκτέλεση κάθε μέρα 12:00 ώρα Ελλάδας
+
+  [functions."notify_user_expiry-scheduled"]
+schedule = "@daily"
+
