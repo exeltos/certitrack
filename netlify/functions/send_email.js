@@ -25,7 +25,14 @@ exports.handler = async (event) => {
         htmlContent = `
           <h2>Λίστα χρηστών με ληγμένη συνδρομή</h2>
           <ul>
-            ${certificates.map(c => `<li>• ${c.title}</li>`).join("")}
+            ${certificates.map(c => `
+              <li>
+                <strong>Ονομασία:</strong> ${c.name || '—'}<br>
+                <strong>Email:</strong> ${c.email || '—'}<br>
+                <strong>ΑΦΜ:</strong> ${c.afm || '—'}<br>
+                <strong>Ημερομηνία Λήξης:</strong> ${c.date || '—'}
+              </li>
+            `).join('<hr>')}
           </ul>
         `;
       } 
