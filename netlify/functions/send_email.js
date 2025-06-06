@@ -21,12 +21,21 @@ exports.handler = async (event) => {
   switch (type) {
     case "certificate":
       usedSubject = subject || "📄 Πιστοποιητικά από το CertiTrack";
-      htmlContent = `
-        <h2>Έλαβες νέα πιστοποιητικά</h2>
-        <ul>
-          ${certificates.map(c => `<li><strong>${c.title}</strong> - ${c.date}</li>`).join("")}
-        </ul>
-      `;
+      if (subject?.toLowerCase().includes("λήξη") || subject?.toLowerCase().includes("χρήστη")) {
+        htmlContent = `
+          <h2>Λίστα χρηστών με ληγμένη συνδρομή</h2>
+          <ul>
+            ${certificates.map(c => `<li>• ${c.title}</li>`).join("")}
+          </ul>
+        `;
+      } else {
+        htmlContent = `
+          <h2>Έλαβες νέα πιστοποιητικά</h2>
+          <ul>
+            ${certificates.map(c => `<li><strong>${c.title}</strong> - ${c.date}</li>`).join("")}
+          </ul>
+        `;
+      }
       break;
     case "invite":
       usedSubject = subject || "📨 Πρόσκληση Εγγραφής στο CertiTrack";
@@ -97,3 +106,4 @@ try {
     return { statusCode: 500, body: JSON.stringify({ error: "Email sending failed" }) };
   }
   }
+
