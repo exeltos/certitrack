@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const sendAdminEmail = require("./send_email.js");
 const { createClient } = require("@supabase/supabase-js");
 
 const supabase = createClient(
@@ -47,10 +48,8 @@ exports.handler = async () => {
       return { statusCode: 200, body: JSON.stringify({ message: "No expired users" }) };
     }
 
-    const baseUrl = process.env.URL || "https://your-site.netlify.app";
-    await fetch(`${baseUrl}/.netlify/functions/send_email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    await sendAdminEmail.handler({
+      httpMethod: "POST",
       body: JSON.stringify({
         email: "info@exeltos.com",
         type: "user_event",
