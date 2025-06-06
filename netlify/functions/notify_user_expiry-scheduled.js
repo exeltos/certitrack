@@ -47,7 +47,8 @@ exports.handler = async () => {
       return { statusCode: 200, body: JSON.stringify({ message: "No expired users" }) };
     }
 
-    await fetch("/.netlify/functions/send_email", {
+    const baseUrl = process.env.URL || "https://your-site.netlify.app";
+    await fetch(`${baseUrl}/.netlify/functions/send_email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
