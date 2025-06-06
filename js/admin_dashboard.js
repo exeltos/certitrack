@@ -394,6 +394,47 @@ if (signInError || !sessionData || !sessionData.user) {
 
 
 
+// ✅ Ανανέωση εγγραφής με καθορισμένη ημερομηνία
+
+document.getElementById('renewSelectedBtn')?.addEventListener('click', async () => {
+  const selected = [...document.querySelectorAll('.admin-checkbox:checked')];
+  if (!selected.length) {
+    Swal.fire('Καμία Επιλογή', 'Επίλεξε πρώτα χρήστες με checkbox.', 'info');
+    return;
+  }
+
+  const { value: inputDate } = await Swal.fire({
+    title: 'Ημερομηνία Εγγραφής',
+    html: '<input type="date" id="renewDate" class="swal2-input">',
+    focusConfirm: false,
+    preConfirm: () => {
+      const date = document.getElementById('renewDate').value;
+      if (!date) {
+        Swal.showValidationMessage('Συμπλήρωσε ημερομηνία.');
+        return false;
+      }
+      return date;
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Ενημέρωση',
+    cancelButtonText: 'Άκυρο'
+  });
+
+  if (!inputDate) return;
+
+  const isoDate = new Date(inputDate).toISOString();
+
+  for (const cb of selected) {
+    const afm = cb.dataset.afm;
+    const role = cb.dataset.role;
+    const table = role === 'Εταιρεία' ? 'companies' : 'suppliers';
+    await supabase.from(table).update({ timestamp: isoDate }).eq('afm', afm);
+  }
+
+  Swal.fire('✅ Ολοκληρώθηκε', 'Η εγγραφή ενημερώθηκε.', 'success');
+  loadAllUsers();
+});
+
 // ✅ Μαζικές ενέργειες admin
 function updateBulkActionVisibility() {
   const selected = document.querySelectorAll('.admin-checkbox:checked');
@@ -484,4 +525,5 @@ exportBtn?.addEventListener('click', () => {
   link.click();
 });
 ;
+
 
