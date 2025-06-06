@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-const sendAdminEmail = require("./send_email.js");
+
 const { createClient } = require("@supabase/supabase-js");
 
 const supabase = createClient(
@@ -48,8 +48,9 @@ exports.handler = async () => {
       return { statusCode: 200, body: JSON.stringify({ message: "No expired users" }) };
     }
 
-    await sendAdminEmail.handler({
-      httpMethod: "POST",
+    await fetch("https://www.certitrack.gr/.netlify/functions/send_email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: "info@exeltos.com",
         type: "user_event",
