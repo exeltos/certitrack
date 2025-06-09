@@ -538,7 +538,6 @@ if (fromProfile) {
 }
 if (hasSeenPopup) return;
   const countEl = document.getElementById('notifyCount');
-  console.log('📄 Όλα τα πιστοποιητικά:', data);
   const soon = data.filter(c => {
     const diff = Math.ceil((new Date(c.date) - new Date()) / (1000 * 60 * 60 * 24));
     return diff >= 0 && diff <= 30;
@@ -553,7 +552,6 @@ if (hasSeenPopup) return;
 }
 
 async function showExpirationPopup() {
-  console.log('✅ Τρέχει η showExpirationPopup');
   const { data } = await supabase.from('supplier_certificates')
     .select('*')
     .eq('supplier_user_id', currentUser.id)
@@ -572,11 +570,8 @@ async function showExpirationPopup() {
 
   if (supErr || !supProfile) return;
   const supplierId = supProfile.id;
-  console.log('🔑 supplierId:', supplierId);
 
-  console.log('📆 Πιστοποιητικά προς λήξη:', soon);
   for (const cert of soon) {
-    console.log('➡️ Επεξεργασία cert:', cert.id);
     try {
       const { data: existing } = await supabase
         .from('supplier_notifications')
@@ -586,16 +581,11 @@ async function showExpirationPopup() {
         .maybeSingle();
 
       if (!existing) {
-        const { error: insertErr } = await supabase.from('supplier_notifications').insert({
-  certificate_id: cert.id,
-  supplier_id: supplierId,
-  notified_at: new Date().toISOString()
-});
-if (insertErr) {
-  console.error('❌ Σφάλμα insert στην supplier_notifications:', insertErr.message);
-} else {
-  console.log(`✅ Ειδοποίηση καταγράφηκε για πιστοποιητικό ${cert.id}`);
-}
+        await supabase.from('supplier_notifications').insert({
+          certificate_id: cert.id,
+          supplier_id: supplierId,
+          notified_at: new Date().toISOString()
+        });
       }
     } catch (err) {
       console.error('❌ Σφάλμα καταγραφής ειδοποίησης:', err.message);
