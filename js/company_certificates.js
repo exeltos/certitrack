@@ -257,7 +257,10 @@ if (certActions) certActions.classList.remove('hidden');
     window.location.href = 'index.html';
   }
 });
-    document.getElementById('notifyBtn')?.addEventListener('click', showExpirationPopup);
+    document.getElementById('notifyBtn')?.addEventListener('click', async () => {
+  await showExpirationPopup();
+  await notifyCompaniesForExpiringSupplierCerts();
+});
     // 🔧 Το γρανάζι καταργήθηκε
 // document.getElementById('userSettingsBtn')?.addEventListener(...);
 
@@ -570,6 +573,69 @@ if (hasSeenPopup) return;
   }
 }
 
+async function notifyCompaniesForExpiringSupplierCerts() {
+  console.log('🔔 Έλεγχος για ληγμένα πιστοποιητικά προμηθευτών');
+  try {
+    const { data: companyProfile, error: profileErr } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    if (profileErr || !companyProfile) throw profileErr || new Error('Δεν βρέθηκε προφίλ εταιρείας.');
+
+    const companyId = companyProfile.id;
+
+    // Βρες όλους τους προμηθευτές με access granted
+    const { data: suppliers, error: supErr } = await supabase
+      .from('company_suppliers')
+      .select('supplier_id')
+      .eq('company_id', companyId)
+      .eq('access', 'granted');
+    if (supErr) throw supErr;
+
+    for (const s of suppliers) {
+      const { data: certs, error: certErr } = await supabase
+        .from('supplier_certificates')
+        .select('id, date')
+        .eq('supplier_id', s.supplier_id);
+
+      if (certErr || !certs) continue;
+
+      const today = new Date();
+      const expiring = certs.filter(c => {
+        const days = Math.ceil((new Date(c.date) - today) / (1000 * 60 * 60 * 24));
+        return days >= 0 && days <= 30;
+      });
+
+      for (const cert of expiring) {
+        const { data: existing } = await supabase
+          .from('company_notifications')
+          .select('id')
+          .eq('certificate_id', cert.id)
+          .eq('company_id', companyId)
+          .maybeSingle();
+
+        if (!existing) {
+          const { error: insertErr } = await supabase
+            .from('company_notifications')
+            .insert({
+              certificate_id: cert.id,
+              company_id: companyId,
+              date_notified: new Date().toISOString()
+            });
+          if (insertErr) {
+            console.error('❌ Σφάλμα insert για εταιρεία:', insertErr.message);
+          } else {
+            console.log(`✅ Καταγράφηκε ειδοποίηση για cert ${cert.id} σε εταιρεία ${companyId}`);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('❌ notifyCompaniesForExpiringSupplierCerts error:', err.message);
+  }
+}
+
 async function showExpirationPopup() {
   const { data } = await supabase.from('company_certificates').select('*').eq('company_user_id', currentUser.id).order('date', { ascending: false });
   const soon = data.filter(c => {
@@ -676,5 +742,6 @@ const type = selectedType === 'Άλλο' && customTypeInput?.value.trim() ? cust
     }
   });
 }
+
 
 
