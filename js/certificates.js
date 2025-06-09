@@ -581,11 +581,12 @@ async function showExpirationPopup() {
         .maybeSingle();
 
       if (!existing) {
-        await supabase.from('supplier_notifications').insert({
-          certificate_id: cert.id,
-          supplier_id: supplierId,
-          notified_at: new Date().toISOString()
-        });
+        const { error: insertErr } = await supabase.from('supplier_notifications').insert({$1});
+if (insertErr) {
+  console.error('❌ Σφάλμα insert στην supplier_notifications:', insertErr.message);
+} else {
+  console.log(`✅ Ειδοποίηση καταγράφηκε για πιστοποιητικό ${cert.id}`);
+}
       }
     } catch (err) {
       console.error('❌ Σφάλμα καταγραφής ειδοποίησης:', err.message);
