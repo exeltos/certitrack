@@ -552,14 +552,50 @@ if (hasSeenPopup) return;
 }
 
 async function showExpirationPopup() {
-  const { data } = await supabase.from('supplier_certificates').select('*').eq('supplier_user_id', currentUser.id).order('date', { ascending: false });
+  const { data } = await supabase.from('supplier_certificates')
+    .select('*')
+    .eq('supplier_user_id', currentUser.id)
+    .order('date', { ascending: false });
+
   const soon = data.filter(c => {
     const diff = Math.ceil((new Date(c.date) - new Date()) / (1000 * 60 * 60 * 24));
     return diff >= 0 && diff <= 30;
   });
+
+  const { data: supProfile, error: supErr } = await supabase
+    .from('suppliers')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .maybeSingle();
+
+  if (supErr || !supProfile) return;
+  const supplierId = supProfile.id;
+
+  for (const cert of soon) {
+    try {
+      const { data: existing } = await supabase
+        .from('supplier_notifications')
+        .select('id')
+        .eq('certificate_id', cert.id)
+        .eq('supplier_id', supplierId)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from('supplier_notifications').insert({
+          certificate_id: cert.id,
+          supplier_id: supplierId,
+          notified_at: new Date().toISOString()
+        });
+      }
+    } catch (err) {
+      console.error('❌ Σφάλμα καταγραφής ειδοποίησης:', err.message);
+    }
+  }
+
   const html = soon.length
     ? `<ul class='text-left'>${soon.map(c => `<li>• ${c.title}: ${new Date(c.date).toLocaleDateString('el-GR')}</li>`).join('')}</ul>`
     : 'Δεν υπάρχουν επικείμενες λήξεις.';
+
   Swal.fire({ title: 'Ειδοποιήσεις λήξης', html, icon: soon.length ? 'warning' : 'info' });
 }
 
@@ -789,4 +825,5 @@ return { title, type, date, file, is_private };
     }
   });
 }
+
 
