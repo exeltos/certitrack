@@ -627,6 +627,30 @@ async function notifyCompaniesForExpiringSupplierCerts() {
             console.error('❌ Σφάλμα insert για εταιρεία:', insertErr.message);
           } else {
             console.log(`✅ Καταγράφηκε ειδοποίηση για cert ${cert.id} σε εταιρεία ${companyId}`);
+
+            // ➕ Λήψη στοιχείων supplier για το email
+            const { data: supplierData } = await supabase
+              .from('suppliers')
+              .select('company_name, afm')
+              .eq('id', s.supplier_id)
+              .maybeSingle();
+
+            await fetch('/.netlify/functions/send_email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: currentUser.email,
+                type: 'certificate',
+                subject: '📄 Λήξη Πιστοποιητικών Προμηθευτών',
+                companyName: companyId,
+                certificates: [{
+                  title: cert.title || '',
+                  date: cert.date || '',
+                  supplier: supplierData?.company_name || '',
+                  afm: supplierData?.afm || ''
+                }]
+              })
+            });
           }
         }
       }

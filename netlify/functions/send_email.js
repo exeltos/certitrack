@@ -36,6 +36,20 @@ exports.handler = async (event) => {
             `).join('<hr>')}
           </ul>
         `;
+      } else {
+        htmlContent = `
+          <p>Σας ενημερώνουμε ότι τα παρακάτω πιστοποιητικά προμηθευτών έχουν λήξει ή πρόκειται να λήξουν:</p>
+          <ul style="font-size: 15px; line-height: 1.6">
+            ${certificates.map(c => `
+              <li style="margin-bottom: 12px">
+                <strong>Τίτλος:</strong> ${c.title || '—'}<br>
+                <strong>Ημερομηνία Λήξης:</strong> ${c.date || '—'}<br>
+                ${c.supplier ? `<strong>Προμηθευτής:</strong> ${c.supplier}` : ''}
+                ${c.afm ? `<br><strong>ΑΦΜ:</strong> ${c.afm}` : ''}
+              </li>
+            `).join('')}
+          </ul>
+        `;
       }
       break;
     case "invite":
@@ -115,3 +129,4 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: JSON.stringify({ error: "Email sending failed" }) };
   }
 };
+
