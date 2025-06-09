@@ -616,10 +616,8 @@ async function notifyCompaniesForExpiringSupplierCerts() {
           .maybeSingle();
 
         if (!existing) {
-          const { error: insertErr } = await supabase
-            .from('company_notifications')
-            .insert({
-              certificate_id: cert.id,
+          const { error: insertErr } = await supabase.from('company_notifications').insert({
+              supplier_certificate_id: cert.id,
               company_id: companyId,
               date_notified: new Date().toISOString()
             });
