@@ -581,7 +581,11 @@ async function showExpirationPopup() {
         .maybeSingle();
 
       if (!existing) {
-        const { error: insertErr } = await supabase.from('supplier_notifications').insert({$1});
+        const { error: insertErr } = await supabase.from('supplier_notifications').insert({
+  certificate_id: cert.id,
+  supplier_id: supplierId,
+  notified_at: new Date().toISOString()
+});
 if (insertErr) {
   console.error('❌ Σφάλμα insert στην supplier_notifications:', insertErr.message);
 } else {
