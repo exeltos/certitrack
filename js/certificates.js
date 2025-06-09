@@ -571,7 +571,13 @@ async function showExpirationPopup() {
   if (supErr || !supProfile) return;
   const supplierId = supProfile.id;
 
-  Swal.fire({ title: 'Ειδοποιήσεις λήξης', html, icon: soon.length ? 'warning' : 'info' });
+  Swal.fire({
+    title: 'Ειδοποιήσεις λήξης',
+    html: soon.length
+      ? `<p>Έχεις ${soon.length} πιστοποιητικά που λήγουν εντός 30 ημερών:</p><ul style='text-align: left;'>${soon.map(c => `<li>• <b>${c.title}</b> (${new Date(c.date).toLocaleDateString('el-GR')})</li>`).join('')}</ul>`
+      : 'Δεν υπάρχουν πιστοποιητικά προς λήξη.',
+    icon: soon.length ? 'warning' : 'info'
+  });
 }
 
 async function loadCompanies() {
