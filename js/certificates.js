@@ -460,6 +460,8 @@ function bindCertificateActions() {
     updates.name = file.name;
   }
   await supabase.from('supplier_certificates').update(updates).eq('id', value.id);
+// 🧹 Διαγραφή ειδοποιήσεων για το ενημερωμένο πιστοποιητικό
+await supabase.from('certificate_notifications').delete().eq('certificate_id', value.id);
         await loadCertificates();
       }
     });
@@ -806,5 +808,6 @@ return { title, type, date, file, is_private };
     }
   });
 }
+
 
 
