@@ -459,7 +459,12 @@ function bindCertificateActions() {
     updates.file_url = urlData.publicUrl;
     updates.name = file.name;
   }
-  await supabase.from('supplier_certificates').update(updates).eq('id', value.id);
+  const { error: updateErr } = await supabase.from('supplier_certificates').update(updates).eq('id', value.id);
+if (updateErr) throw updateErr;
+
+// 🧹 Διαγραφή ειδοποιήσεων για το ενημερωμένο πιστοποιητικό
+const { error: delErr } = await supabase.from('certificate_notifications').delete().eq('certificate_id', value.id);
+if (delErr) console.error('❌ Σφάλμα διαγραφής ειδοποίησης:', delErr);
 // 🧹 Διαγραφή ειδοποιήσεων για το ενημερωμένο πιστοποιητικό
 await supabase.from('certificate_notifications').delete().eq('certificate_id', value.id);
         await loadCertificates();
