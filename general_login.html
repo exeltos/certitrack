@@ -97,17 +97,34 @@
       if (!afm) return;
 
       try {
-        const { data, error } = await supabase
-          .from('companies')
-          .select('email')
-          .eq('afm', afm)
-          .maybeSingle();
+        // Προσπάθεια σε companies
+const { data: compData, error: compError } = await supabase
+  .from('companies')
+  .select('email')
+  .eq('afm', afm)
+  .maybeSingle();
+
+let email;
+if (compError || !compData?.email) {
+  // Αν δεν βρέθηκε σε companies, ψάχνουμε suppliers
+  const { data: supData, error: supError } = await supabase
+    .from('suppliers')
+    .select('email')
+    .eq('afm', afm)
+    .maybeSingle();
+  if (supError || !supData?.email) {
+    return Swal.fire('Σφάλμα', 'Δεν βρέθηκε email για αυτό το ΑΦΜ.', 'error');
+  }
+  email = supData.email;
+} else {
+  email = compData.email;
+}
 
         if (error || !data?.email) {
           return Swal.fire('Σφάλμα', 'Δεν βρέθηκε email για αυτό το ΑΦΜ.', 'error');
         }
 
-        const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email: data.email });
+        const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email });
         if (resendErr) throw resendErr;
 
         Swal.fire('Έτοιμο', 'Σας στείλαμε νέο σύνδεσμο επιβεβαίωσης.', 'success');
