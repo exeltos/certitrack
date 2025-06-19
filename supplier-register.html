@@ -186,14 +186,11 @@
 
 
         // Sign up user
-        const { data: signData, error: signErr } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { type: 'supplier', afm, name },
-            emailRedirectTo: `${window.location.origin}/general_login.html`
-          }
-        });
+        // Sign up user (v1 syntax for email confirmation)
+        const { data: signData, error: signErr } = await supabase.auth.signUp(
+          { email, password },
+          { redirectTo: `${window.location.origin}/general_login.html`, data: { type: 'supplier', afm, name } }
+        );
         if (signErr) {
           if (signErr.message === 'User already registered') {
             Swal.fire('Προσοχή', 'Αυτός ο χρήστης είναι ήδη εγγεγραμμένος. Παρακαλώ κάνε σύνδεση.', 'info');
