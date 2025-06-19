@@ -189,10 +189,7 @@
         const { data: signData, error: signErr } = await supabase.auth.signUp({
   email,
   password,
-  options: {
-    data: { type: 'supplier', afm, name },
-    redirectTo: `${window.location.origin}/general_login.html`
-  }
+  options: {$1emailRedirectTo: `${window.location.origin}/general_login.html`$2}
 });
         if (signErr) {
           if (signErr.message === 'User already registered') {
