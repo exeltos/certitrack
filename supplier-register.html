@@ -235,7 +235,9 @@ console.log('[DEBUG] signData:', signData);
   .update({
     user_id: signData.user.id,
     status: '✅ Εγγεγραμμένος',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    afm,
+    name
   })
   .eq('afm', afm);
           if (updateErr) throw updateErr;
