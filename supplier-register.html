@@ -239,7 +239,7 @@ console.log('[DEBUG] signData:', signData);
     afm,
     name
   })
-  .eq('afm', afm);
+  .eq('id', existingSupplier.id);
           if (updateErr) throw updateErr;
 
           // ✅ Ενημέρωση ή εισαγωγή εγγραφής στον πίνακα company_suppliers ΜΟΝΟ αν υπάρχει company_id
