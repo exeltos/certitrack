@@ -227,13 +227,13 @@
         // Ενημέρωση υπάρχοντος supplier αν υπάρχει χωρίς user_id
         if (existingSupplier) {
           const { error: updateErr } = await supabase
-            .from('suppliers')
-            .update({
-              user_id: signData.user.id,
-              status: '✅ Εγγεγραμμένος',
-              timestamp: new Date().toISOString()
-            })
-            .eq('id', existingSupplier.id);
+  .from('suppliers')
+  .update({
+    user_id: signData.user.id,
+    status: '✅ Εγγεγραμμένος',
+    timestamp: new Date().toISOString()
+  })
+  .eq('afm', afm);
           if (updateErr) throw updateErr;
 
           // ✅ Ενημέρωση ή εισαγωγή εγγραφής στον πίνακα company_suppliers ΜΟΝΟ αν υπάρχει company_id
