@@ -159,6 +159,9 @@
           .or(`afm.eq.${afm},email.eq.${email}`)
           .limit(1);
         const existingSupplier = existingSupplierData?.[0];
+console.log('[DEBUG] email:', email);
+console.log('[DEBUG] afm:', afm);
+console.log('[DEBUG] existingSupplier:', existingSupplier);
 
         // 🔍 Αν δεν υπάρχει company_id, πάρε το από τον πίνακα company_suppliers
         if (existingSupplier && !existingSupplier.company_id) {
@@ -214,6 +217,7 @@
     redirectTo: `${window.location.origin}/general_login.html`
   }
 });
+console.log('[DEBUG] signData:', signData);
         if (signErr) {
           if (signErr.message === 'User already registered') {
             Swal.fire('Προσοχή', 'Αυτός ο χρήστης είναι ήδη εγγεγραμμένος. Παρακαλώ κάνε σύνδεση.', 'info');
