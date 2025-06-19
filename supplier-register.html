@@ -192,8 +192,27 @@
         });
         if (signErr) {
           if (signErr.message === 'User already registered') {
-            // Resend confirmation link
-            await supabase.auth.resend({ type: 'signup', email });
+            // Resend confirmation link via magic link
+            const { error: otpErr } = await supabase.auth.signInWithOtp({
+              email,
+              options: { emailRedirectTo: `${window.location.origin}/general_login.html` }
+            });
+            if (otpErr) throw otpErr;
+            // Update supplier status only
+            await supabase
+              .from('suppliers')
+              .update({ status: '✅ Εγγεγραμμένος', timestamp: new Date().toISOString() })
+              .eq('id', existingSupplier.id);
+            if (existingSupplier.company_id) {
+              await supabase
+                .from('company_suppliers')
+                .update({ status: '✅ Εγγεγραμμένος', timestamp: new Date().toISOString() })
+                .eq('supplier_id', existingSupplier.id)
+                .eq('company_id', existingSupplier.company_id);
+            }
+            Swal.fire('Έλεγχος Email', 'Στείλαμε ξανά τον σύνδεσμο επιβεβαίωσης.', 'success');
+            return window.location.href = 'general_login.html';
+          });
             // Update supplier status
             await supabase
               .from('suppliers')
