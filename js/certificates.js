@@ -459,7 +459,9 @@ function bindCertificateActions() {
     updates.file_url = urlData.publicUrl;
     updates.name = file.name;
   }
-  const { error: updateErr } = await supabase.from('supplier_certificates').update(updates).eq('id', value.id);
+  const checkbox = Swal.getPopup().querySelector('#swal-private');
+updates.is_private = checkbox?.checked;
+const { error: updateErr } = await supabase.from('supplier_certificates').update(updates).eq('id', value.id);
 if (updateErr) throw updateErr;
 
 // 🧹 Διαγραφή ειδοποιήσεων για το ενημερωμένο πιστοποιητικό
