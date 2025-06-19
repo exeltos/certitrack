@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://klutmusrabsizqjnzwpu.supabase.co; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://klutmusrabsizqjnzwpu.supabase.co https://auth.klutmusrabsizqjnzwpu.supabase.co; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data;">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CertiTrack - Εγγραφή Προμηθευτή</title>
@@ -93,12 +93,48 @@
   <script type="module">
     import { supabase } from '../js/supabaseClient.js';
 
+// Listener μετά το email verification για ενημέρωση status
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+    const user = session.user;
+    const afmMeta = user.user_metadata?.afm;
+    if (afmMeta) {
+      // Ενημέρωση πίνακα suppliers
+      await supabase.from('suppliers')
+        .update({ user_id: user.id, status: '✅ Εγγεγραμμένος', timestamp: new Date().toISOString() })
+        .eq('afm', afmMeta);
+      // Ενημέρωση πίνακα company_suppliers με βάση AFM
+      await supabase.from('company_suppliers')
+        .update({ status: '✅ Εγγεγραμμένος', timestamp: new Date().toISOString() })
+        .eq('supplier_afm', afmMeta);
+      Swal.fire('Επιβεβαίωση Ολοκληρώθηκε', 'Ο λογαριασμός σου ενεργοποιήθηκε.', 'success');
+    }
+  }
+});
+
     const form = document.getElementById('supplierForm');
     const errorEl = document.getElementById('errorMsg');
     const submitBtn = document.getElementById('submitBtn');
     const spinner = document.getElementById('spinner');
 
     form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  // Προβολή Όρων Χρήσης πριν την εγγραφή
+  const { value: accepted } = await Swal.fire({
+    title: 'Όροι Χρήσης',
+    html: `<label><input type="checkbox" id="terms"> Αποδέχομαι τους όρους.</label>`,
+    preConfirm: () => {
+      if (!document.getElementById('terms').checked) {
+        Swal.showValidationMessage('Πρέπει να αποδεχτείτε τους όρους.');
+      }
+      return document.getElementById('terms').checked;
+    }
+  });
+  if (!accepted) {
+    spinner.classList.add('hidden');
+    submitBtn.disabled = false;
+    return;
+  }
       e.preventDefault();
       errorEl.classList.add('hidden');
       submitBtn.disabled = true;
@@ -186,14 +222,14 @@
 
 
         // Sign up user
-        const { data: signData, error: signErr } = await supabase.auth.signUp({
-  email,
-  password,
-  options: {
-    data: { type: 'supplier', afm, name },
-    redirectTo: `${window.location.origin}/general_login.html`
-  }
-});
+        // Χρησιμοποιούμε σωστή υπογραφή v2: credentials πρώτο, options δεύτερο
+        const { data: signData, error: signErr } = await supabase.auth.signUp(
+          { email, password },
+          {
+            data: { type: 'supplier', afm, name },
+            emailRedirectTo: `${window.location.origin}/general_login.html`
+          }
+        );
         if (signErr) {
           if (signErr.message === 'User already registered') {
             Swal.fire('Προσοχή', 'Αυτός ο χρήστης είναι ήδη εγγεγραμμένος. Παρακαλώ κάνε σύνδεση.', 'info');
@@ -307,6 +343,10 @@
 </script>
 </body>
 </html>
+
+
+
+
 
 
 
