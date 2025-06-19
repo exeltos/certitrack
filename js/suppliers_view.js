@@ -287,29 +287,34 @@ function deleteSupplier(supplierId) {
     confirmButtonText: 'Ναι, διαγραφή',
     cancelButtonText: 'Ακύρωση'
   }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        showLoading();
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        const company_id = userData?.user?.id;
+    if (!result.isConfirmed) return;
+    try {
+      showLoading();
+      // Παίρνουμε το session για το τρέχον χρήστη
+      const { data: { session } } = await supabase.auth.getSession();
+      const userEmail = session?.user?.email;
+      if (!userEmail) throw new Error('Δεν βρέθηκε συνδεδεμένος χρήστης');
 
-        const { error } = await supabase
-          .from('company_suppliers')
-          .delete()
-          .eq('supplier_id', supplierId)
-          .eq('company_id', company_id);
+      const { data: company, error: companyErr } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('email', userEmail)
+        .single();
+      if (companyErr || !company) throw companyErr;
 
-        if (error) throw error;
+      const { error } = await supabase
+        .from('company_suppliers')
+        .delete()
+        .eq('supplier_id', supplierId)
+        .eq('company_id', company.id);
+      if (error) throw error;
 
-        Swal.fire('Αφαιρέθηκε!', 'Ο προμηθευτής αφαιρέθηκε από τη λίστα σας.', 'success').then(() => {
-          location.href = 'company_dashboard.html';
-        });
-      } catch (err) {
-        handleError(err);
-      } finally {
-        hideLoading();
-      }
+      await Swal.fire('Αφαιρέθηκε!', 'Ο προμηθευτής αφαιρέθηκε από τη λίστα σας.', 'success');
+      location.href = 'company_dashboard.html';
+    } catch (err) {
+      handleError(err);
+    } finally {
+      hideLoading();
     }
   });
 }

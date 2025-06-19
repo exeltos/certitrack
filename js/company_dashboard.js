@@ -31,7 +31,9 @@ async function dashboardInit() {
     console.log('🏢 Εταιρεία:', company);
     await updateCertificateCount();
     setActiveTab('btnSuppliers');
-    await showSuppliers(company);
+    // console.log αφαιρέθηκε γιατί η μεταβλητή δεν είναι ορατή εδώ
+await showSuppliers(company);
+updateDeleteButtonVisibility();
     await updateRegisteredSuppliers(company.id);
     const nameSpan = document.getElementById('companyName');
     if (nameSpan) nameSpan.textContent = company.name;
@@ -108,6 +110,8 @@ const total = certs?.length || 0;
 
 function logout() {
   Swal.fire({
+    showLoaderOnConfirm: true,
+    allowOutsideClick: () => !Swal.isLoading(),
     title: 'Αποσύνδεση',
     text: 'Θέλεις σίγουρα να αποσυνδεθείς;',
     icon: 'question',
@@ -150,11 +154,17 @@ function filterData() {
 }
 
 async function showSuppliers(company) {
+  // Εμφάνιση loader κατά τη φόρτωση της λίστας
+  showLoading();
+
   document.getElementById('certControls')?.classList.add('hidden');
   document.getElementById('loading')?.classList.remove('hidden');
   document.getElementById('supplierControls')?.classList.remove('hidden');
+
   await renderSuppliers(company);
-  
+
+  // Απόκρυψη loader μετά τη φόρτωση
+  hideLoading();
   document.getElementById('loading')?.classList.add('hidden');
 }
 
@@ -222,7 +232,7 @@ if (searchTerm) {
   else if (sort === 'pending') list.sort((a, b) => (b.status === '🕓 Εκκρεμή εγγραφή') - (a.status === '🕓 Εκκρεμή εγγραφή'));
 
   const container = document.getElementById('supplierTableBody');
-  container.innerHTML = '';
+  container.replaceChildren();
 
   if (!list.length) {
     container.innerHTML = '<tr><td colspan="6" class="text-center py-4">Δεν βρέθηκαν προμηθευτές.</td></tr>';
@@ -455,16 +465,22 @@ document.getElementById('deleteSelectedBtn')?.addEventListener('click', async ()
 
   try {
     showLoading();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: `${company.afm}@confirm.local`,
-      password: formValues.password
-    });
+    // Έλεγχος ΑΦΜ επιβεβαίωσης
+if (formValues.username !== company.afm) {
+  throw new Error('Μη έγκυρο ΑΦΜ επιβεβαίωσης.');
+}
+const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+  email: session.user.email,
+  password: formValues.password
+});
 
-    if (error || data.user.id !== session.user.id) {
+    if (authError || authData.user.id !== session.user.id) {
       throw new Error('Μη έγκυρα στοιχεία επιβεβαίωσης.');
     }
 
     const idsToDelete = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+console.log('🔍 supplier_ids προς διαγραφή:', idsToDelete);
+console.log('🔍 company_id:', company.id);
     const { error: delErr } = await supabase
       .from('company_suppliers')
       .delete()
@@ -726,6 +742,3 @@ function showAddSupplierForm() {
   }
 });
 }
-
-
-

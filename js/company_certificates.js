@@ -395,6 +395,8 @@ function highlightStat(activeId) {
 function renderFiltered(list) {
   const grid = document.getElementById('certContainer');
   grid.innerHTML = '';
+// grid.style.minHeight αφαιρέθηκε γιατί προκαλούσε αναπήδηση
+
   list.forEach(cert => {
     const expDate = new Date(cert.date);
     const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
@@ -408,7 +410,7 @@ function renderFiltered(list) {
       : '<span class="text-green-600 font-medium">Ισχύει</span>';
 
     const card = document.createElement('div');
-    card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card`;
+    card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card w-full max-w-full grow`;
     card.innerHTML = `
       <div>
         <h3 class="font-semibold mb-1 text-gray-800 dark:text-white">${cert.title}</h3>
@@ -450,7 +452,7 @@ function renderFiltered(list) {
         : '<span class="text-green-600 font-medium">Ισχύει</span>';
 
       const card = document.createElement('div');
-      card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card`;
+      card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card w-full max-w-full`;
       card.innerHTML = `
         <div>
           <h3 class="font-semibold mb-1 text-gray-800 dark:text-white">${cert.title}</h3>
@@ -764,6 +766,7 @@ const type = selectedType === 'Άλλο' && customTypeInput?.value.trim() ? cust
     }
   });
 }
+
 
 
 
