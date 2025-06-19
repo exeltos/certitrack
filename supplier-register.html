@@ -186,21 +186,35 @@
 
 
         // Sign up user
+        // Sign up user (ή resend magic link αν ήδη προσκεκλημένος)
         const { data: signData, error: signErr } = await supabase.auth.signUp({
-  email,
-  password,
-  options: {
-    data: { type: 'supplier', afm, name },
-    redirectTo: `${window.location.origin}/general_login.html`
-  }
-});
+          email,
+          password,
+          options: {
+            data: { type: 'supplier', afm, name },
+            emailRedirectTo: `${window.location.origin}/general_login.html`
+          }
+        });
         if (signErr) {
-          if (signErr.message === 'User already registered') {
-            Swal.fire('Προσοχή', 'Αυτός ο χρήστης είναι ήδη εγγεγραμμένος. Παρακαλώ κάνε σύνδεση.', 'info');
-            spinner.classList.add('hidden');
-            submitBtn.disabled = false;
+          console.warn('[DEBUG] signUp error:', signErr.message);
+          if (signErr.message.includes('User already registered')) {
+            // resend magic link
+            const { error: otpErr } = await supabase.auth.signInWithOtp({
+              email,
+              options: { emailRedirectTo: `${window.location.origin}/general_login.html` }
+            });
+            if (otpErr) throw otpErr;
+            // ενημέρωση status
+            await supabase.from('suppliers').update({ status: '✅ Εγγεγραμμένος', timestamp: new Date().toISOString() }).eq('id', existingSupplier.id);
+            if (existingSupplier.company_id) {
+              await supabase.from('company_suppliers').update({ status: '✅ Εγγεγραμμένος', timestamp: new Date().toISOString() }).match({ supplier_id: existingSupplier.id, company_id: existingSupplier.company_id });
+            }
+            Swal.fire('Έλεγχος Email', 'Στείλαμε ξανά τον σύνδεσμο επιβεβαίωσης.', 'success')
+              .then(() => { window.location.href = 'general_login.html'; });
             return;
           }
+          throw signErr;
+        }
           throw signErr;
         }
 
