@@ -187,10 +187,10 @@
 
         // Sign up user
         const { data: signData, error: signErr } = await supabase.auth.signUp({
-  email,
-  password,
-  options: {$1emailRedirectTo: `${window.location.origin}/general_login.html`$2}
-});
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/general_login.html` }
+        });
         if (signErr) {
           if (signErr.message === 'User already registered') {
             Swal.fire('Προσοχή', 'Αυτός ο χρήστης είναι ήδη εγγεγραμμένος. Παρακαλώ κάνε σύνδεση.', 'info');
