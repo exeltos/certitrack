@@ -186,7 +186,6 @@
 
 
         // Sign up user
-        // Sign up user (v1 syntax for email confirmation)
         const { data: signData, error: signErr } = await supabase.auth.signUp(
           { email, password },
           { redirectTo: `${window.location.origin}/general_login.html`, data: { type: 'supplier', afm, name } }
