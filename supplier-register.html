@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://klutmusrabsizqjnzwpu.supabase.co; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://klutmusrabsizqjnzwpu.supabase.co https://auth.klutmusrabsizqjnzwpu.supabase.co; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data;">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CertiTrack - Εγγραφή Προμηθευτή</title>
@@ -186,12 +186,14 @@
 
 
         // Sign up user
-        // Supabase v2 requires credentials and options as separate arguments
-        // Πρώτο: { email, password }, Δεύτερο: { data, emailRedirectTo }
-        const { data: signData, error: signErr } = await supabase.auth.signUp(
-          { email, password },
-          { data: { type: 'supplier', afm, name }, emailRedirectTo: `${window.location.origin}/general_login.html` }
-        );
+        const { data: signData, error: signErr } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    data: { type: 'supplier', afm, name },
+    redirectTo: `${window.location.origin}/general_login.html`
+  }
+});
         if (signErr) {
           if (signErr.message === 'User already registered') {
             Swal.fire('Προσοχή', 'Αυτός ο χρήστης είναι ήδη εγγεγραμμένος. Παρακαλώ κάνε σύνδεση.', 'info');
