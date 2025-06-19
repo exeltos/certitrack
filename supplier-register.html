@@ -186,6 +186,8 @@
 
 
         // Sign up user
+        // Supabase v2 requires credentials and options as separate arguments
+        // Πρώτο: { email, password }, Δεύτερο: { data, emailRedirectTo }
         const { data: signData, error: signErr } = await supabase.auth.signUp(
           { email, password },
           { data: { type: 'supplier', afm, name }, emailRedirectTo: `${window.location.origin}/general_login.html` }
