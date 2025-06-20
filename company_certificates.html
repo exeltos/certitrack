@@ -26,6 +26,49 @@
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
   <style>
+    /* Από certificates.html */
+    .card-transition {
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+    .card-transition:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    }
+    .cert-card {
+  background-color: white;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-height: 220px;
+  height: 220px;
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.3s ease-in-out;
+  transform: translateY(0);
+  border: 2px solid transparent;
+}
+.cert-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+.border-warning {
+  border-color: #f59e0b !important;
+}
+.border-error {
+  border-color: #dc2626 !important;
+}
+.cert-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+.dark .cert-card {
+  background-color: #1f2937;
+}
+
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
 .fade-in { animation: fadeIn 0.6s ease-in-out; }
 .card-transition:hover {
@@ -34,6 +77,14 @@
   }
   .border-warning { border: 2px solid #f59e0b !important; }
   .border-error { border: 2px solid #dc2626 !important; }
+#supplierCount, #certTabCount {
+  color: black !important;
+}
+
+#certContainer > .cert-card {
+  height: 100%;
+  min-height: 220px;
+}
 </style>
 <script>
 function updateIcons() {
@@ -85,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-16 w-auto">
   <div id="companyHeader" class="relative flex items-center gap-2 text-lg font-bold text-blue-800 dark:text-blue-300">
   Πιστοποιητικά - <span id="companyName" class="ml-1 font-semibold text-blue-800 dark:text-blue-200"></span>
-<span id="supplierCount" class="ml-2 text-sm text-gray-500 dark:text-gray-300"></span>
+<span id="supplierCount" class="ml-2 text-sm text-gray-900 dark:text-gray-900 font-bold"></span>
       <button id="notifyBtn" class="relative focus:outline-none" title="Ειδοποιήσεις">
   <i data-lucide="bell" aria-hidden="true" class="w-5 h-5 text-gray-500 hover:text-red-500"></i>
   <span id="notifyCount" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-1 hidden">0</span>
@@ -118,11 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="flex-1 flex flex-col items-center gap-6 p-4 md:p-6 pt-0">
     <main class="flex flex-col gap-4 items-center w-full max-w-6xl pt-[100px]">
   <div id="navTabs" class="flex gap-4 mb-4">
-  <a href="company_dashboard.html" id="btnSuppliers" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
-    👥 Οι Προμηθευτές μου <span id="supplierCount" class="ml-1 text-sm"></span>
+  <a href="company_dashboard.html" id="btnSuppliers" class="tab-btn flex items-center gap-2 px-4 py-2 bg-white dark:bg-white text-gray-900 dark:text-gray-900 border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500">
+    👥 Οι Προμηθευτές μου <span id="supplierCount" class="ml-1 text-sm font-semibold" style="color: black !important; background-color: transparent !important;"></span>
   </a>
-  <button class="tab-btn flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500 ring-2 ring-blue-500" disabled>
-    📦 Τα Πιστοποιητικά μου
+  <button class="tab-btn flex items-center gap-2 px-4 py-2 bg-white dark:bg-white text-gray-900 dark:text-gray-900 border rounded-2xl shadow hover:shadow-xl transition duration-200 ring-offset-2 focus:ring-2 focus:ring-blue-500 ring-2 ring-blue-500" disabled>
+    📦 Τα Πιστοποιητικά μου <span id="certTabCount" class="ml-1 text-sm font-semibold" style="color: black !important; background-color: transparent !important;"></span>
   </button>
 </div>
   
@@ -168,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
 
       <!-- Πιστοποιητικά -->
-      <div id="certContainer" class="hidden grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 transition-transform duration-300 justify-center mx-auto" data-export-mode="false" style="grid-auto-rows: 1fr;"></div>
+      <div id="certContainer" class="hidden grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 transition-transform duration-300 items-stretch" data-export-mode="false" style="align-items: stretch; justify-items: center;"></div>
     </main>
 
     <!-- Sidebar -->
