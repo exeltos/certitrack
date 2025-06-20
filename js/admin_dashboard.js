@@ -1,5 +1,24 @@
 import { supabase } from '../js/supabaseClient.js';
 
+// 🔍 DEBUG: έλεγχος role από JWT
+supabase.auth.getUser().then(({ data: { user }, error }) => {
+  if (error) {
+    console.error('❌ Σφάλμα Supabase Auth:', error);
+    return;
+  }
+  console.log('[DEBUG] user metadata:', user?.app_metadata || user?.user_metadata || user);
+  console.log('[DEBUG] user.app_metadata.app_role:', user?.app_metadata?.app_role);
+  console.log('[DEBUG] user.app_role:', user?.app_role);
+  console.log('[DEBUG] user.raw_app_meta_data?.app_role:', user?.raw_app_meta_data?.app_role);
+
+  const isAdmin = user?.email === 'admin@certitrack.gr';
+  if (!isAdmin) {
+    alert('Δεν έχετε δικαίωμα πρόσβασης σε αυτή τη σελίδα.');
+    window.location.href = '/no-access.html';
+    return;
+  }
+});
+
 let allUsersCache = [];
 
 // 📊 Προσθήκη στατιστικών μετρητών πάνω από τον πίνακα
@@ -312,15 +331,42 @@ document.addEventListener('click', async (e) => {
     if (!result.isConfirmed) return;
 
     const table = role === 'Εταιρεία' ? 'companies' : 'suppliers';
-    const { error } = await supabase.from(table).delete().eq('afm', afm);
-
-    if (error) {
+    try {
+      // Cascade delete related records
+      if (role === 'Προμηθευτής') {
+        const { data: supRec, error: supErr } = await supabase
+          .from('suppliers')
+          .select('id, user_id')
+          .eq('afm', afm)
+          .single();
+        if (!supErr && supRec) {
+          await supabase.from('company_suppliers').delete().eq('supplier_id', supRec.id);
+          await supabase.from('supplier_certificates').delete().eq('supplier_user_id', supRec.user_id);
+          await supabase.from('supplier_notifications').delete().eq('supplier_id', supRec.id);
+        }
+      } else {
+        const { data: compRec, error: compErr } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('afm', afm)
+          .single();
+        if (!compErr && compRec) {
+          await supabase.from('company_suppliers').delete().eq('company_id', compRec.id);
+          await supabase.from('company_certificates').delete().eq('company_id', compRec.id);
+          await supabase.from('company_notifications').delete().eq('company_id', compRec.id);
+        }
+      }
+      // Main delete
+      const { error: mainErr } = await supabase
+        .from(table)
+        .delete()
+        .eq('afm', afm);
+      if (mainErr) throw mainErr;
+      Swal.fire('Διαγράφηκε', 'Ο χρήστης διαγράφηκε από παντού.', 'success');
+      loadAllUsers();
+    } catch (err) {
       Swal.fire('Σφάλμα', 'Η διαγραφή απέτυχε.', 'error');
-      return;
     }
-
-    Swal.fire('Διαγράφηκε', 'Ο χρήστης διαγράφηκε.', 'success');
-    loadAllUsers();
   }
 });
 
@@ -525,5 +571,6 @@ exportBtn?.addEventListener('click', () => {
   link.click();
 });
 ;
+
 
 
