@@ -278,7 +278,7 @@ if (certActions) certActions.classList.remove('hidden');
     if (certTabBtn && certCount) {
       const badge = document.createElement('span');
       badge.textContent = ` ${certCount}`;
-      badge.className = 'ml-1 text-sm font-semibold text-gray-700 dark:text-gray-100';
+      badge.className = 'ml-1 text-sm font-semibold text-black dark:text-black';
       certTabBtn.appendChild(badge);
     }
 
@@ -301,7 +301,7 @@ if (certActions) certActions.classList.remove('hidden');
     if (!supplierErr && supplierTabBtn) {
       const badge = document.createElement('span');
       badge.textContent = ` ${supplierCount}`;
-      badge.className = 'ml-1 text-sm font-semibold text-gray-700 dark:text-gray-100';
+      badge.className = 'ml-1 text-sm font-semibold text-black dark:text-black';
       supplierTabBtn.appendChild(badge);
     }
     } catch (err) {
@@ -394,6 +394,7 @@ function highlightStat(activeId) {
 
 function renderFiltered(list) {
   const grid = document.getElementById('certContainer');
+  grid.style.alignItems = 'stretch';
   grid.innerHTML = '';
 // grid.style.minHeight αφαιρέθηκε γιατί προκαλούσε αναπήδηση
 
@@ -410,7 +411,15 @@ function renderFiltered(list) {
       : '<span class="text-green-600 font-medium">Ισχύει</span>';
 
     const card = document.createElement('div');
-    card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card w-full max-w-full grow`;
+    card.classList.add('h-full');
+    card.style.minHeight = '200px';
+    card.style.height = '100%';
+    card.style.minHeight = '200px';
+    card.style.height = '100%';
+    card.style.minHeight = '200px';
+    card.style.height = '100%';
+    
+    card.className = `cert-card ${borderClass} w-full h-[240px]`;
     card.innerHTML = `
       <div>
         <h3 class="font-semibold mb-1 text-gray-800 dark:text-white">${cert.title}</h3>
@@ -438,6 +447,7 @@ function renderFiltered(list) {
 });
 
     const grid = document.getElementById('certContainer');
+  grid.style.alignItems = 'stretch';
     grid.innerHTML = '';
     filtered.forEach(cert => {
       const expDate = new Date(cert.date);
@@ -452,7 +462,15 @@ function renderFiltered(list) {
         : '<span class="text-green-600 font-medium">Ισχύει</span>';
 
       const card = document.createElement('div');
-      card.className = `card-transition shadow-sm bg-white dark:bg-gray-800 rounded-2xl p-4 flex flex-col justify-between border-2 ${borderClass} cert-card w-full max-w-full`;
+    card.classList.add('h-full');
+    card.style.minHeight = '200px';
+    card.style.height = '100%';
+    card.style.minHeight = '200px';
+    card.style.height = '100%';
+    card.style.minHeight = '200px';
+    card.style.height = '100%';
+    
+      card.className = `cert-card ${borderClass} w-full h-[240px]`;
       card.innerHTML = `
         <div>
           <h3 class="font-semibold mb-1 text-gray-800 dark:text-white">${cert.title}</h3>
@@ -766,7 +784,3 @@ const type = selectedType === 'Άλλο' && customTypeInput?.value.trim() ? cust
     }
   });
 }
-
-
-
-
