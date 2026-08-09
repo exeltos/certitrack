@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CertiTrack - Συμμόρφωση</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../../src/config/tailwindConfig.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../../assets/styles/app.css">
+  <script type="module" src="../../src/components/appShell.js"></script>
+</head>
+<body class="min-h-screen flex flex-col" data-page="company-compliance">
+  <div id="app-header"></div>
+  <div class="ct-app-layout">
+    <div id="app-sidebar"></div>
+    <div class="ct-app-content">
+      <div id="app-page-header"></div>
+      <main class="ct-content-page ct-compliance-page">
+        <section class="ct-overview-kpis ct-compliance-kpis" aria-label="Δείκτες συμμόρφωσης">
+          <article class="ct-kpi-card"><div class="ct-kpi-card__icon"><i data-lucide="shield-check"></i></div><div><span>Συμμορφωμένοι</span><strong id="compOk">—</strong><small>Πλήρεις απαιτήσεις</small></div></article>
+          <article class="ct-kpi-card"><div class="ct-kpi-card__icon"><i data-lucide="circle-alert"></i></div><div><span>Με ελλείψεις</span><strong id="compMissing">—</strong><small>Λείπει απαιτούμενο έγγραφο</small></div></article>
+          <article class="ct-kpi-card"><div class="ct-kpi-card__icon"><i data-lucide="clock-3"></i></div><div><span>Προς λήξη</span><strong id="compSoon">—</strong><small>Εντός 30 ημερών</small></div></article>
+          <article class="ct-kpi-card"><div class="ct-kpi-card__icon"><i data-lucide="triangle-alert"></i></div><div><span>Μη συμμορφωμένοι</span><strong id="compCritical">—</strong><small>Ληγμένο απαιτούμενο</small></div></article>
+        </section>
+
+        <section class="ct-filterbar ct-compliance-toolbar">
+          <div class="ct-filterbar__search"><i data-lucide="search"></i><input id="complianceSearch" type="search" placeholder="Αναζήτηση προμηθευτή ή ΑΦΜ..."></div>
+          <select id="complianceFilter" aria-label="Κατάσταση συμμόρφωσης">
+            <option value="all">Όλες οι καταστάσεις</option>
+            <option value="compliant">Συμμορφωμένοι</option>
+            <option value="missing">Με ελλείψεις</option>
+            <option value="soon">Προς λήξη</option>
+            <option value="critical">Μη συμμορφωμένοι</option>
+            <option value="unconfigured">Χωρίς απαιτήσεις</option>
+          </select>
+          <button id="profilesBtn" class="ct-btn ct-btn-secondary"><i data-lucide="list-checks"></i> Πρότυπα απαιτήσεων</button>
+        </section>
+
+        <section class="ct-card ct-panel ct-compliance-panel">
+          <div class="ct-panel__header">
+            <div><h2>Κατάσταση προμηθευτών</h2><p>Η κατάσταση υπολογίζεται από τα απαιτούμενα πιστοποιητικά και την ημερομηνία λήξης τους.</p></div>
+            <span id="complianceCount" class="ct-list-count">0 προμηθευτές</span>
+          </div>
+          <div class="ct-table-shell ct-compliance-table">
+            <table>
+              <thead><tr><th>Προμηθευτής</th><th>Πρότυπο</th><th>Κάλυψη</th><th>Ελλείψεις</th><th>Λήξεις</th><th>Κατάσταση</th><th class="ct-actions-col">Ενέργειες</th></tr></thead>
+              <tbody id="complianceRows"><tr><td colspan="7" class="ct-table-empty">Φόρτωση...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <div id="app-footer"></div>
+  <script type="module" src="../../src/pages/company/compliance.js"></script>
+</body>
+</html>

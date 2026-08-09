@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="el">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+  <title>
+   CertiTrack - Ρυθμίσεις
+  </title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+  </script>
+  <script defer="" src="https://unpkg.com/lucide@latest">
+  </script>
+  <link href="../../assets/styles/app.css" rel="stylesheet"/>
+  <script src="../../src/components/appShell.js" type="module">
+  </script>
+ </head>
+ <body data-page="supplier-profile">
+  <div id="app-header">
+  </div>
+  <div class="ct-app-layout">
+   <div id="app-sidebar">
+   </div>
+   <div class="ct-app-content">
+    <div id="app-page-header">
+    </div>
+    <main class="ct-content-page ct-workspace ct-profile-shell">
+     <section class="ct-card ct-profile-card">
+      <header class="ct-profile-card__head">
+       <div>
+        <h2>Στοιχεία λογαριασμού</h2>
+        <p>Βασικά στοιχεία και ασφάλεια του λογαριασμού σας.</p>
+       </div>
+      </header>
+      <form class="ct-profile-form" id="profileForm">
+       <div class="ct-field">
+        <label for="profileName">
+         Επωνυμία / Όνομα
+        </label>
+        <input autocomplete="organization" id="profileName" type="text"/>
+       </div>
+       <div class="ct-field">
+        <label for="profileEmail">
+         Email
+        </label>
+        <input autocomplete="email" id="profileEmail" type="email"/>
+       </div>
+       <div class="ct-field">
+        <label for="profileAfm">
+         ΑΦΜ
+        </label>
+        <input disabled="" id="profileAfm" type="text"/>
+        <span class="ct-inline-note">
+         Το ΑΦΜ δεν αλλάζει από αυτή την οθόνη.
+        </span>
+       </div>
+       <div>
+        <button class="ct-btn ct-btn-secondary ct-btn-sm" id="togglePasswordFields" type="button">
+         <i data-lucide="key-round">
+         </i>
+         Αλλαγή κωδικού
+        </button>
+       </div>
+       <section class="hidden" id="passwordFields">
+        <div class="ct-form-grid ct-form-grid--two">
+         <div class="ct-field">
+          <label for="profilePassword">
+           Νέος κωδικός
+          </label>
+          <div class="ct-password-row">
+           <input autocomplete="new-password" id="profilePassword" type="password"/>
+           <button aria-label="Προβολή κωδικού" class="ct-icon-btn password-toggle" data-target="profilePassword" type="button">
+            <i data-lucide="eye">
+            </i>
+           </button>
+          </div>
+         </div>
+         <div class="ct-field">
+          <label for="profilePasswordConfirm">
+           Επιβεβαίωση
+          </label>
+          <div class="ct-password-row">
+           <input autocomplete="new-password" id="profilePasswordConfirm" type="password"/>
+           <button aria-label="Προβολή κωδικού" class="ct-icon-btn password-toggle" data-target="profilePasswordConfirm" type="button">
+            <i data-lucide="eye">
+            </i>
+           </button>
+          </div>
+         </div>
+        </div>
+        <p class="ct-inline-note" id="passwordMatchMsg">
+        </p>
+       </section>
+       <div class="ct-form-actions">
+        <button class="ct-btn ct-btn-danger" id="deleteAccountBtn" type="button">
+         <i data-lucide="trash-2">
+         </i>
+         Διαγραφή λογαριασμού
+        </button>
+        <button class="ct-btn ct-btn-primary" id="saveBtn" type="submit">
+         <i class="hidden" data-lucide="loader-circle" id="saveSpinner">
+         </i>
+         Αποθήκευση
+        </button>
+       </div>
+      </form>
+     </section>
+    </main>
+   </div>
+  </div>
+  <div id="app-footer">
+  </div>
+  <script src="../../src/pages/shared/profile.js" type="module">
+  </script>
+ </body>
+</html>

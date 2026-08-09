@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="el">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+  <title>
+   CertiTrack - Προμηθευτής
+  </title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+  </script>
+  <script defer="" src="https://unpkg.com/lucide@latest">
+  </script>
+  <link href="../../assets/styles/app.css" rel="stylesheet"/>
+  <script src="../../src/components/appShell.js" type="module">
+  </script>
+ </head>
+ <body data-page="company-supplier">
+  <div id="app-header">
+  </div>
+  <div class="ct-app-layout">
+   <div id="app-sidebar">
+   </div>
+   <div class="ct-app-content">
+    <div id="app-page-header">
+    </div>
+    <main class="ct-content-page ct-workspace">
+     <section class="ct-card ct-detail-card" id="supplierInfo">
+      <div class="ct-detail-card__top">
+       <div class="ct-detail-card__identity">
+        <div class="ct-avatar">
+         <i data-lucide="building-2">
+         </i>
+        </div>
+        <div>
+         <h2>
+          Στοιχεία προμηθευτή
+         </h2>
+         <p>
+          Βασικά στοιχεία συνεργάτη και κατάσταση λογαριασμού.
+         </p>
+        </div>
+       </div>
+       <button class="ct-btn ct-btn-danger" id="deleteSupplierBtn">
+        <i data-lucide="trash-2">
+        </i>
+        Αφαίρεση προμηθευτή
+       </button>
+      </div>
+      <div class="ct-form-grid">
+       <div class="ct-field">
+        <label for="input-name">
+         Επωνυμία
+        </label>
+        <input id="input-name" type="text"/>
+       </div>
+       <div class="ct-field">
+        <label for="input-email">
+         Email
+        </label>
+        <input id="input-email" type="email"/>
+       </div>
+       <div class="ct-field">
+        <label for="input-afm">
+         ΑΦΜ
+        </label>
+        <input id="input-afm" type="text"/>
+       </div>
+      </div>
+      <div class="ct-form-actions">
+       <button class="ct-btn ct-btn-primary" id="saveBtn">
+        <i data-lucide="save">
+        </i>
+        Αποθήκευση
+       </button>
+      </div>
+     </section>
+     <section class="ct-card ct-detail-card">
+      <div class="ct-detail-card__top">
+       <div>
+        <h2>
+         Πιστοποιητικά προμηθευτή
+        </h2>
+        <p id="certSummary">
+         Πιστοποιητικά: 0
+        </p>
+       </div>
+       <div class="ct-certificate-actions">
+        <button class="ct-btn ct-btn-secondary ct-btn-sm hidden" id="selectAllBtn">
+         Επιλογή όλων
+        </button>
+        <button class="ct-btn ct-btn-secondary ct-btn-sm hidden" id="realDownloadBtn">
+         Λήψη
+        </button>
+       </div>
+      </div>
+      <div class="ct-toolbar ct-toolbar--spaced">
+       <div class="ct-toolbar__search">
+        <i data-lucide="search">
+        </i>
+        <input id="searchInput" placeholder="Αναζήτηση τίτλου πιστοποιητικού..." type="search"/>
+       </div>
+      </div>
+      <div id="certificatesContainer">
+       <p class="ct-empty-block hidden" id="noCertificatesMessage">
+        Δεν υπάρχουν διαθέσιμα πιστοποιητικά.
+       </p>
+      </div>
+     </section>
+    </main>
+   </div>
+  </div>
+  <div id="app-footer">
+  </div>
+  <script src="../../src/features/suppliers/view.js" type="module">
+  </script>
+ </body>
+</html>

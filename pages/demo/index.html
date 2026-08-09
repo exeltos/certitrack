@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CertiTrack Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../../src/config/tailwindConfig.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../../assets/styles/app.css">
+  <link rel="stylesheet" href="../../assets/styles/pages/pages-demo-index.css">
+  <script type="module" src="../../src/demo/demoPage.js"></script>
+  <script type="module" src="../../src/components/appShell.js"></script>
+
+</head>
+<body class="demo-page min-h-screen flex flex-col" data-page="demo">
+  <div id="app-header"></div>
+
+  <main class="flex-1">
+    <section class="demo-hero">
+      <div class="demo-hero__top">
+        <div>
+          <div class="ct-page-header__eyebrow">DEMO DATA · ΧΩΡΙΣ ΠΡΑΓΜΑΤΙΚΑ ΔΕΔΟΜΕΝΑ</div>
+          <h1 id="demoTitle">Εταιρεία</h1>
+          <p id="demoSubtitle"></p>
+        </div>
+        <div class="demo-role-switch" aria-label="Επιλογή demo ρόλου">
+          <button data-demo-role="company">Εταιρεία</button>
+          <button data-demo-role="supplier">Προμηθευτής</button>
+          <button data-demo-role="admin">Admin</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="demo-shell">
+      <div id="demoKpis" class="demo-kpis"></div>
+      <div class="demo-grid">
+        <section class="demo-panel">
+          <div class="demo-panel__head"><h2 id="demoPrimaryTitle"></h2><span class="text-xs text-gray-400">Demo</span></div>
+          <div id="demoPrimary" class="demo-panel__body"></div>
+        </section>
+        <section class="demo-panel">
+          <div class="demo-panel__head"><h2 id="demoSecondaryTitle"></h2></div>
+          <div id="demoSecondary" class="demo-panel__body"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="app-footer"></div>
+</body>
+</html>
