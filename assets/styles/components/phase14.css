@@ -1,0 +1,106 @@
+/* Phase 14 — neutral minimal B2B visual refinement + clearer forms */
+:root{
+  --ct-brand:#315efb;
+  --ct-brand-hover:#244bd8;
+  --ct-brand-soft:#f2f5ff;
+  --ct-bg:#f7f8fa;
+  --ct-surface-muted:#f6f7f9;
+  --ct-border:#d9dee7;
+  --ct-text:#111827;
+  --ct-muted:#667085;
+  --ct-shadow:0 1px 2px rgba(16,24,40,.03);
+}
+
+/* Flat, software-first surfaces. */
+.ct-card,.cert-card,.demo-real-panel,.ct-product-preview,.ct-home__features article,.ct-home-role-demo{
+  box-shadow:none!important;
+}
+.ct-card:hover,.cert-card:hover{box-shadow:none!important;border-color:#cbd2dc!important}
+
+/* Inputs must read as actual controls, not as another white panel. */
+.ct-field{gap:.42rem}
+.ct-field label{font-size:.72rem;font-weight:700;color:#344054}
+.ct-field input,.ct-field select,.ct-field textarea,
+.ct-swal-field input,.ct-swal-field select,.ct-swal-field textarea{
+  min-height:2.7rem;
+  background:#fff!important;
+  border:1px solid #cbd3df!important;
+  border-radius:.6rem!important;
+  color:#101828!important;
+}
+.ct-field input:hover,.ct-field select:hover,.ct-field textarea:hover{border-color:#98a2b3!important}
+.ct-field input:focus,.ct-field select:focus,.ct-field textarea:focus{
+  border-color:#7f9cf5!important;
+  box-shadow:0 0 0 3px rgba(49,94,251,.10)!important;
+}
+.ct-field input:disabled,.ct-field select:disabled{
+  background:#f2f4f7!important;
+  border-color:#d0d5dd!important;
+  color:#667085!important;
+  opacity:1;
+}
+.ct-inline-note{color:#7b8495;font-size:.67rem}
+.ct-profile-card{max-width:72rem!important;padding:1.15rem!important}
+.ct-profile-form{gap:1rem}
+.ct-profile-form>.ct-field{max-width:none!important}
+.ct-profile-form{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+.ct-profile-form>div:not(.ct-field),.ct-profile-form>#passwordFields,.ct-profile-form>.ct-form-actions{grid-column:1/-1}
+.ct-profile-form>.ct-form-actions{padding-top:.35rem;border-top:1px solid var(--ct-border)}
+
+/* Header: quieter and less application-chrome-heavy. */
+.ct-header{background:rgba(255,255,255,.985);backdrop-filter:blur(8px)}
+.ct-shell-logo{width:1.7rem;height:1.7rem}
+.ct-shell-brand{font-size:.94rem;gap:.5rem}
+.ct-header__role{font-size:.68rem;font-weight:650}
+.ct-language-toggle{border-color:transparent!important;background:transparent!important}
+
+/* Minimal public home: neutral B2B, no industry styling, no 3D/gradients. */
+.ct-home{width:min(calc(100% - 2rem),74rem);padding:clamp(3rem,7vw,6.5rem) 0 3.5rem;gap:5rem}
+.ct-home-hero{grid-template-columns:minmax(0,.95fr) minmax(28rem,1.05fr);gap:clamp(2.5rem,6vw,6rem)}
+.ct-home__badge{padding:0;background:transparent;border-radius:0;color:#667085;font-size:.66rem;font-weight:700;letter-spacing:.035em}
+.ct-home__badge svg{color:#667085}
+.ct-home h1{margin:.9rem 0 0;font-size:clamp(2.5rem,4.6vw,4.15rem);line-height:1.03;letter-spacing:-.052em;font-weight:780;max-width:11ch}
+.ct-home h1 span{color:var(--ct-text)}
+.ct-home-hero__copy>p{margin-top:1.25rem;max-width:34rem;color:#667085;font-size:1rem;line-height:1.65}
+.ct-home__primary-actions{margin-top:1.7rem}
+.ct-home-proof{margin-top:1.25rem;color:#7b8495;gap:1.15rem}
+.ct-home-proof svg{color:#667085}
+
+.ct-product-preview{border:1px solid #d9dee7;border-radius:.8rem;background:#fff;transform:none!important;overflow:hidden}
+.ct-product-preview__bar{height:2.35rem;background:#f8f9fb;border-color:#e4e7ec}
+.ct-product-preview__bar i{background:#cfd5de}.ct-product-preview__bar b{color:#667085}
+.ct-product-preview__body{grid-template-columns:3rem 1fr;min-height:22rem}
+.ct-product-preview__nav{background:#fff;border-color:#e4e7ec;color:#98a2b3}
+.ct-product-preview__nav strong{background:#111827;border-radius:.45rem}
+.ct-product-preview__nav svg:first-of-type{color:#344054}
+.ct-product-preview__stats article{background:#fff;border-color:#e4e7ec;border-radius:.55rem}
+.ct-product-preview__panel{border-color:#e4e7ec;border-radius:.55rem}
+.ct-product-preview__panel-head{background:#f8f9fb}
+
+.ct-home-flow{gap:1.45rem;border-top:1px solid #e4e7ec;padding-top:3rem}
+.ct-home-section-heading>span{color:#667085;font-weight:750}
+.ct-home-section-heading h2{font-weight:750}
+.ct-home__features{gap:0;border:1px solid #e4e7ec;border-radius:.8rem;overflow:hidden;background:#fff}
+.ct-home__features article{border:0!important;border-right:1px solid #e4e7ec!important;border-radius:0!important;padding:1.4rem 1.35rem;background:#fff!important}
+.ct-home__features article:last-child{border-right:0!important}
+.ct-home__features svg{color:#344054}
+.ct-home-role-demo{padding:1.2rem 0;border:0!important;border-top:1px solid #e4e7ec!important;border-radius:0!important;background:transparent!important}
+.ct-home-role-demo span{color:#667085}
+
+.dark .ct-field input,.dark .ct-field select,.dark .ct-field textarea{background:#111827!important;border-color:#344054!important;color:#f9fafb!important}
+.dark .ct-field input:disabled{background:#182230!important;color:#98a2b3!important}
+.dark .ct-field label{color:#d0d5dd}
+.dark .ct-product-preview,.dark .ct-product-preview__nav,.dark .ct-product-preview__stats article,.dark .ct-home__features,.dark .ct-home__features article{background:#101828!important;border-color:#344054!important}
+.dark .ct-product-preview__bar,.dark .ct-product-preview__panel-head{background:#182230!important;border-color:#344054!important}
+.dark .ct-home-flow,.dark .ct-home-role-demo{border-color:#344054!important}
+.dark .ct-home__badge,.dark .ct-home-proof,.dark .ct-home-role-demo span{color:#98a2b3}
+
+@media(max-width:900px){
+  .ct-profile-form{grid-template-columns:1fr 1fr}
+  .ct-home-hero{grid-template-columns:1fr}.ct-home h1{max-width:14ch}.ct-product-preview{max-width:none}
+}
+@media(max-width:700px){
+  .ct-profile-form{grid-template-columns:1fr}
+  .ct-home{padding-top:2.25rem;gap:3rem}.ct-home h1{font-size:2.55rem}
+  .ct-home__features{grid-template-columns:1fr}.ct-home__features article{border-right:0!important;border-bottom:1px solid #e4e7ec!important}.ct-home__features article:last-child{border-bottom:0!important}
+}

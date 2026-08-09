@@ -1,0 +1,18 @@
+
+.ct-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  min-height: 2.5rem;
+  padding: .55rem .9rem;
+  border-radius: .7rem;
+  font-size: .875rem;
+  font-weight: 700;
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.ct-btn:hover { transform: translateY(-1px); }
+.ct-btn-primary { background: #2563eb; color: white; box-shadow: 0 5px 16px rgba(37,99,235,.18); }
+.ct-btn-secondary { background: white; color: #334155; border: 1px solid var(--ct-border); }
+.dark .ct-btn-secondary { background: #1f2937; color: #f8fafc; }
+.ct-btn-danger { background: #dc2626; color: white; }

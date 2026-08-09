@@ -1,0 +1,9 @@
+/* Shared header/footer shell */
+.ct-header { border-bottom: 1px solid var(--ct-border); }
+.ct-header > div { width: 100%; max-width: var(--ct-content-width); margin-inline: auto; }
+.ct-shell-logo { object-fit: contain; flex: 0 0 auto; }
+.ct-footer { margin-top: auto; border-top: 1px solid var(--ct-border); }
+
+.ct-header { position: sticky; top: 0; z-index: 50; min-height: var(--ct-header-height); }
+.ct-header > div { min-height: var(--ct-header-height); }
+.ct-auth-page #app-footer { position: relative; z-index: 2; }

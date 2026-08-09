@@ -1,0 +1,192 @@
+
+/* Mobile-first corrections for existing CertiTrack screens */
+@media (max-width: 768px) {
+  body.ct-auth-page {
+    padding-bottom: 4.4rem;
+  }
+
+  .ct-app-layout {
+    display: block;
+  }
+
+  #app-sidebar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 80;
+  }
+
+  .ct-sidebar {
+    width: 100%;
+    min-height: 0;
+    border: 0;
+    border-top: 1px solid var(--ct-border);
+    box-shadow: 0 -8px 24px rgba(15,23,42,.08);
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(14px);
+  }
+
+  .dark .ct-sidebar {
+    background: rgba(17,24,39,.97);
+  }
+
+  .ct-sidebar__inner {
+    position: static;
+    padding: .35rem .45rem max(.35rem, env(safe-area-inset-bottom));
+    overflow: visible;
+  }
+
+  .ct-sidebar__nav {
+    display: grid;
+    grid-template-columns: repeat(var(--ct-mobile-nav-count, 4), minmax(0,1fr));
+    gap: .2rem;
+    min-width: 0;
+  }
+
+  .ct-nav-item {
+    min-width: 0;
+    min-height: 3.5rem;
+    padding: .35rem .25rem;
+    flex-direction: column;
+    justify-content: center;
+    gap: .2rem;
+    border-radius: .65rem;
+    font-size: .62rem;
+    line-height: 1.05;
+    text-align: center;
+  }
+
+  .ct-nav-item__icon {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  .ct-sidebar__label {
+    display: none;
+  }
+
+  .ct-page-header {
+    margin-top: .7rem;
+    padding-inline: .15rem;
+  }
+
+  .ct-page-header__description {
+    max-width: 34rem;
+  }
+
+  .ct-header {
+    min-height: 4.2rem;
+  }
+
+  .ct-header > div {
+    min-height: 4.2rem;
+    padding: .55rem .7rem !important;
+  }
+
+  .ct-header img {
+    height: 2.6rem !important;
+  }
+
+  .ct-header h1 {
+    font-size: 1rem !important;
+    line-height: 1.15;
+  }
+
+  .ct-header nav {
+    gap: .45rem !important;
+  }
+
+  .ct-header nav a {
+    font-size: .72rem !important;
+  }
+
+  .ct-header button {
+    min-width: 2.2rem;
+    min-height: 2.2rem;
+  }
+
+  main {
+    max-width: 100% !important;
+  }
+
+  #certStats {
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    width: 100%;
+    gap: .45rem !important;
+  }
+
+  #certStats > * {
+    text-align: center;
+    justify-content: center;
+  }
+
+  #searchInput,
+  #searchInputSuppliers,
+  #sortSelect {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  #supplierControls,
+  #certEmailActions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .cert-card {
+    height: auto !important;
+    min-height: 12rem;
+  }
+
+  .ct-card {
+    border-radius: .85rem;
+  }
+
+  .ct-btn {
+    min-height: 2.7rem;
+  }
+
+  .swal2-popup {
+    width: calc(100vw - 1rem) !important;
+    max-width: none !important;
+    padding: .9rem !important;
+  }
+
+  .swal2-input,
+  .swal2-select,
+  .swal2-file {
+    width: calc(100% - 1rem) !important;
+    max-width: none !important;
+    margin-inline: .5rem !important;
+  }
+
+  iframe,
+  embed {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ct-page-header__title {
+    font-size: 1.25rem;
+  }
+
+  .ct-page-header__description {
+    font-size: .78rem;
+  }
+
+  #certStats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ct-header .gap-3 {
+    gap: .25rem !important;
+  }
+
+  .ct-header a[title="Ρυθμίσεις"],
+  .ct-header button[title="Εξαγωγή"] {
+    padding: .35rem !important;
+  }
+}

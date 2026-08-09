@@ -1,0 +1,68 @@
+/* Phase 16 — unified SaaS visual foundation */
+:root{
+  --ct-surface:#fff;
+  --ct-control-bg:#fff;
+  --ct-control-border:#c7cfda;
+  --ct-control-border-hover:#98a2b3;
+  --ct-control-disabled:#f2f4f7;
+}
+
+/* Wordmark only: no legacy pictogram. */
+.ct-shell-brand{display:inline-flex;align-items:center;gap:.55rem;color:var(--ct-text);font-weight:800;letter-spacing:-.025em;text-decoration:none}
+.ct-shell-brand__mark{display:inline-flex;align-items:center;font-size:1.02rem;line-height:1;color:var(--ct-text)}
+.ct-shell-brand__mark::after{content:"";width:.34rem;height:.34rem;margin-left:.18rem;margin-top:-.6rem;border-radius:999px;background:var(--ct-brand)}
+.ct-shell-logo{display:none!important}
+
+/* One control language everywhere. */
+.ct-field{display:grid;gap:.42rem}
+.ct-field label{font-size:.78rem!important;font-weight:700!important;color:#344054!important}
+.ct-field input,.ct-field select,.ct-field textarea,
+.ct-filter-bar input,.ct-filter-bar select,.ct-toolbar input,.ct-toolbar select{
+  background:var(--ct-control-bg)!important;
+  border:1px solid var(--ct-control-border)!important;
+  border-radius:.65rem!important;
+  color:var(--ct-text)!important;
+  min-height:2.85rem;
+  box-shadow:none!important;
+}
+.ct-field input:hover,.ct-field select:hover,.ct-field textarea:hover,
+.ct-filter-bar input:hover,.ct-filter-bar select:hover,.ct-toolbar input:hover,.ct-toolbar select:hover{border-color:var(--ct-control-border-hover)!important}
+.ct-field input:focus,.ct-field select:focus,.ct-field textarea:focus,
+.ct-filter-bar input:focus,.ct-filter-bar select:focus,.ct-toolbar input:focus,.ct-toolbar select:focus{
+  outline:0!important;border-color:#667eea!important;box-shadow:0 0 0 3px rgba(49,94,251,.10)!important
+}
+.ct-field input:disabled,.ct-field select:disabled,.ct-field textarea:disabled{
+  background:var(--ct-control-disabled)!important;border-color:#d0d5dd!important;color:#667085!important;cursor:not-allowed
+}
+
+/* Profile settings: compact, readable, not three merged giant fields. */
+.ct-profile-card{max-width:68rem!important;padding:0!important;overflow:hidden}
+.ct-profile-card__head{padding:1.2rem 1.35rem;border-bottom:1px solid var(--ct-border);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.ct-profile-card__head h2{margin:0;font-size:1rem;letter-spacing:-.01em}.ct-profile-card__head p{margin:.3rem 0 0;color:var(--ct-muted);font-size:.78rem}
+.ct-profile-form{padding:1.35rem!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:1.15rem 1.25rem!important}
+.ct-profile-form>.ct-field{max-width:none!important}
+.ct-profile-form>.ct-field--full,.ct-profile-form>div:not(.ct-field),.ct-profile-form>#passwordFields,.ct-profile-form>.ct-form-actions{grid-column:1/-1}
+.ct-profile-form>.ct-form-actions{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-top:.2rem;padding-top:1rem;border-top:1px solid var(--ct-border)}
+.ct-profile-form #passwordFields{padding:1rem;border:1px solid var(--ct-border);border-radius:.75rem;background:var(--ct-surface-muted)}
+.ct-profile-form .ct-password-row{position:relative}.ct-profile-form .ct-password-row input{padding-right:3rem}.ct-profile-form .ct-password-row .ct-icon-btn{position:absolute;right:.35rem;top:50%;transform:translateY(-50%)}
+.ct-inline-note{display:block;margin-top:.05rem;font-size:.72rem!important;line-height:1.4;color:#7b8495!important}
+
+/* Consistent responsive workspace constraints. */
+.ct-app-content{min-width:0}
+.ct-content-page{max-width:100%;overflow-x:hidden}
+.ct-table-scroll,.ct-list-scroll{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+
+.dark{
+  --ct-surface:#101828;--ct-control-bg:#111827;--ct-control-border:#475467;--ct-control-border-hover:#667085;--ct-control-disabled:#182230;
+}
+.dark .ct-field label{color:#d0d5dd!important}
+.dark .ct-profile-form #passwordFields{background:#0f172a;border-color:#344054}
+
+@media(max-width:760px){
+  .ct-profile-form{grid-template-columns:1fr!important;padding:1rem!important}
+  .ct-profile-form>.ct-field--full,.ct-profile-form>div:not(.ct-field),.ct-profile-form>#passwordFields,.ct-profile-form>.ct-form-actions{grid-column:auto}
+  .ct-profile-form>.ct-form-actions{flex-direction:column-reverse}.ct-profile-form>.ct-form-actions .ct-btn{width:100%;justify-content:center}
+  .ct-profile-card__head{padding:1rem}
+  .ct-header__inner{padding-inline:.8rem}
+  .ct-shell-brand__mark{font-size:.95rem}
+}

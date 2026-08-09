@@ -1,0 +1,63 @@
+/* Phase 11 — scrollable workspaces, clear destructive actions, lean header */
+
+/* Theme: one coherent surface palette, with a calm transition */
+html.ct-theme-changing *,html.ct-theme-changing *::before,html.ct-theme-changing *::after{transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease!important}
+.dark{--ct-bg:#0b1220;--ct-surface:#111827;--ct-surface-muted:#0f172a;--ct-text:#f1f5f9;--ct-muted:#94a3b8;--ct-border:#283548;--ct-brand-soft:#172554;--ct-shadow:0 8px 24px rgba(0,0,0,.18)}
+.dark body.ct-auth-page{background:var(--ct-bg)!important;color:var(--ct-text)!important}
+.dark .ct-card,.dark .demo-real-panel,.dark .ct-table-shell,.dark .ct-certificate-list,.dark .ct-toolbar,.dark .ct-filterbar{background:var(--ct-surface)!important;border-color:var(--ct-border)!important;color:var(--ct-text)!important}
+.dark input,.dark select,.dark textarea{background:#0f172a!important;color:#e5e7eb!important;border-color:#334155!important}
+.dark input::placeholder,.dark textarea::placeholder{color:#64748b!important}
+.dark .ct-btn-secondary{background:#0f172a!important;border-color:#334155!important;color:#e5e7eb!important}
+.dark .ct-btn-secondary:hover{background:#1e293b!important}
+.dark .ct-theme-toggle{color:#fbbf24}
+.ct-theme-toggle svg{width:1.1rem;height:1.1rem;stroke-width:1.9}
+
+/* Large lists scroll inside their own workspace; headers remain visible. */
+.ct-table-shell{overflow:auto!important;max-height:clamp(20rem,53vh,42rem);overscroll-behavior:contain;scrollbar-gutter:stable}
+.ct-table-shell table{min-width:58rem}
+.ct-table-shell thead{position:sticky;top:0;z-index:3;background:var(--ct-surface-muted)}
+.ct-table-shell thead th{background:var(--ct-surface-muted)}
+.ct-certificate-list{max-height:clamp(20rem,54vh,44rem);overflow:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable}
+.ct-certificate-head{position:sticky;top:0;z-index:3}
+.ct-company-list,.ct-scroll-list,.ct-compact-list{max-height:clamp(18rem,48vh,38rem);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.demo-real-panel #demoSupplierRows,.demo-activity-list{max-height:clamp(18rem,47vh,36rem);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.ct-supplier-panel .ct-compact-list{max-height:clamp(16rem,40vh,32rem)}
+
+/* Table action column and rows */
+.ct-actions-col{width:5rem;text-align:right!important}
+.ct-table-actions{white-space:nowrap;text-align:right;padding:.35rem .65rem!important}
+.ct-table-empty{text-align:center;padding:2rem!important;color:var(--ct-muted)}
+.ct-supplier-table tbody tr{border-bottom:1px solid var(--ct-border)}
+.ct-supplier-table tbody tr:last-child{border-bottom:0}
+.ct-supplier-table td,.ct-supplier-table th{vertical-align:middle}
+.ct-supplier-table .ct-row-action{margin-left:auto}
+
+/* Import workflow */
+.ct-import-dropzone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;min-height:10rem;padding:1.2rem;border:1.5px dashed #bfdbfe;border-radius:.85rem;background:#f8fbff;text-align:center}
+.ct-import-dropzone>svg{width:2rem;height:2rem;color:var(--ct-brand)}
+.ct-import-dropzone strong{font-size:.84rem}.ct-import-dropzone span{font-size:.68rem;color:var(--ct-muted)}
+.ct-import-dropzone input[type=file]{width:100%;margin-top:.5rem;padding:.55rem;background:#fff;border:1px solid var(--ct-border);border-radius:.65rem;font-size:.7rem}
+.ct-template-download{width:max-content}.ct-import-preview{padding:.65rem .75rem;border-radius:.65rem;background:var(--ct-surface-muted);font-size:.7rem;color:var(--ct-muted)}
+.ct-import-result{line-height:1.7}.ct-import-result small{display:block;margin-top:.55rem;text-align:left;color:var(--ct-muted)}
+.dark .ct-import-dropzone{background:#0f172a;border-color:#334155}.dark .ct-import-dropzone input[type=file]{background:#111827;color:#cbd5e1}
+
+/* Demo supplier list gets a real action column. */
+.demo-real-table-head--actions,.demo-real-supplier:has(.demo-supplier-remove){grid-template-columns:minmax(14rem,1.6fr) minmax(5rem,.55fr) minmax(8rem,.75fr) minmax(7rem,.7fr) 3rem}
+.demo-supplier-remove{justify-self:end}
+
+/* Keep header intentionally lean. */
+.ct-header__actions{gap:.25rem}
+.ct-header__actions .ct-icon-btn{width:2.25rem;height:2.25rem}
+
+@media(max-width:900px){
+  .ct-table-shell,.ct-certificate-list,.ct-company-list,.ct-scroll-list,.ct-compact-list,.demo-real-panel #demoSupplierRows,.demo-activity-list{max-height:none}
+  .ct-table-shell{overflow-x:auto!important;overflow-y:visible!important}
+  .ct-certificate-list{overflow:visible!important}
+}
+
+/* Phase 12 language control */
+.ct-language-toggle{height:38px;min-width:58px;padding:0 10px;border:1px solid var(--ct-border,#d8e0eb);border-radius:10px;background:var(--ct-surface,#fff);color:var(--ct-text,#10213b);display:inline-flex;align-items:center;justify-content:center;gap:6px;font:700 12px/1 Inter,sans-serif;cursor:pointer;transition:background .18s ease,border-color .18s ease,color .18s ease}
+.ct-language-toggle:hover{background:var(--ct-surface-soft,#f4f7fb);border-color:var(--ct-primary,#2563eb)}
+.ct-language-toggle svg{width:17px;height:17px}.ct-language-code{letter-spacing:.04em}
+.ct-form-grid--two{grid-template-columns:1fr 1fr}.ct-toolbar--spaced{margin-top:1rem}
+@media(max-width:720px){.ct-form-grid--two{grid-template-columns:1fr}.ct-language-toggle{min-width:50px;padding:0 8px}}

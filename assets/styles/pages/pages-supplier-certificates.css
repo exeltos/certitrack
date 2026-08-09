@@ -1,0 +1,41 @@
+body {
+    font-family: 'Inter', sans-serif;
+  }
+  .card-transition {
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  }
+  .card-transition:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  }
+  .cert-card {
+    min-height: 180px;
+    max-width: 360px;
+  }
+  #certStats span {
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  #certStats span:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.5);
+  }
+  .filter-active i {
+    color: #2563eb !important;
+  }
+  #myCompaniesList button i {
+    transition: color 0.2s ease;
+  }
+  .filter-icon {
+    transition: color 0.2s ease;
+  }
+  .filter-active-red i {
+    color: #dc2626 !important;
+  }
+  .filter-active-green i {
+    color: #16a34a !important;
+  }
+  .filter-active-blue i {
+    color: #2563eb !important;
+  }
