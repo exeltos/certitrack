@@ -3,45 +3,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CertiTrack - Καλώς Ήρθατε</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: '#1D4ED8',
-            secondary: '#14B8A6',
-            accent: '#F59E0B'
-          }
-        }
-      }
-    };
-  </script>
+  <script src="/src/config/tailwindConfig.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</head>
-<body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-800 dark:to-blue-900 min-h-screen flex flex-col transition-all">
+  <link rel="stylesheet" href="/assets/styles/app.css">\n</head>
+<body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-800 dark:to-blue-900 min-h-screen flex flex-col transition-all" data-page="home">
 
   <!-- Header -->
-  <header class="bg-white dark:bg-gray-900 p-4 shadow-md">
-    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-      <div class="flex items-center gap-2">
-        <img src="../images/certitrack-logo.png" alt="CertiTrack Logo" class="h-16 w-auto">
-        <h1 class="text-xl font-bold text-blue-700 dark:text-teal-400">CertiTrack</h1>
-      </div>
-      <div class="flex flex-wrap gap-3 items-center justify-center sm:justify-end">
-        <a href="company_register.html" class="text-sm text-gray-700 dark:text-gray-300 hover:underline">Εγγραφή Εταιρείας</a>
-        <a href="supplier-register.html" class="text-sm text-gray-700 dark:text-gray-300 hover:underline">Εγγραφή Προμηθευτή</a>
-        <button id="theme-toggle" aria-label="Εναλλαγή Θέματος" class="p-2 rounded focus:outline-none focus:ring-2 focus:ring-accent text-gray-700 dark:text-white">
-          <svg id="icon-moon" class="w-6 h-6 dark:hidden" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M17.293 13.293A8 8 0 116.707 2.707a6 6 0 0010.586 10.586z" />
-          </svg>
-          <svg id="icon-sun" class="w-6 h-6 hidden dark:block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-  <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 14.25a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM3.03 4.97a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L3.03 6.03a.75.75 0 010-1.06zM15.85 4.97a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM2 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 012 10zM14.25 9.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM3.03 15.03a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM15.85 15.03l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 1.06z" />
-</svg>
-        </button>
-      </div>
-    </div>
-  </header>
+  <div id="app-header"></div>
 
   <!-- Main Content -->
   <main class="flex-1 flex flex-col items-center justify-center text-center px-4 py-12 space-y-6">
@@ -51,48 +19,35 @@
     <p class="text-base sm:text-lg text-gray-700 dark:text-gray-300 max-w-xl">
       Η έξυπνη διαχείριση Εγγράφων για Εταιρείες και Προμηθευτές
     </p>
-    <a href="general_login.html" class="px-6 py-2 border border-blue-700 text-blue-700 rounded hover:bg-blue-50 dark:hover:bg-teal-50 transition">
+    <a href="/pages/auth/login.html" class="px-6 py-2 border border-blue-700 text-blue-700 rounded hover:bg-blue-50 dark:hover:bg-teal-50 transition">
       Είσοδος
     </a>
-  </main>
+  
+    <section class="ct-demo-launcher">
+      <div class="ct-demo-launcher__label">Δοκιμή εφαρμογής χωρίς εγγραφή</div>
+      <div class="ct-demo-launcher__actions">
+        <button type="button" class="ct-btn ct-btn-secondary" data-enter-demo="company">
+          <i data-lucide="building-2"></i>
+          Demo ως Εταιρεία
+        </button>
+        <button type="button" class="ct-btn ct-btn-secondary" data-enter-demo="supplier">
+          <i data-lucide="truck"></i>
+          Demo ως Προμηθευτής
+        </button>
+      </div>
+      <a href="/pages/demo/index.html" class="ct-demo-launcher__overview">Γρήγορη συνολική προβολή demo</a>
+    </section>
+</main>
 
   <!-- Footer -->
-  <footer class="bg-white dark:bg-gray-900 text-center py-4 border-t dark:border-gray-800">
-    <p class="text-sm text-gray-600 dark:text-gray-400">© 2025 CertiTrack</p>
-  </footer>
+  <div id="app-footer"></div>
 
   <!-- Global Loader -->
   <div id="global-loader" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
   </div>
 
-  <script>
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const htmlEl = document.documentElement;
-    const sunIcon = document.getElementById('icon-sun');
-    const moonIcon = document.getElementById('icon-moon');
-
-    function applyTheme(isDark) {
-  if (isDark) {
-    htmlEl.classList.add('dark');
-    moonIcon?.classList.add('hidden');
-    sunIcon?.classList.remove('hidden');
-  } else {
-    htmlEl.classList.remove('dark');
-    sunIcon?.classList.add('hidden');
-    moonIcon?.classList.remove('hidden');
-  }
-}
-
-    const userPref = localStorage.getItem('theme');
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(userPref === 'dark' || (!userPref && systemDark));
-
-    themeToggleBtn.addEventListener('click', () => {
-      const isNowDark = !htmlEl.classList.contains('dark');
-      applyTheme(isNowDark);
-      localStorage.setItem('theme', isNowDark ? 'dark' : 'light');
-    });
-  </script>
+  
+  <script type="module" src="/src/components/appShell.js"></script>\n  <script type="module" src="/src/shared/theme.js"></script>\n  <script type="module" src="/src/demo/demoLauncher.js"></script>
 </body>
 </html>
