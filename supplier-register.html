@@ -159,9 +159,6 @@
           .or(`afm.eq.${afm},email.eq.${email}`)
           .limit(1);
         const existingSupplier = existingSupplierData?.[0];
-console.log('[DEBUG] email:', email);
-console.log('[DEBUG] afm:', afm);
-console.log('[DEBUG] existingSupplier:', existingSupplier);
 
         // 🔍 Αν δεν υπάρχει company_id, πάρε το από τον πίνακα company_suppliers
         if (existingSupplier && !existingSupplier.company_id) {
@@ -217,7 +214,6 @@ console.log('[DEBUG] existingSupplier:', existingSupplier);
     redirectTo: `${window.location.origin}/general_login.html`
   }
 });
-console.log('[DEBUG] signData:', signData);
         if (signErr) {
           if (signErr.message === 'User already registered') {
             Swal.fire('Προσοχή', 'Αυτός ο χρήστης είναι ήδη εγγεγραμμένος. Παρακαλώ κάνε σύνδεση.', 'info');
@@ -245,9 +241,6 @@ console.log('[DEBUG] signData:', signData);
           // ✅ Ενημέρωση ή εισαγωγή εγγραφής στον πίνακα company_suppliers ΜΟΝΟ αν υπάρχει company_id
           // και αλλάζουμε το status σε ✅ Εγγεγραμμένος όταν γίνεται εγγραφή
           if (existingSupplier.company_id) {
-            console.log('[DEBUG] company_id:', existingSupplier.company_id);
-            console.log('[DEBUG] supplier_id:', existingSupplier.id);
-            console.log('[DEBUG] fetching companyLink...');
             const { data: companyLink, error: linkErr } = await supabase
               .from('company_suppliers')
               .select('id')
@@ -258,9 +251,7 @@ console.log('[DEBUG] signData:', signData);
             if (linkErr) throw linkErr;
 
             if (!companyLink) {
-  console.warn('[DEBUG] Δεν βρέθηκε εγγραφή στον πίνακα company_suppliers με supplier_id:', existingSupplier.id, 'και company_id:', existingSupplier.company_id);
 } else {
-  console.log('[DEBUG] companyLink found:', companyLink);
 }
             if (companyLink) {
   const { error: updateErr } = await supabase
