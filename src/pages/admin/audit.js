@@ -1,0 +1,12 @@
+import { adminService } from '../../services/adminService.js';
+import { requirePlatformAdmin, safeDate } from './adminCommon.js';
+let rows=[];
+const demoRows=[
+ {created_at:new Date().toISOString(),action:'certificate.updated',entity_type:'certificate',organization:'MedSupply A.E.',details:'ISO 13485 renewed'},
+ {created_at:new Date(Date.now()-3600000).toISOString(),action:'relationship.created',entity_type:'relationship',organization:'DEMO COMPANY S.A.',details:'Supplier connected'},
+ {created_at:new Date(Date.now()-7200000).toISOString(),action:'certificate.visibility_changed',entity_type:'certificate',organization:'CleanCare Services',details:'Document changed to private'},
+ {created_at:new Date(Date.now()-86400000).toISOString(),action:'account.created',entity_type:'account',organization:'Industrial Demo IKE',details:'Supplier account registered'}
+];
+function render(){const q=(document.getElementById('auditSearch').value||'').toLowerCase();const type=document.getElementById('auditType').value;const out=rows.filter(x=>(type==='all'||String(x.entity_type||'').includes(type))&&[x.action,x.entity_type,x.organization,JSON.stringify(x.details||'')].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('auditBody').innerHTML=out.map(x=>`<tr><td>${safeDate(x.created_at)}</td><td><strong>${x.action||'—'}</strong></td><td>${x.entity_type||'—'}</td><td>${x.organization||'—'}</td><td><div class="ct-admin-audit-details">${typeof x.details==='string'?x.details:JSON.stringify(x.details||{})}</div></td></tr>`).join('')||'<tr><td colspan="5" class="ct-admin-empty">Δεν υπάρχουν audit records.</td></tr>';}
+async function init(){const guard=await requirePlatformAdmin();if(guard.denied)return;try{if(guard.demo)rows=demoRows;else{const r=await adminService.audit().select('*').order('created_at',{ascending:false}).limit(500);if(r.error)throw r.error;rows=(r.data||[]).map(x=>({...x,organization:x.company_id?'Company tenant':x.supplier_id?'Supplier tenant':'Platform'}));}render();}catch(err){console.error(err);document.getElementById('auditBody').innerHTML='<tr><td colspan="5" class="ct-admin-empty">Το audit_log είναι tenant-scoped αυτή τη στιγμή. Η platform admin policy θα αποφασιστεί μετά τον πλήρη έλεγχο RLS.</td></tr>';}document.getElementById('auditSearch')?.addEventListener('input',render);document.getElementById('auditType')?.addEventListener('change',render);}
+init();
