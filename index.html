@@ -1,53 +1,80 @@
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
-<meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CertiTrack - Καλώς Ήρθατε</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+  <title>CertiTrack</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="/src/config/tailwindConfig.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link rel="stylesheet" href="/assets/styles/app.css">\n</head>
-<body class="bg-gradient-to-br from-gray-100 to-blue-100 dark:from-gray-800 dark:to-blue-900 min-h-screen flex flex-col transition-all" data-page="home">
-
-  <!-- Header -->
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <link rel="stylesheet" href="/assets/styles/app.css">
+  <script type="module" src="/src/components/appShell.js"></script>
+</head>
+<body class="min-h-screen flex flex-col" data-page="home">
   <div id="app-header"></div>
 
-  <!-- Main Content -->
-  <main class="flex-1 flex flex-col items-center justify-center text-center px-4 py-12 space-y-6">
-    <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-blue-700 dark:text-teal-400">
-      Καλώς ήρθατε στο CertiTrack
-    </h2>
-    <p class="text-base sm:text-lg text-gray-700 dark:text-gray-300 max-w-xl">
-      Η έξυπνη διαχείριση Εγγράφων για Εταιρείες και Προμηθευτές
-    </p>
-    <a href="/pages/auth/login.html" class="px-6 py-2 border border-blue-700 text-blue-700 rounded hover:bg-blue-50 dark:hover:bg-teal-50 transition">
-      Είσοδος
-    </a>
-  
-    <section class="ct-demo-launcher">
-      <div class="ct-demo-launcher__label">Δοκιμή εφαρμογής χωρίς εγγραφή</div>
-      <div class="ct-demo-launcher__actions">
-        <button type="button" class="ct-btn ct-btn-secondary" data-enter-demo="company">
-          <i data-lucide="building-2"></i>
-          Demo ως Εταιρεία
-        </button>
-        <button type="button" class="ct-btn ct-btn-secondary" data-enter-demo="supplier">
-          <i data-lucide="truck"></i>
-          Demo ως Προμηθευτής
-        </button>
+  <main class="ct-home flex-1">
+    <section class="ct-home-hero">
+      <div class="ct-home-hero__copy">
+        <div class="ct-home__badge"><i data-lucide="shield-check"></i> Certificate & Compliance Management</div>
+        <h1>Πιστοποιητικά και συμμόρφωση, <span>οργανωμένα.</span></h1>
+        <p>Διαχειριστείτε πιστοποιητικά, απαιτήσεις και συνεργάτες από ένα καθαρό περιβάλλον, με άμεση εικόνα για λήξεις και ελλείψεις.</p>
+        <div class="ct-home__primary-actions">
+          <button type="button" class="ct-btn ct-btn-primary ct-btn-lg" data-enter-demo="company"><i data-lucide="play"></i> Δείτε το demo</button>
+          <a href="/pages/auth/login.html" class="ct-btn ct-btn-secondary ct-btn-lg">Είσοδος</a>
+        </div>
+        <div class="ct-home-proof">
+          <span><i data-lucide="check"></i> Χωρίς εγκατάσταση</span>
+          <span><i data-lucide="check"></i> Εταιρείες & προμηθευτές</span>
+          <span><i data-lucide="check"></i> Ιδιωτικά ή κοινόχρηστα έγγραφα</span>
+        </div>
       </div>
-      <a href="/pages/demo/index.html" class="ct-demo-launcher__overview">Γρήγορη συνολική προβολή demo</a>
+
+      <div class="ct-product-preview" aria-label="Προεπισκόπηση CertiTrack">
+        <div class="ct-product-preview__bar"><div><i></i><i></i><i></i></div><span>CertiTrack / Επισκόπηση</span><b>DEMO</b></div>
+        <div class="ct-product-preview__body">
+          <aside class="ct-product-preview__nav"><strong>CT</strong><i data-lucide="layout-dashboard"></i><i data-lucide="users"></i><i data-lucide="badge-check"></i><i data-lucide="shield-check"></i></aside>
+          <div class="ct-product-preview__content">
+            <div class="ct-product-preview__title"><span>Επισκόπηση συμμόρφωσης</span><small>Σήμερα</small></div>
+            <div class="ct-product-preview__stats">
+              <article><small>Προμηθευτές</small><strong>12</strong></article>
+              <article><small>Συμμορφωμένοι</small><strong>7</strong></article>
+              <article><small>Προς λήξη</small><strong>5</strong></article>
+              <article class="is-alert"><small>Ελλείψεις</small><strong>3</strong></article>
+            </div>
+            <div class="ct-product-preview__panel">
+              <div class="ct-product-preview__panel-head"><strong>Χρειάζονται προσοχή</strong><span>Κατάσταση</span></div>
+              <div class="ct-product-preview__row"><span><b>SafeWaste ΕΠΕ</b><small>ISO 9001 · ISO 14001</small></span><em class="danger">Ληγμένο</em></div>
+              <div class="ct-product-preview__row"><span><b>BioLab Solutions</b><small>1 απαιτούμενο λείπει</small></span><em class="warning">Ελλιπής</em></div>
+              <div class="ct-product-preview__row"><span><b>CleanCare Services</b><small>ISO 14001 · 24 ημέρες</small></span><em class="warning">Προς λήξη</em></div>
+              <div class="ct-product-preview__row"><span><b>MedSupply A.E.</b><small>Όλα τα απαιτούμενα ενεργά</small></span><em class="success">Πλήρης</em></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
-</main>
 
-  <!-- Footer -->
+    <section class="ct-home-flow">
+      <div class="ct-home-section-heading"><span>ΑΠΟ ΤΟ ΕΓΓΡΑΦΟ ΣΤΗΝ ΑΠΟΦΑΣΗ</span><h2>Όχι απλώς αποθήκευση πιστοποιητικών.</h2><p>Το CertiTrack συνδέει τα έγγραφα με πραγματικές απαιτήσεις συμμόρφωσης.</p></div>
+      <div class="ct-home__features">
+        <article><i data-lucide="files"></i><strong>1. Συγκέντρωση</strong><span>Εταιρικά και προμηθευτικά πιστοποιητικά σε μία οργανωμένη λίστα.</span></article>
+        <article><i data-lucide="list-checks"></i><strong>2. Απαιτήσεις</strong><span>Ορίστε τι χρειάζεται κάθε κατηγορία ή συγκεκριμένος προμηθευτής.</span></article>
+        <article><i data-lucide="shield-check"></i><strong>3. Συμμόρφωση</strong><span>Αυτόματη εικόνα για ελλείψεις, ληγμένα και πιστοποιητικά προς λήξη.</span></article>
+      </div>
+    </section>
+
+    <section class="ct-home-role-demo">
+      <div><span>Θέλετε να το δείτε από μέσα;</span><strong>Δοκιμάστε και τους δύο ρόλους χωρίς εγγραφή.</strong></div>
+      <div class="ct-home-role-demo__actions">
+        <button type="button" class="ct-btn ct-btn-secondary" data-enter-demo="company"><i data-lucide="building-2"></i> Demo Εταιρείας</button>
+        <button type="button" class="ct-btn ct-btn-secondary" data-enter-demo="supplier"><i data-lucide="truck"></i> Demo Προμηθευτή</button>
+      </div>
+    </section>
+  </main>
+
   <div id="app-footer"></div>
-
-  <!-- Global Loader -->
-  <div id="global-loader" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
-  </div>
-
-  
-  <script type="module" src="/src/components/appShell.js"></script>\n  <script type="module" src="/src/shared/theme.js"></script>\n  <script type="module" src="/src/demo/demoLauncher.js"></script>
+  <script type="module" src="/src/demo/demoLauncher.js"></script>
 </body>
 </html>

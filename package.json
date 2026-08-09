@@ -4,7 +4,8 @@
   "description": "Netlify functions for CertiTrack",
   "main": "index.js",
   "scripts": {
-    "build": "echo \"No build step required\""
+    "build": "echo \"Static CertiTrack: no build step required\"",
+    "dev": "node scripts/dev-server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.25.0",
