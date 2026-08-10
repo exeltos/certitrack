@@ -1696,3 +1696,59 @@ html body .demo-search > input:not([type="checkbox"]):not([type="radio"]):not([t
   box-shadow:none!important;
   background:transparent!important;
 }
+
+/* ==========================================================================\n   CertiTrack v46 — final search geometry\n   One visual control: wrapper owns border; icon is anchored; input reserves\n   icon space. This prevents Lucide replacement/layout shifts in every view.\n   ========================================================================== */
+html body .ct-toolbar__search,
+html body .ct-filterbar__search,
+html body .demo-search{
+  position:relative!important;
+  display:block!important;
+  min-height:var(--ct-control-height)!important;
+  padding:0!important;
+  border:1px solid var(--ct-border-strong)!important;
+  border-radius:var(--ct-radius)!important;
+  background:var(--ct-surface)!important;
+  overflow:hidden!important;
+}
+html body .ct-toolbar__search > svg,
+html body .ct-filterbar__search > svg,
+html body .demo-search > svg,
+html body .ct-toolbar__search > i[data-lucide],
+html body .ct-filterbar__search > i[data-lucide],
+html body .demo-search > i[data-lucide]{
+  position:absolute!important;
+  left:.9rem!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:1rem!important;
+  height:1rem!important;
+  margin:0!important;
+  z-index:2!important;
+  color:#98a2b3!important;
+  pointer-events:none!important;
+}
+html body .ct-toolbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+html body .ct-filterbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+html body .demo-search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]){
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:calc(var(--ct-control-height) - 2px)!important;
+  height:calc(var(--ct-control-height) - 2px)!important;
+  padding:0 .9rem 0 2.65rem!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+  line-height:calc(var(--ct-control-height) - 2px)!important;
+  appearance:none!important;
+  -webkit-appearance:none!important;
+}
+html body .ct-toolbar__search:focus-within,
+html body .ct-filterbar__search:focus-within,
+html body .demo-search:focus-within{
+  border-color:#84a0ff!important;
+  box-shadow:0 0 0 3px rgba(49,94,251,.10)!important;
+}

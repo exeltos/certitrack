@@ -1,7 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL=Deno.env.get('SUPABASE_URL')!;
-const SERVICE_ROLE=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const legacyServiceRole=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const namedSecretKeys=Deno.env.get('SUPABASE_SECRET_KEYS');
+const SERVICE_ROLE=legacyServiceRole || (()=>{try{return JSON.parse(namedSecretKeys||'{}')?.default||'';}catch{return '';}})();
 const CRON_SECRET=Deno.env.get('CRON_SECRET') || '';
 const MAILERSEND_TOKEN=Deno.env.get('MAILERSEND_TOKEN') || '';
 const EMAIL_FROM=Deno.env.get('EMAIL_FROM') || 'noreply@certitrack.gr';
@@ -69,6 +71,7 @@ Deno.serve(async req=>{
   if(req.method!=='POST') return new Response('Method Not Allowed',{status:405});
   if(!CRON_SECRET || req.headers.get('x-cron-secret')!==CRON_SECRET) return new Response('Unauthorized',{status:401});
 
+  if(!SUPABASE_URL || !SERVICE_ROLE) return Response.json({ok:false,error:'Supabase server credentials are unavailable'},{status:500});
   const sb=createClient(SUPABASE_URL,SERVICE_ROLE,{auth:{persistSession:false,autoRefreshToken:false}});
   const {data:generated,error:genError}=await sb.rpc('ct_generate_expiry_notifications');
   if(genError) return Response.json({ok:false,stage:'generate',error:genError.message},{status:500});
