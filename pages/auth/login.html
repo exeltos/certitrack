@@ -8,7 +8,7 @@
   <title>CertiTrack - Σύνδεση</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
-  <link rel="stylesheet" href="../../assets/styles/app.css?v=21">
+  <link rel="stylesheet" href="../../assets/styles/app.css?v=39">
   <script type="module" src="../../src/components/appShell.js"></script>
   <script type="module" src="../../src/shared/passwordVisibility.js"></script>
   <script type="module" src="../../src/pages/auth/login.js"></script>
@@ -20,12 +20,12 @@
       <header class="ct-auth-heading">
         <span class="ct-auth-eyebrow">CertiTrack</span>
         <h1 id="loginTitle">Σύνδεση</h1>
-        <p>Συνδεθείτε στον λογαριασμό εταιρείας, προμηθευτή ή διαχειριστή.</p>
+        <p>Συνδεθείτε με το επιβεβαιωμένο email του λογαριασμού σας.</p>
       </header>
       <form id="loginForm" class="ct-auth-form">
         <div class="ct-field">
-          <label for="username">ΑΦΜ ή Admin</label>
-          <input id="username" name="username" type="text" autocomplete="username" placeholder="ΑΦΜ ή Admin" required>
+          <label for="username">Email</label>
+          <input id="username" name="username" type="email" autocomplete="email" placeholder="name@company.gr" required>
         </div>
         <div class="ct-field">
           <label for="password">Κωδικός</label>
@@ -41,7 +41,6 @@
         </div>
       </form>
       <div class="ct-auth-links">
-        <div>Δεν έλαβα email επιβεβαίωσης; <a href="#" id="resend-confirmation">Ξαναστείλε</a></div>
         <a href="./forgot.html">Ξέχασα τον κωδικό</a>
       </div>
     </section>
