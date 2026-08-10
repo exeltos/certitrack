@@ -1,0 +1,12 @@
+# Phase 38 — Audit, Account Lifecycle & Backend Hardening
+- Added controlled organization closure request/cancel lifecycle.
+- Added platform-admin suspend/reactivate/close lifecycle RPC.
+- Closing an organization ends active/pending partner relationships without deleting either organization.
+- No certificate, certificate-file or audit hard deletion is performed.
+- Added membership role/remove RPCs with last-owner protection.
+- Hardened audit_log as append-only for normal clients.
+- Added organization/member audit coverage and platform-admin audit visibility.
+- Activated functional Platform Admin organization state controls.
+- Improved audit viewer with organization names and changed-field summaries.
+- Restored the Settings departure control as a safe closure request, not destructive deletion.
+- No production Supabase changes performed.
