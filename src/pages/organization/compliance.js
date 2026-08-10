@@ -1,0 +1,7 @@
+import { getOrganizationContext, bindOrganizationLogout } from './guard.js';
+import { organizationService } from '../../services/organizationService.js';
+import { daysUntil } from '../../core/certificateCore.js';
+import { emptyState, escapeHtml, statusBadge } from '../../components/uiPrimitives.js';
+const safe=escapeHtml;
+async function init(){const ctx=await getOrganizationContext();if(!ctx)return;bindOrganizationLogout();const partners=await organizationService.listPartners(ctx.organization);document.getElementById('complianceCount').textContent=`${partners.length} συνεργάτες`;document.getElementById('complianceList').innerHTML=partners.length?partners.map(r=>`<article class="ct-company-row"><div class="ct-company-row__identity"><div class="ct-company-row__avatar"><i data-lucide="building-2"></i></div><div><strong>${safe(r.partner?.name||'Συνεργάτης')}</strong><span>ΑΦΜ ${safe(r.partner?.afm||'—')}</span></div></div><div class="ct-company-row__meta">${statusBadge(r.status==='blocked'?'danger':'neutral',r.status==='blocked'?'Χωρίς πρόσβαση':'Συνδεδεμένος')}<span class="ct-muted">Οι απαιτήσεις θα εφαρμόζονται ανά σχέση συνεργασίας.</span></div></article>`).join(''):emptyState({icon:'shield-check',title:'Δεν υπάρχουν σχέσεις για αξιολόγηση',text:'Συνδέστε συνεργάτες και ορίστε απαιτήσεις πιστοποιητικών ανά σχέση.'});window.lucide?.createIcons();}
+init().catch(e=>Swal.fire('Σφάλμα',e.message||'Αποτυχία φόρτωσης','error'));

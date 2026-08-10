@@ -6,9 +6,9 @@ export function showLoading() {
   if (!loader) {
     loader = document.createElement('div');
     loader.id = 'global-loader';
-    loader.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    loader.className = 'ct-global-loader';
     loader.innerHTML = `
-      <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-white"></div>
+      <div class="ct-global-loader__spinner" aria-label="Φόρτωση"></div>
     `;
     document.body.appendChild(loader);
   }

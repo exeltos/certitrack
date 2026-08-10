@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style id="ct-prepaint">html{background:#f6f8fb}html.ct-prepaint body{visibility:hidden}</style>
   <script>document.documentElement.classList.add('ct-prepaint');addEventListener('DOMContentLoaded',()=>document.documentElement.classList.remove('ct-prepaint'),{once:true});</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
   <title>CertiTrack</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
-  <link rel="stylesheet" href="./assets/styles/app.css?v=21">
+  <link rel="stylesheet" href="./assets/styles/app.css?v=39">
   <script type="module" src="./src/components/appShell.js"></script>
 </head>
 <body class="ct-public-page" data-page="home">
@@ -18,16 +18,16 @@
   <main class="ct-home">
     <section class="ct-home-hero">
       <div class="ct-home-hero__copy">
-        <div class="ct-home__badge"><i data-lucide="shield-check"></i> Certificate & Compliance Management</div>
+        <div class="ct-home__badge"><i data-lucide="shield-check"></i> Organization Certificate Network</div>
         <h1>Πιστοποιητικά και συμμόρφωση, <span>οργανωμένα.</span></h1>
-        <p>Διαχειριστείτε πιστοποιητικά, απαιτήσεις και συνεργάτες από ένα καθαρό περιβάλλον, με άμεση εικόνα για λήξεις και ελλείψεις.</p>
+        <p>Κάθε εταιρεία διαχειρίζεται τα δικά της πιστοποιητικά και συνδέεται με συνεργάτες για ασφαλή, ελεγχόμενη κοινοποίηση και συμμόρφωση.</p>
         <div class="ct-home__primary-actions">
-          <button type="button" class="ct-btn ct-btn-primary ct-btn-lg" data-enter-demo="company"><i data-lucide="play"></i> Δείτε το demo</button>
+          <a class="ct-btn ct-btn-primary ct-btn-lg" href="./pages/demo/index.html"><i data-lucide="play"></i> Δείτε το demo</a>
           <a href="./pages/auth/login.html" class="ct-btn ct-btn-secondary ct-btn-lg">Είσοδος</a>
         </div>
         <div class="ct-home-proof">
           <span><i data-lucide="check"></i> Χωρίς εγκατάσταση</span>
-          <span><i data-lucide="check"></i> Εταιρείες & προμηθευτές</span>
+          <span><i data-lucide="check"></i> Ένας λογαριασμός ανά οργανισμό</span>
           <span><i data-lucide="check"></i> Ιδιωτικά ή κοινόχρηστα έγγραφα</span>
         </div>
       </div>
@@ -39,7 +39,7 @@
           <div class="ct-product-preview__content">
             <div class="ct-product-preview__title"><span>Επισκόπηση συμμόρφωσης</span><small>Σήμερα</small></div>
             <div class="ct-product-preview__stats">
-              <article><small>Προμηθευτές</small><strong>12</strong></article>
+              <article><small>Συνεργάτες</small><strong>12</strong></article>
               <article><small>Συμμορφωμένοι</small><strong>7</strong></article>
               <article><small>Προς λήξη</small><strong>5</strong></article>
               <article class="is-alert"><small>Ελλείψεις</small><strong>3</strong></article>
@@ -59,18 +59,15 @@
     <section class="ct-home-flow">
       <div class="ct-home-section-heading"><span>ΑΠΟ ΤΟ ΕΓΓΡΑΦΟ ΣΤΗΝ ΑΠΟΦΑΣΗ</span><h2>Όχι απλώς αποθήκευση πιστοποιητικών.</h2><p>Το CertiTrack συνδέει τα έγγραφα με πραγματικές απαιτήσεις συμμόρφωσης.</p></div>
       <div class="ct-home__features">
-        <article><i data-lucide="files"></i><strong>1. Συγκέντρωση</strong><span>Εταιρικά και προμηθευτικά πιστοποιητικά σε μία οργανωμένη λίστα.</span></article>
-        <article><i data-lucide="list-checks"></i><strong>2. Απαιτήσεις</strong><span>Ορίστε τι χρειάζεται κάθε κατηγορία ή συγκεκριμένος προμηθευτής.</span></article>
+        <article><i data-lucide="files"></i><strong>1. Συγκέντρωση</strong><span>Όλα τα πιστοποιητικά του οργανισμού σε μία κοινή, ελεγχόμενη λίστα.</span></article>
+        <article><i data-lucide="list-checks"></i><strong>2. Απαιτήσεις</strong><span>Ορίστε τι απαιτείται σε κάθε συγκεκριμένη σχέση συνεργασίας.</span></article>
         <article><i data-lucide="shield-check"></i><strong>3. Συμμόρφωση</strong><span>Αυτόματη εικόνα για ελλείψεις, ληγμένα και πιστοποιητικά προς λήξη.</span></article>
       </div>
     </section>
 
     <section class="ct-home-role-demo">
-      <div><span>Θέλετε να το δείτε από μέσα;</span><strong>Δοκιμάστε και τους δύο ρόλους χωρίς εγγραφή.</strong></div>
-      <div class="ct-home-role-demo__actions">
-        <button type="button" class="ct-btn ct-btn-secondary" data-enter-demo="company"><i data-lucide="building-2"></i> Demo Εταιρείας</button>
-        <button type="button" class="ct-btn ct-btn-secondary" data-enter-demo="supplier"><i data-lucide="truck"></i> Demo Προμηθευτή</button>
-      </div>
+      <div><span>Θέλετε να το δείτε από μέσα;</span><strong>Δείτε το ενιαίο μοντέλο οργανισμού χωρίς εγγραφή.</strong></div>
+      <div class="ct-home-role-demo__actions"><a class="ct-btn ct-btn-secondary" href="./pages/demo/index.html"><i data-lucide="building-2"></i> Demo Οργανισμού</a></div>
     </section>
   </main>
 

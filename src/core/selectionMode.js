@@ -27,8 +27,8 @@ export function ensureSelectionCheckbox(card, onChange, selectorClass = 'export-
   if (!checkbox) {
     checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.className = `${selectorClass} absolute top-2 right-2 w-5 h-5 accent-blue-600`;
-    card.classList.add('relative');
+    checkbox.className = `${selectorClass} ct-export-checkbox`;
+    card.classList.add('ct-selectable-card');
     if (onChange) checkbox.addEventListener('change', onChange);
     card.appendChild(checkbox);
   } else {

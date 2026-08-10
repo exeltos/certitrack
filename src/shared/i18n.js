@@ -55,9 +55,116 @@ const PHRASES = [
 ,
   ['Platform Admin','Platform Admin'],['Επισκόπηση πλατφόρμας','Platform overview'],['Συνολική εικόνα οργανισμών, συνεργασιών και δραστηριότητας.','Overview of organizations, relationships and activity.'],['Οργανισμοί','Organizations'],['Εταιρείες και προμηθευτές που χρησιμοποιούν την πλατφόρμα.','Companies and suppliers using the platform.'],['Audit log','Audit log'],['Ιστορικό ενεργειών και βασικών μεταβολών της πλατφόρμας.','History of platform actions and key changes.'],['Πρόσφατοι οργανισμοί','Recent organizations'],['Νέες και ενεργές εγγραφές στην πλατφόρμα','New and active registrations on the platform'],['Όλοι οι οργανισμοί','All organizations'],['Πρόσφατη δραστηριότητα','Recent activity'],['Συνοπτική εικόνα λειτουργίας','Operational activity summary'],['Σχέσεις συνεργασίας','Relationships'],['Στην πλατφόρμα','On the platform'],['Όλοι οι τύποι','All types'],['Εταιρείες','Companies'],['Όλες οι καταστάσεις','All statuses'],['Ενεργοί','Active'],['Εκκρεμείς','Pending'],['Αποκλεισμένοι','Blocked'],['Οργανισμός','Organization'],['Εγγραφή','Registration'],['Αναζήτηση ενέργειας, οντότητας ή οργανισμού...','Search action, entity or organization...'],['Όλες οι ενέργειες','All actions'],['Σχέσεις','Relationships'],['Λογαριασμοί','Accounts'],['Ημερομηνία','Date'],['Ενέργεια','Action'],['Οντότητα','Entity'],['Λεπτομέρειες','Details']
 ];
+
+PHRASES.push(...[
+  ['Εγγραφή Οργανισμού','Organization sign up'],['ΟΡΓΑΝΙΣΜΟΣ','ORGANIZATION'],['CertiTrack / Οργανισμός','CertiTrack / Organization'],
+  ['Πιστοποιητικά, συνεργάτες και εκκρεμότητες σε μία ενιαία εικόνα.','Certificates, partners and pending items in one unified view.'],
+  ['Διαχείριση των πιστοποιητικών που ανήκουν στον οργανισμό σας.','Manage certificates owned by your organization.'],
+  ['Συνδέστε άλλους οργανισμούς και διαχειριστείτε τις μεταξύ σας σχέσεις.','Connect with other organizations and manage your relationships.'],
+  ['Απαιτήσεις και κατάσταση συμμόρφωσης ανά σχέση συνεργασίας.','Requirements and compliance status for each partner relationship.'],
+  ['Στοιχεία οργανισμού και ασφάλεια λογαριασμού.','Organization details and account security.'],
+  ['Καρτέλα συνεργάτη','Partner profile'],['Στοιχεία συνεργάτη και κοινόχρηστα πιστοποιητικά.','Partner details and shared certificates.'],
+  ['Συνεργάτες','Partners'],['Συνεργάτης','Partner'],['Συνεργασία','Partnership'],['Σχέσεις συνεργασίας','Partner relationships'],
+  ['Διαχείριση συνεργατών','Manage partners'],['Όλοι οι συνεργάτες','All partners'],['Νέα συνεργασία','New partnership'],
+  ['Συνδεδεμένοι οργανισμοί','Connected organizations'],['Συνδεδεμένος','Connected'],['Ενεργή συνεργασία','Active partnership'],['Ενεργή σχέση','Active relationship'],
+  ['Αναμονή αποδοχής','Awaiting acceptance'],['Αίτημα προς εσάς','Incoming request'],['Απορρίφθηκε','Rejected'],['Ανενεργή','Inactive'],['Αποκλεισμένη','Blocked'],
+  ['Αποδοχή','Accept'],['Απόρριψη','Reject'],['Κατάργηση συνεργασίας','Remove partnership'],['Κατάργηση','Remove'],
+  ['ΑΦΜ ή email οργανισμού','Organization Tax ID or email'],['Αποστολή αιτήματος συνεργασίας','Send partnership request'],['Αποστολή αιτήματος','Send request'],['Αναζήτηση','Search'],
+  ['Δεν βρέθηκε','Not found'],['Δεν υπάρχει οργανισμός με αυτά τα στοιχεία.','No organization was found with these details.'],
+  ['Το αίτημα συνεργασίας στάλθηκε και περιμένει αποδοχή.','The partnership request was sent and is awaiting acceptance.'],
+  ['Η συνεργασία ενεργοποιήθηκε.','The partnership is now active.'],['Η συνεργασία ενεργοποιήθηκε','The partnership is now active'],['Το αίτημα απορρίφθηκε','The request was rejected'],
+  ['Η συνεργασία καταργήθηκε','The partnership was removed'],['Δεν ολοκληρώθηκε','Could not complete'],
+  ['Δεν βρέθηκαν συνεργάτες','No partners found'],['Δεν υπάρχουν συνεργάτες','No partners yet'],
+  ['Συνδέστε έναν οργανισμό για να ανταλλάσσετε κοινόχρηστα πιστοποιητικά.','Connect an organization to exchange shared certificates.'],
+  ['Προσθέστε τον πρώτο συνεργάτη σας για να μοιράζεστε πιστοποιητικά.','Add your first partner to start sharing certificates.'],
+  ['ΣΥΝΕΡΓΑΖΟΜΕΝΟΣ ΟΡΓΑΝΙΣΜΟΣ','PARTNER ORGANIZATION'],['Χωρίς επωνυμία','Unnamed organization'],
+  ['Δεν υπάρχει πρόσβαση','Access unavailable'],['Η συνεργασία δεν είναι ενεργή ή δεν βρέθηκε.','The partnership is not active or could not be found.'],
+  ['Δικά σας έγγραφα','Your documents'],['Έγγραφα του οργανισμού','Organization documents'],['Με βάση τα δικά σας ενεργά πιστοποιητικά','Based on your active certificates'],
+  ['Πιστοποιητικά που χρειάζονται προσοχή','Certificates requiring attention'],['Ληγμένα ή κοντά στη λήξη.','Expired or nearing expiry.'],
+  ['Όλα τα πιστοποιητικά','All certificates'],['Δεν υπάρχουν άμεσες εκκρεμότητες','No immediate issues'],
+  ['Τα δικά σας πιστοποιητικά δεν έχουν λήξει και δεν λήγουν εντός 30 ημερών.','None of your certificates are expired or due within 30 days.'],
+  ['Πολύ καλή εικόνα','Excellent status'],['Χρειάζεται παρακολούθηση','Needs monitoring'],['Χρειάζεται ενέργεια','Action required'],
+  ['λήξη','expiry'],['Λήξη','Expiry'],['Εντός 30 ημερών','Within 30 days'],
+  ['Οι οργανισμοί με τους οποίους είστε συνδεδεμένοι.','Organizations connected to your account.'],['Όλοι','All'],
+  ['Δεν υπάρχουν ληγμένα πιστοποιητικά','No expired certificates'],['Ληγμένα πιστοποιητικά','Expired certificates'],['Κλείσιμο','Close'],
+  ['Διαγραφή πιστοποιητικού;','Delete certificate?'],['Η ενέργεια δεν αναιρείται.','This action cannot be undone.'],['Αποθηκεύτηκε','Saved'],['Το πιστοποιητικό καταχωρήθηκε.','The certificate was added.'],
+  ['Οι ρυθμίσεις ενημερώθηκαν.','Settings were updated.'],['Οι κωδικοί δεν ταιριάζουν.','Passwords do not match.'],['Η αποθήκευση απέτυχε.','Saving failed.'],['Αποτυχία φόρτωσης','Loading failed'],
+  ['Δεν υπάρχουν σχέσεις για αξιολόγηση','No relationships to evaluate'],['Συνδέστε συνεργάτες και ορίστε απαιτήσεις πιστοποιητικών ανά σχέση.','Connect partners and define certificate requirements for each relationship.'],
+  ['Οι απαιτήσεις θα εφαρμόζονται ανά σχέση συνεργασίας.','Requirements will apply per partner relationship.'],['Χωρίς πρόσβαση','No access'],
+  ['Δημιουργία οργανισμού','Create organization'],['Κάθε επιχείρηση δημιουργεί έναν ενιαίο χώρο, διαχειρίζεται τα πιστοποιητικά της και συνδέεται με συνεργάτες.','Each organization has one workspace to manage its certificates and connect with partners.'],
+  ['Επιβεβαίωση ΑΦΜ','Confirm Tax ID'],['Κωδικός','Password'],['Ξέχασα τον κωδικό','Forgot password'],['Δεν έλαβα email επιβεβαίωσης;','Didn’t receive the confirmation email?'],['Ξαναστείλε','Resend'],
+  ['Συνδεθείτε στον λογαριασμό του οργανισμού σας ή ως διαχειριστής.','Sign in to your organization account or as an administrator.'],['ΑΦΜ ή Admin','Tax ID or Admin'],
+  ['Γίνεται σύνδεση...','Signing in...'],['Καλώς ήρθατε','Welcome'],['Δεν ήταν δυνατή η σύνδεση','Could not sign in'],['Ελέγξτε τα στοιχεία σας.','Check your credentials.'],
+  ['Δεν βρέθηκε οργανισμός με αυτό το ΑΦΜ.','No organization was found with this Tax ID.'],['Ο συνδυασμός ΑΦΜ και κωδικού είναι λανθασμένος.','The Tax ID and password combination is incorrect.'],['Η σύνδεση απέτυχε.','Sign in failed.'],['Ο οργανισμός είναι αποκλεισμένος από το σύστημα.','This organization is blocked.'],
+  ['Συμπληρώστε όλα τα πεδία.','Complete all fields.'],['Τα ΑΦΜ δεν ταιριάζουν.','Tax IDs do not match.'],['Υπάρχει ήδη οργανισμός με αυτό το ΑΦΜ.','An organization with this Tax ID already exists.'],
+  ['Όροι χρήσης','Terms of use'],['Αποδέχομαι τους όρους χρήσης','I accept the terms of use'],['Απαιτείται αποδοχή των όρων.','You must accept the terms.'],['Η εγγραφή ολοκληρώθηκε. Ελέγξτε το email σας για επιβεβαίωση.','Registration completed. Check your email to confirm your account.'],['Σφάλμα εγγραφής.','Registration failed.'],
+  ['Οργανισμός ·','Organization ·'],['Ένας λογαριασμός, δικά σας πιστοποιητικά και σχέσεις με άλλους οργανισμούς.','One account, your own certificates and relationships with other organizations.'],
+  ['Πιστοποιητικά οργανισμού','Organization certificates'],['Χρειάζονται παρακολούθηση','Needs monitoring'],['Χρειάζονται ενέργεια','Action required'],['Παρακολούθηση','Monitoring'],
+  ['DEMO DATA · ΕΝΙΑΙΟ ORGANIZATION MODEL','DEMO DATA · UNIFIED ORGANIZATION MODEL'],['Demo δεδομένα','Demo data'],['Καμία αλλαγή δεν αποθηκεύεται','Changes are not saved'],
+  ['Προβολή λεπτομερειών','View details'],['Λεπτομέρειες πιστοποιητικού','Certificate details'],['Λεπτομέρειες συνεργάτη','Partner details'],['Πίσω στους συνεργάτες','Back to partners'],
+  ['Ιδιωτικό έγγραφο','Private document'],['Κοινόχρηστο σε συνεργάτες','Shared with partners'],['Ημερομηνία έκδοσης','Issue date'],['Ημερομηνία λήξης','Expiry date'],
+  ['Ρυθμίσεις οργανισμού','Organization settings'],['Ασφάλεια λογαριασμού','Account security'],['Αλλαγή κωδικού πρόσβασης','Change password'],
+  ['Διαγραφή λογαριασμού','Delete account'],['Demo λειτουργία','Demo mode'],['Η ενέργεια είναι διαθέσιμη στην κανονική εφαρμογή.','This action is available in the live application.'],
+  ['Προηγούμενη σελίδα','Previous page'],['Επόμενη σελίδα','Next page'],['Σελίδα','Page'],['Μόνο προβολή','View only'],['Προβολή πιστοποιητικού','Certificate preview'],['Δεν βρέθηκε αρχείο για προβολή.','No file was found to preview.'],
+  ['Ένας λογαριασμός ανά οργανισμό','One account per organization'],['Κάθε εταιρεία διαχειρίζεται τα δικά της πιστοποιητικά και συνδέεται με συνεργάτες για ασφαλή, ελεγχόμενη κοινοποίηση και συμμόρφωση.','Each organization manages its own certificates and connects with partners for secure, controlled sharing and compliance.'],
+  ['Όλα τα πιστοποιητικά του οργανισμού σε μία κοινή, ελεγχόμενη λίστα.','All organization certificates in one controlled list.'],['Ορίστε τι απαιτείται σε κάθε συγκεκριμένη σχέση συνεργασίας.','Define what is required for each partner relationship.'],['Αυτόματη εικόνα για ελλείψεις, ληγμένα και πιστοποιητικά προς λήξη.','Instant visibility into missing, expired and expiring certificates.'],
+  ['Δείτε το ενιαίο μοντέλο οργανισμού χωρίς εγγραφή.','Explore the unified organization model without signing up.'],['Demo Οργανισμού','Organization demo'],['Επισκόπηση συμμόρφωσης','Compliance overview'],['Σήμερα','Today'],['Χρειάζονται προσοχή','Needs attention'],['Κατάσταση','Status'],['Ελλιπής','Incomplete'],['Πλήρης','Complete'],['Όλα τα απαιτούμενα ενεργά','All required certificates active'],['1 απαιτούμενο λείπει','1 required item missing'],
+  ['Ασφαλιστική ενημερότητα','Social security clearance'],['Φορολογική ενημερότητα','Tax clearance'],['Άδεια λειτουργίας','Operating license'],['Πιστοποιητικό πυρασφάλειας','Fire safety certificate']
+]);
+
+PHRASES.push(...[
+  ['Οι αλλαγές ισχύουν μόνο μέχρι να ανανεώσετε τη σελίδα.','Changes last only until you refresh the page.'],
+  ['Κατάσταση συνεργατών','Partner status'],['Συνοπτική εικόνα συμμόρφωσης ανά σχέση συνεργασίας.','Compliance overview for each partner relationship.'],
+  ['Βασικά στοιχεία του λογαριασμού.','Basic account details.'],['Ασφάλεια','Security'],['Αλλαγή κωδικού πρόσβασης μόνο όταν χρειάζεται.','Change your password only when needed.'],
+  ['Τα βασικά στοιχεία που χρησιμοποιούνται στο CertiTrack.','Core details used across CertiTrack.'],
+  ['Η εταιρεία σας','Your organization'],['Ενιαία διαχείριση πιστοποιητικών και συνεργασιών.','Unified certificate and partnership management.'],
+  ['Ένας οργανισμός μπορεί να είναι πελάτης, προμηθευτής ή συνεργάτης ανάλογα με τη συγκεκριμένη σχέση.','An organization can be a customer, supplier or partner depending on the specific relationship.'],
+  ['Συμμόρφωση ανά συνεργασία','Compliance by partnership'],['Οι απαιτήσεις ανήκουν στη σχέση μεταξύ δύο οργανισμών — όχι σε έναν μόνιμο ρόλο προμηθευτή.','Requirements belong to the relationship between two organizations — not to a permanent supplier role.'],
+  ['Εμφανίζονται μόνο τα πιστοποιητικά που ο συνεργάτης έχει επιτρέψει να κοινοποιούνται σε ενεργούς συνεργάτες.','Only certificates the partner has chosen to share with active partners are shown.'],
+  ['Δεν υπάρχουν διαθέσιμα κοινόχρηστα πιστοποιητικά.','No shared certificates are available.'],['Κοινόχρηστα πιστοποιητικά','Shared certificates'],
+  ['Φίλτρο ορατότητας','Visibility filter'],['Αποστολή','Send'],['Εξαγωγή','Export'],['Προεπισκόπηση νέου πιστοποιητικού','New certificate preview'],
+  ['Παραμένει στη λίστα σου, αλλά δεν εμφανίζεται σε συνεργαζόμενες εταιρείες.','It stays in your list but is not shown to partner organizations.'],
+  ['Πιστοποιητικό','Certificate'],['Απόφαση','Decision'],['Νομιμοποιητικό έγγραφο','Legal document'],['Ανάλυση','Analysis'],['Στοιχεία προϊόντος','Product details'],['Άλλο','Other'],['Καταχώρισε τύπο','Enter a type'],
+  ['Νέο Πιστοποιητικό','New certificate'],['Επεξεργασία Πιστοποιητικού','Edit certificate'],['Επεξεργασία πιστοποιητικού','Edit certificate'],['Συμπλήρωσε όλα τα πεδία και ανέβασε PDF.','Complete all fields and upload a PDF.'],
+  ['Δεν υπάρχουν δεδομένα.','No data available.'],['Χωρίς τίτλο','Untitled'],['Πρόσβαση ενεργή','Access active'],['Επαναφορά','Restore'],['Αποκλεισμός','Block'],
+  ['Μόνο προβολή','View only'],['Προηγούμενη σελίδα','Previous page'],['Επόμενη σελίδα','Next page'],['Σμίκρυνση','Zoom out'],['Μεγέθυνση','Zoom in'],['Φόρτωση εγγράφου...','Loading document...'],['Το CertiTrack εμφανίζει το έγγραφο μέσα στην εφαρμογή χωρίς κουμπί λήψης.','CertiTrack displays the document inside the application without a download button.'],['Δεν ήταν δυνατή η ενσωματωμένη προβολή του PDF.','The embedded PDF preview could not be displayed.'],
+  ['Δεν βρέθηκε το αρχείο του πιστοποιητικού.','The certificate file was not found.'],['Δεν ήταν δυνατή η ασφαλής πρόσβαση στο αρχείο.','Secure access to the file could not be established.'],
+  ['Αποτυχία κλήσης','Request failed:'],['Αποτυχία αναζήτησης λογαριασμού.','Account lookup failed.'],['Παρουσιάστηκε σφάλμα.','An error occurred.'],['Φόρτωση','Loading'],
+  ['Ενεργές συνεργασίες','Active partnerships'],['Εκκρεμή αιτήματα','Pending requests'],['Ενεργοί οργανισμοί','Active organizations'],['Προβολή οργανισμού','View organization'],
+  ['Δεν υπάρχουν εγγραφές audit.','No audit records found.'],['Δεν υπάρχουν οργανισμοί.','No organizations found.'],
+  ['Θέλετε να αποσυνδεθείτε;','Do you want to sign out?'],['Ο οργανισμός είναι αποκλεισμένος.','The organization is blocked.'],
+  ['π.χ. 099999999 ή quality@company.gr','e.g. 099999999 or quality@company.com'],['Η σύνδεση με','The connection with'],['τον οργανισμό','the organization'],['θα αφαιρεθεί. Δεν διαγράφονται πιστοποιητικά κανενός οργανισμού.','will be removed. No certificates belonging to either organization will be deleted.'],
+  ['Δεν μπορείτε να προσθέσετε τον ίδιο οργανισμό ως συνεργάτη.','You cannot add the same organization as a partner.'],['Υπάρχει ήδη σχέση ή εκκρεμές αίτημα με αυτόν τον οργανισμό.','A relationship or pending request already exists with this organization.'],['Ο συνεργάτης υπάρχει ήδη.','This partner already exists.'],['Ο οργανισμός βρέθηκε σε παλιό τύπο λογαριασμού. Η σύνδεση θα ενεργοποιηθεί πλήρως μετά το Organization migration.','The organization uses a legacy account type. The connection will be fully enabled after the Organization migration.'],['Η αποδοχή αιτημάτων απαιτεί το νέο Organization model.','Accepting requests requires the new Organization model.'],['Μη έγκυρη κατάσταση σχέσης.','Invalid relationship status.'],
+  ['Επαναφορά Κωδικού','Reset Password'],['Νέος κωδικός','New password'],['Η σύνδεση επαναφοράς είναι μη έγκυρη ή έχει λήξει.','The reset link is invalid or has expired.'],['Ο κωδικός άλλαξε. Συνδέσου ξανά.','Password changed. Please sign in again.'],['Το link έληξε','The link has expired'],['Το link επαναφοράς έχει λήξει ή είναι άκυρο. Παρακαλώ δοκιμάστε ξανά.','The reset link has expired or is invalid. Please try again.'],['Σφάλμα επαναφοράς','Reset error'],['Μη αναγνωρίσιμο σφάλμα.','Unknown error.'],['Έλεγχος Email','Check your email'],['Έστειλα link επαναφοράς στο email σου.','A password reset link was sent to your email.'],['Το ΑΦΜ και το Email δεν ταιριάζουν με εγγεγραμμένο χρήστη.','The Tax ID and email do not match a registered account.'],
+  ['Οι αλλαγές δεν αποθηκεύονται','Changes are not saved'],['Η αλλαγή ισχύει μόνο στο demo session.','This change applies only to the demo session.'],['Η αναζήτηση πραγματικού οργανισμού ενεργοποιείται μετά τη σύνδεση με τη νέα βάση.','Searching real organizations becomes available after connecting the new database.'],['Προβολή των πιστοποιητικών που ο συνεργάτης έχει διαθέσει στη σχέση.','View certificates the partner has shared with this relationship.'],['Κάλυψη','Coverage'],['Ελλείψεις ή ληγμένα','Missing or expired items'],['Πλήρεις απαιτήσεις','All requirements met'],
+  ['ΟΡΓΑΝΙΣΜΟΣ','ORGANIZATION'],['ΔΙΑΧΕΙΡΙΣΗ','ADMINISTRATION'],['CertiTrack αρχική','CertiTrack home'],['Αρχική CertiTrack','CertiTrack home'],
+  ['Σε συνεργάτες','Shared with partners'],['Ιδιωτικό','Private'],['Σε ','In '],[' ημέρες',' days'],['ημέρες','days']
+]);
+
+PHRASES.push(...[
+ ['και συμμόρφωση, ','and compliance, '],['οργανωμένα.','organized.'],['Password πρόσβασης και διαχείριση λογαριασμού.','Password and account management.'],
+ ['Έχετε λογαριασμό;','Already have an account?'],['Νέος Κωδικός','New password'],
+ ['συνεργάτες','partners'],['συνεργάτη','partner'],['Ενεργή','Active'],['Έτοιμο','Done'],
+ ['Αποτυχία ενημέρωσης.','Update failed.'],['Αποτυχία κατάργησης.','Removal failed.'],['Συμπληρώστε ΑΦΜ ή email.','Enter a Tax ID or email.'],['Αποτυχία δημιουργίας συνεργασίας.','Could not create the partnership.'],
+ ['Το Platform Admin είναι ξεχωριστό επίπεδο από τους οργανισμούς. Η πρόσβαση σε δεδομένα άλλων tenants θα ενεργοποιηθεί μόνο μέσω server-controlled admin role και ελεγμένων RLS policies.','Platform Admin is a separate layer from organization workspaces. Access to other tenants’ data will only be enabled through a server-controlled admin role and verified RLS policies.'],
+ ['Η διαγραφή οργανισμού δεν εκτελείται από αυτό το interface. Για production θα χρησιμοποιείται ελεγχόμενη διαδικασία απενεργοποίησης/αρχειοθέτησης ώστε να μη διαγράφονται αλυσιδωτά πιστοποιητικά και audit records.','Organizations are not deleted from this interface. In production, a controlled deactivation/archive process will be used so certificates and audit records are not cascade-deleted.'],
+ ['Η διαγραφή οργανισμού δεν εκτελείται από αυτό το interface. Για production θα χρησιμοποιείται ελεγχόμενη διαδικασία απενεργοποίησης/αρχειοθέτησης ώστε να μη διαγράφονται αλυσιδωτά certificates και audit records.','Organizations are not deleted from this interface. In production, a controlled deactivation/archive process will be used so certificates and audit records are not cascade-deleted.'],
+ ['Οργανισμοί που χρησιμοποιούν την πλατφόρμα.','Organizations using the platform.'],
+ ['Συμπλήρωσε τίτλο, τύπο και ημερομηνία λήξης.','Complete the title, type and expiry date.'],
+ ['Προβολή συνεργάτη','View partner'],
+ ['Επεξεργασία / αντικατάσταση PDF','Edit / replace PDF'],['Απόκρυψη από συνεργάτες','Hide from partners'],['Κοινοποίηση σε συνεργάτες','Share with partners'],
+ ['Απόκρυψη από συνεργάτες;','Hide from partners?'],['Κοινοποίηση σε συνεργάτες;','Share with partners?'],
+ ['Το συγκεκριμένο πιστοποιητικό θα παραμείνει στη δική σας λίστα, αλλά δεν θα εμφανίζεται σε κανέναν συνεργάτη.','This certificate will remain in your list but will not be visible to any partner.'],
+ ['Το συγκεκριμένο πιστοποιητικό θα είναι ορατό στους ενεργούς συνεργάτες σας.','This certificate will be visible to your active partners.'],
+ ['Αντικατάσταση PDF','Replace PDF'],['(προαιρετικά)','(optional)'],['Αν επιλέξεις νέο PDF, θα αντικαταστήσει το υπάρχον αρχείο μετά την αποθήκευση.','If you select a new PDF, it will replace the existing file after saving.'],
+ ['Το πιστοποιητικό και το PDF αντικαταστάθηκαν.','The certificate and PDF were replaced.'],['Οι αλλαγές αποθηκεύτηκαν.','Changes saved.'],
+ ['Το πιστοποιητικό θα παραμείνει στη λίστα σας αλλά δεν θα εμφανίζεται στους συνεργάτες.','The certificate will remain in your list but will not be visible to partners.'],
+ ['Το πιστοποιητικό θα είναι ξανά ορατό στους συνεργάτες.','The certificate will be visible to partners again.']
+]);
+
 PHRASES.sort((a,b) => b[0].length - a[0].length);
 
-function translateString(value) {
+export function translateString(value) {
   if (!value) return value;
   let out = value;
   for (const [el,en] of PHRASES) out = out.split(el).join(en);
@@ -125,6 +232,8 @@ export function applyLanguage(lang) {
 }
 
 export function getLanguage() { return localStorage.getItem(STORAGE_KEY) === 'en' ? 'en' : 'el'; }
+export function t(el, en = null) { return getLanguage() === 'en' ? (en || translateString(el)) : el; }
+export function locale() { return getLanguage() === 'en' ? 'en-GB' : 'el-GR'; }
 
 export function initLanguage() {
   applyLanguage(getLanguage());

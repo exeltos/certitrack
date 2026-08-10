@@ -7,7 +7,7 @@ export function certificateObjectPath(fileRef, bucketName) {
   if (!fileRef) return '';
   const value = String(fileRef);
 
-  // New Phase 3C records store the object path directly.
+  // Current records store the object path directly.
   if (!/^https?:\/\//i.test(value)) return value.replace(/^\/+/, '');
 
   try {
@@ -48,6 +48,25 @@ export async function removeCertificateObject(bucketName, fileRef) {
 }
 
 export async function openCertificatePreview(bucketName, fileRef, title = '') {
-  const signedUrl = await createCertificateSignedUrl(bucketName, fileRef, 600);
+  if (!fileRef) throw new Error('Δεν βρέθηκε το αρχείο του πιστοποιητικού.');
+  const value = String(fileRef);
+  // Demo/local files, object URLs and legacy public URLs can be previewed directly.
+  if (/^(https?:|blob:|data:)/i.test(value) || value.startsWith('/')) {
+    return openPdfViewer(value, title || 'Προβολή πιστοποιητικού');
+  }
+  const signedUrl = await createCertificateSignedUrl(bucketName, value, 600);
   return openPdfViewer(signedUrl, title || 'Προβολή πιστοποιητικού');
+}
+
+
+export async function downloadCertificate(bucketName, fileRef, filename = 'certificate.pdf') {
+  const signedUrl = await createCertificateSignedUrl(bucketName, fileRef, 600);
+  const link = document.createElement('a');
+  link.href = signedUrl;
+  link.download = filename || 'certificate.pdf';
+  link.target = '_blank';
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }

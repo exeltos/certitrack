@@ -1,14 +1,13 @@
 {
   "name": "certitrack-netlify-functions",
-  "version": "1.0.0",
-  "description": "Netlify functions for CertiTrack",
+  "version": "1.0.1",
+  "description": "CertiTrack organization certificate compliance platform",
   "main": "index.js",
   "scripts": {
     "build": "echo \"Static CertiTrack: no build step required\"",
     "dev": "node scripts/dev-server.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.25.0",
-    "node-fetch": "^2.6.7"
+    "@supabase/supabase-js": "^2.25.0"
   }
 }

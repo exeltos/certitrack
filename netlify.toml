@@ -1,86 +1,11 @@
 [build]
-  functions = "netlify/functions"
   publish = "."
-
-[functions]
-  node_bundler = "esbuild"
-
 
 [[redirects]]
   from = "/reset-password"
   to = "/pages/auth/reset-password.html"
   status = 200
 
-[functions."notify_expiring_certificates-scheduled"]
-  schedule = "0 9 * * *" # εκτέλεση κάθε μέρα 12:00 ώρα Ελλάδας
-
-[functions."notify_user_expiry-scheduled"]
-  schedule = "0 9 * * *"
-
-
-
-# Phase 4 route compatibility
-[[redirects]]
-  from = "/general_login.html"
-  to = "/pages/auth/login.html"
-  status = 301
-
-[[redirects]]
-  from = "/company_register.html"
-  to = "/pages/auth/company-register.html"
-  status = 301
-
-[[redirects]]
-  from = "/supplier-register.html"
-  to = "/pages/auth/supplier-register.html"
-  status = 301
-
-[[redirects]]
-  from = "/forgot.html"
-  to = "/pages/auth/forgot.html"
-  status = 301
-
-[[redirects]]
-  from = "/reset-password.html"
-  to = "/pages/auth/reset-password.html"
-  status = 301
-
-[[redirects]]
-  from = "/company_dashboard.html"
-  to = "/pages/company/dashboard.html"
-  status = 301
-
-[[redirects]]
-  from = "/company_certificates.html"
-  to = "/pages/company/certificates.html"
-  status = 301
-
-[[redirects]]
-  from = "/company_info.html"
-  to = "/pages/company/profile.html"
-  status = 301
-
-[[redirects]]
-  from = "/supplier_view.html"
-  to = "/pages/company/supplier.html"
-  status = 301
-
-[[redirects]]
-  from = "/certificates.html"
-  to = "/pages/supplier/certificates.html"
-  status = 301
-
-[[redirects]]
-  from = "/supplier_info.html"
-  to = "/pages/supplier/profile.html"
-  status = 301
-
-[[redirects]]
-  from = "/admin_dashboard.html"
-  to = "/pages/admin/dashboard.html"
-  status = 301
-
-# Phase 21: prevent stale UI flashes while the product is under active development
 [[headers]]
   for = "/*.html"
   [headers.values]

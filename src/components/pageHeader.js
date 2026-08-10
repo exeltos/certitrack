@@ -1,49 +1,10 @@
 const META = {
-  'company-dashboard': {
-    eyebrow: 'CertiTrack / Εταιρεία',
-    title: 'Επισκόπηση',
-    description: 'Κατάσταση συμμόρφωσης, λήξεις και ενέργειες που χρειάζονται προσοχή.'
-  },
-  'company-suppliers': {
-    eyebrow: 'CertiTrack / Εταιρεία',
-    title: 'Προμηθευτές',
-    description: 'Διαχείριση συνεργαζόμενων προμηθευτών και πρόσβαση στα πιστοποιητικά τους.'
-  },
-  'company-certificates': {
-    eyebrow: 'CertiTrack / Εταιρεία',
-    title: 'Πιστοποιητικά εταιρείας',
-    description: 'Κεντρική διαχείριση των πιστοποιητικών της εταιρείας.'
-  },
-  'company-compliance': {
-    eyebrow: 'CertiTrack / Εταιρεία',
-    title: 'Συμμόρφωση',
-    description: 'Απαιτήσεις ανά προμηθευτή, ελλείψεις και κατάσταση συμμόρφωσης.'
-  },
-  'company-profile': {
-    eyebrow: 'CertiTrack / Εταιρεία',
-    title: 'Ρυθμίσεις λογαριασμού',
-    description: 'Στοιχεία εταιρείας και ασφάλεια λογαριασμού.'
-  },
-  'company-supplier': {
-    eyebrow: 'CertiTrack / Προμηθευτής',
-    title: 'Καρτέλα προμηθευτή',
-    description: 'Στοιχεία συνεργάτη και διαθέσιμα πιστοποιητικά.'
-  },
-  'supplier-certificates': {
-    eyebrow: 'CertiTrack / Προμηθευτής',
-    title: 'Πιστοποιητικά',
-    description: 'Διαχείριση, ισχύς και κοινοποίηση των πιστοποιητικών σας.'
-  },
-  'supplier-companies': {
-    eyebrow: 'CertiTrack / Προμηθευτής',
-    title: 'Οι εταιρείες μου',
-    description: 'Εταιρείες που σας έχουν αποθηκευμένο και κατάσταση πρόσβασης.'
-  },
-  'supplier-profile': {
-    eyebrow: 'CertiTrack / Προμηθευτής',
-    title: 'Ρυθμίσεις λογαριασμού',
-    description: 'Στοιχεία προμηθευτή και ασφάλεια λογαριασμού.'
-  },
+  'organization-dashboard': { eyebrow:'CertiTrack / Οργανισμός', title:'Επισκόπηση', description:'Πιστοποιητικά, συνεργάτες και εκκρεμότητες σε μία ενιαία εικόνα.' },
+  'organization-certificates': { eyebrow:'CertiTrack / Οργανισμός', title:'Πιστοποιητικά', description:'Διαχείριση των πιστοποιητικών που ανήκουν στον οργανισμό σας.' },
+  'organization-partners': { eyebrow:'CertiTrack / Οργανισμός', title:'Συνεργάτες', description:'Συνδέστε άλλους οργανισμούς και διαχειριστείτε τις μεταξύ σας σχέσεις.' },
+  'organization-compliance': { eyebrow:'CertiTrack / Οργανισμός', title:'Συμμόρφωση', description:'Απαιτήσεις και κατάσταση συμμόρφωσης ανά σχέση συνεργασίας.' },
+  'organization-profile': { eyebrow:'CertiTrack / Οργανισμός', title:'Ρυθμίσεις', description:'Στοιχεία οργανισμού και ασφάλεια λογαριασμού.' },
+  'organization-partner': { eyebrow:'CertiTrack / Οργανισμός', title:'Καρτέλα συνεργάτη', description:'Στοιχεία συνεργάτη και κοινόχρηστα πιστοποιητικά.' },
   'admin-dashboard': {
     eyebrow: 'CertiTrack / Platform Admin',
     title: 'Επισκόπηση πλατφόρμας',
@@ -52,7 +13,7 @@ const META = {
   'admin-organizations': {
     eyebrow: 'CertiTrack / Platform Admin',
     title: 'Οργανισμοί',
-    description: 'Εταιρείες και προμηθευτές που χρησιμοποιούν την πλατφόρμα.'
+    description: 'Οργανισμοί που χρησιμοποιούν την πλατφόρμα.'
   },
   'admin-audit': {
     eyebrow: 'CertiTrack / Platform Admin',
