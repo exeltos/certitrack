@@ -80,11 +80,14 @@ function privateActions(page, role) {
 function resolveHeader(page) {
   const meta = META[page] || { public: true };
   const isPublic = !!meta.public;
+  const organizationContext = meta.role === 'organization'
+    ? `<span class="ct-header__divider"></span><span class="ct-header__organization"><i data-lucide="building-2"></i><strong id="ctHeaderOrganizationName">Οργανισμός</strong></span>`
+    : (!isPublic ? `<span class="ct-header__divider"></span><span class="ct-header__role">${meta.label || ''}</span>` : '');
   return `<header class="ct-header">
     <div class="ct-header__inner">
       ${brand()}
       <div class="ct-header__context">
-        ${!isPublic ? `<span class="ct-header__divider"></span><span class="ct-header__role">${meta.label || ''}</span>` : ''}
+        ${organizationContext}
         <span id="pageHeader" class="hidden"></span>
         <span id="userGreeting" class="hidden"></span>
       </div>
@@ -116,6 +119,16 @@ function mountAuthenticatedLayout(page) {
   const pageHeaderMount = document.getElementById('app-page-header');
   if (pageHeaderMount) pageHeaderMount.innerHTML = renderPageHeader(page);
   document.body.classList.add('ct-auth-page', 'ct-app-body');
+}
+
+
+export function setOrganizationShellContext(organization = {}) {
+  const name = organization.display_name || organization.legal_name || organization.name || 'Οργανισμός';
+  const el = document.getElementById('ctHeaderOrganizationName');
+  if (el) {
+    el.textContent = name;
+    el.title = name;
+  }
 }
 
 export function renderFooter() {

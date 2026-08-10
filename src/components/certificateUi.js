@@ -40,6 +40,12 @@ export function renderCertificateCollection({
 } = {}) {
   if (!container) return;
   const selectable = permissions.selectable !== false;
+  if (!certificates.length) {
+    container.innerHTML = `<div class="ct-certificate-empty"><i data-lucide="file-text"></i><strong>Δεν υπάρχουν πιστοποιητικά</strong><span>Προσθέστε νέο πιστοποιητικό ή αλλάξτε τα φίλτρα αναζήτησης.</span></div>`;
+    onBindActions();
+    window.lucide?.createIcons();
+    return;
+  }
   container.innerHTML = certificateListHeader({ selectable });
   certificates.forEach(cert => {
     const status = certificateStatus(cert.date, now);

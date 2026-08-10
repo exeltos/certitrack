@@ -71,7 +71,6 @@ async function load(){
     bindCertificateStats({certificates:visible,onRender:render});
     render(visible);
     container()?.classList.remove('hidden');
-    document.getElementById('noCertificatesMessage')?.classList.toggle('hidden',visible.length>0);
     updateBulk();
   }catch(err){handleError(err);}
   finally{loading?.classList.add('hidden');}

@@ -11,7 +11,7 @@ async function init(){
   const ctx = await getOrganizationContext(); if(!ctx) return;
   bindOrganizationLogout();
   const { organization, user } = ctx;
-  $('orgName').textContent = organization.name || user.email;
+  $('orgName').textContent = organization.display_name || organization.legal_name || organization.name || 'Οργανισμός';
   const [certs, partners] = await Promise.all([
     organizationService.listOwnCertificates(organization, user.id),
     organizationService.listPartners(organization)

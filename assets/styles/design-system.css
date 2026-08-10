@@ -1370,3 +1370,88 @@ html,body,button,input,select,textarea,.swal2-container{font-family:var(--ct-fon
 .ct-danger-zone{border-color:color-mix(in srgb,var(--ct-danger) 28%,var(--ct-border))}
 .ct-admin-status--closure_requested{background:var(--ct-warning-soft);color:var(--ct-warning)}
 .ct-admin-status--closed{background:var(--ct-surface-subtle);color:var(--ct-text-muted)}
+
+
+/* ==========================================================================\n   CertiTrack v40 — organization shell + compact settings + certificate polish\n   ========================================================================== */
+.ct-header__organization{display:flex;align-items:center;gap:.45rem;min-width:0;max-width:min(32rem,42vw);color:var(--ct-text-strong)}
+.ct-header__organization svg{width:1rem;height:1rem;flex:none;color:var(--ct-muted)}
+.ct-header__organization strong{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.76rem;font-weight:750;letter-spacing:-.01em}
+
+/* One explicit search affordance; remove browser search decorations that can overlap the icon. */
+.ct-toolbar__search{min-width:0!important}
+.ct-toolbar__search>svg{z-index:2;pointer-events:none;left:.85rem!important;width:.95rem!important;height:.95rem!important}
+.ct-toolbar__search input[type="search"]{padding-left:2.4rem!important;-webkit-appearance:none;appearance:none}
+.ct-toolbar__search input[type="search"]::-webkit-search-decoration,
+.ct-toolbar__search input[type="search"]::-webkit-search-cancel-button,
+.ct-toolbar__search input[type="search"]::-webkit-search-results-button,
+.ct-toolbar__search input[type="search"]::-webkit-search-results-decoration{-webkit-appearance:none;display:none}
+
+/* Certificate workspace: internal list scroll only; never force horizontal page scrolling. */
+body[data-page="organization-certificates"] .ct-app-content{min-width:0!important}
+body[data-page="organization-certificates"] .ct-content-page{min-width:0!important;overflow:hidden!important}
+body[data-page="organization-certificates"] #certificatePageChrome{min-width:0!important}
+body[data-page="organization-certificates"] .ct-toolbar{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(10rem,14rem) auto;align-items:center!important}
+body[data-page="organization-certificates"] .ct-toolbar__actions{margin-left:0!important}
+body[data-page="organization-certificates"] .ct-certificate-list{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
+.ct-certificate-head--selectable,.ct-certificate-row--selectable{grid-template-columns:2rem minmax(0,2.1fr) minmax(6.5rem,.8fr) minmax(6.25rem,.72fr) minmax(6rem,.68fr) 7.4rem!important;gap:.75rem!important}
+.ct-certificate-head,.ct-certificate-row{grid-template-columns:minmax(0,2.1fr) minmax(6.5rem,.8fr) minmax(6.25rem,.72fr) minmax(6rem,.68fr) 7.4rem!important;gap:.75rem!important}
+.ct-certificate-title strong,.ct-certificate-title span,.ct-certificate-cell{min-width:0!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ct-certificate-actions{min-width:7.4rem!important;width:7.4rem!important;justify-content:flex-end!important}
+.ct-certificate-empty{min-height:13rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;padding:1.5rem;color:var(--ct-muted);text-align:center}
+.ct-certificate-empty svg{width:1.5rem;height:1.5rem;color:var(--ct-muted-2)}
+.ct-certificate-empty strong{font-size:.8rem;color:var(--ct-text-strong)}
+.ct-certificate-empty span{font-size:.7rem;color:var(--ct-muted)}
+
+/* Settings: compact, professional grouping with shared option/switch components. */
+.ct-profile-shell{padding-bottom:1rem!important}
+.ct-settings-grid{gap:.75rem!important;padding-bottom:1rem!important}
+.ct-settings-body{padding:.2rem 1.05rem .85rem}
+.ct-settings-subsection{padding:.85rem 0;border-bottom:1px solid var(--ct-border)}
+.ct-settings-subsection:last-child{border-bottom:0;padding-bottom:.15rem}
+.ct-settings-subsection__title{display:flex;align-items:flex-start;gap:.65rem;margin-bottom:.7rem}
+.ct-settings-subsection__title>svg{width:1rem;height:1rem;margin-top:.12rem;color:var(--ct-brand);flex:none}
+.ct-settings-subsection__title>div{display:flex;flex-direction:column;gap:.12rem}
+.ct-settings-subsection__title strong{font-size:.76rem;color:var(--ct-text-strong);font-weight:750}
+.ct-settings-subsection__title span{font-size:.67rem;line-height:1.4;color:var(--ct-muted)}
+.ct-settings-options-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem}
+.ct-setting-option{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:3.7rem;padding:.65rem .75rem;border:1px solid var(--ct-border);border-radius:var(--ct-radius);background:var(--ct-surface);cursor:pointer;transition:border-color .14s,background .14s}
+.ct-setting-option:hover{background:var(--ct-surface-muted);border-color:var(--ct-border-strong)}
+.ct-setting-option__copy{display:flex;min-width:0;flex-direction:column;gap:.13rem}
+.ct-setting-option__copy strong{font-size:.72rem;color:var(--ct-text-strong);font-weight:700}
+.ct-setting-option__copy span{font-size:.64rem;line-height:1.35;color:var(--ct-muted)}
+.ct-switch{position:relative;display:inline-flex;width:2.15rem;height:1.25rem;flex:0 0 auto}
+.ct-switch input{position:absolute;opacity:0;pointer-events:none}
+.ct-switch>span{position:absolute;inset:0;border-radius:999px;background:#d0d5dd;transition:.16s;box-shadow:inset 0 0 0 1px rgba(16,24,40,.05)}
+.ct-switch>span::after{content:"";position:absolute;top:.15rem;left:.15rem;width:.95rem;height:.95rem;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.18);transition:transform .16s}
+.ct-switch input:checked+span{background:var(--ct-brand)}
+.ct-switch input:checked+span::after{transform:translateX(.9rem)}
+.ct-switch input:focus-visible+span{outline:3px solid rgba(49,94,251,.15);outline-offset:2px}
+.ct-warning-block{margin-top:.65rem;padding:.7rem .75rem;border:1px solid var(--ct-border);border-radius:var(--ct-radius);background:var(--ct-surface-muted)}
+.ct-warning-block__label{display:block;margin-bottom:.5rem;color:var(--ct-muted);font-size:.65rem;font-weight:650}
+.ct-warning-days{display:flex!important;flex-wrap:wrap!important;gap:.4rem!important}
+.ct-warning-day{position:relative;display:inline-flex!important;align-items:center!important;padding:0!important;border:0!important;background:transparent!important;border-radius:999px!important;cursor:pointer!important}
+.ct-warning-day input{position:absolute!important;opacity:0!important;pointer-events:none!important}
+.ct-warning-day>span{display:inline-flex;align-items:center;justify-content:center;min-height:1.95rem;padding:.34rem .65rem;border:1px solid var(--ct-border-strong);border-radius:999px;background:var(--ct-surface);color:var(--ct-muted);font-size:.65rem;font-weight:700;transition:.14s}
+.ct-warning-day input:checked+span{border-color:#a9b9ff;background:var(--ct-brand-soft);color:var(--ct-brand)}
+.ct-warning-day input:focus-visible+span{outline:3px solid rgba(49,94,251,.13);outline-offset:2px}
+.ct-settings-actions{position:sticky;bottom:0;z-index:5;margin-top:.1rem!important;padding:.65rem!important;border:1px solid var(--ct-border);border-radius:var(--ct-radius-lg);background:rgba(245,247,250,.92);backdrop-filter:blur(10px)}
+.dark .ct-settings-actions{background:rgba(11,18,32,.92)}
+.ct-settings-actions__hint{margin-right:auto;color:var(--ct-muted);font-size:.65rem}
+.ct-danger-zone .ct-settings-section__head{border-bottom:0!important}
+.ct-danger-zone{border-color:#fecdca!important}
+.ct-danger-zone .ct-settings-section__head p{max-width:60rem}
+
+@media(max-width:1000px){
+  body[data-page="organization-certificates"] .ct-toolbar{grid-template-columns:minmax(0,1fr) auto!important}
+  body[data-page="organization-certificates"] .ct-toolbar select{grid-column:1/-1;grid-row:2;width:100%}
+  .ct-certificate-head--selectable,.ct-certificate-row--selectable{grid-template-columns:2rem minmax(0,1fr) minmax(6rem,.7fr) 7.4rem!important}
+  .ct-certificate-head--selectable>:nth-child(4),.ct-certificate-row--selectable>:nth-child(4),.ct-certificate-head--selectable>:nth-child(5),.ct-certificate-row--selectable>:nth-child(5){display:none!important}
+}
+@media(max-width:760px){
+  .ct-header__organization{max-width:48vw}.ct-header__organization svg{display:none}
+  .ct-settings-options-grid{grid-template-columns:1fr}
+  .ct-settings-actions__hint{display:none}
+  body[data-page="organization-certificates"] .ct-toolbar{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+  body[data-page="organization-certificates"] .ct-toolbar__actions{width:100%!important}
+  body[data-page="organization-certificates"] .ct-toolbar__actions .ct-btn{width:100%!important}
+}

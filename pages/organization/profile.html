@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script defer src="https://unpkg.com/lucide@latest"></script>
-  <link href="../../assets/styles/app.css?v=39" rel="stylesheet"/>
+  <link href="../../assets/styles/app.css?v=40" rel="stylesheet"/>
   <script src="../../src/components/appShell.js" type="module"></script>
 </head>
 <body data-page="organization-profile">
@@ -83,42 +83,41 @@
                 <p>Επιλέξτε πώς και πότε θα ενημερώνεστε για λήξεις και συνεργασίες.</p>
               </div>
             </header>
-            <div class="ct-notification-settings">
-              <label class="ct-toggle-row">
-                <span class="ct-toggle-row__text"><strong>Ειδοποιήσεις μέσα στην εφαρμογή</strong><span>Εμφάνιση στο κέντρο ειδοποιήσεων.</span></span>
-                <input id="prefInApp" type="checkbox" checked>
-              </label>
-              <label class="ct-toggle-row">
-                <span class="ct-toggle-row__text"><strong>Email ειδοποιήσεις</strong><span>Αποστολή σημαντικών ενημερώσεων στο email σας.</span></span>
-                <input id="prefEmail" type="checkbox" checked>
-              </label>
-              <label class="ct-toggle-row">
-                <span class="ct-toggle-row__text"><strong>Λήξεις μέσα στην εφαρμογή</strong><span>Προειδοποιήσεις για πιστοποιητικά που λήγουν ή έχουν λήξει.</span></span>
-                <input id="prefExpiryInApp" type="checkbox" checked>
-              </label>
-              <label class="ct-toggle-row">
-                <span class="ct-toggle-row__text"><strong>Email για λήξεις</strong><span>Αποστολή email στα επιλεγμένα χρονικά όρια.</span></span>
-                <input id="prefExpiryEmail" type="checkbox" checked>
-              </label>
-              <div class="ct-field">
-                <label>Προειδοποίηση πριν από τη λήξη</label>
-                <div class="ct-warning-days" id="warningDays">
-                  <label class="ct-warning-day"><input type="checkbox" value="90" checked>90 ημέρες</label>
-                  <label class="ct-warning-day"><input type="checkbox" value="60" checked>60 ημέρες</label>
-                  <label class="ct-warning-day"><input type="checkbox" value="30" checked>30 ημέρες</label>
-                  <label class="ct-warning-day"><input type="checkbox" value="15" checked>15 ημέρες</label>
-                  <label class="ct-warning-day"><input type="checkbox" value="7" checked>7 ημέρες</label>
-                  <label class="ct-warning-day"><input type="checkbox" value="0" checked>Ημέρα λήξης</label>
+            <div class="ct-settings-body ct-notification-settings">
+              <div class="ct-settings-subsection">
+                <div class="ct-settings-subsection__title"><i data-lucide="bell"></i><div><strong>Κανάλια ενημέρωσης</strong><span>Επιλέξτε πού θέλετε να λαμβάνετε ειδοποιήσεις.</span></div></div>
+                <div class="ct-settings-options-grid">
+                  <label class="ct-setting-option"><span class="ct-setting-option__copy"><strong>Μέσα στην εφαρμογή</strong><span>Κέντρο ειδοποιήσεων CertiTrack.</span></span><span class="ct-switch"><input id="prefInApp" type="checkbox" checked><span></span></span></label>
+                  <label class="ct-setting-option"><span class="ct-setting-option__copy"><strong>Email</strong><span>Σημαντικές ενημερώσεις στο email σας.</span></span><span class="ct-switch"><input id="prefEmail" type="checkbox" checked><span></span></span></label>
                 </div>
               </div>
-              <label class="ct-toggle-row">
-                <span class="ct-toggle-row__text"><strong>Συνεργασίες</strong><span>Προσκλήσεις, αποδοχές και αλλαγές σχέσεων.</span></span>
-                <input id="prefRelationships" type="checkbox" checked>
-              </label>
-              <label class="ct-toggle-row">
-                <span class="ct-toggle-row__text"><strong>Αλλαγές πιστοποιητικών</strong><span>Σημαντικές αλλαγές σε πιστοποιητικά συνεργατών.</span></span>
-                <input id="prefCertificateChanges" type="checkbox" checked>
-              </label>
+
+              <div class="ct-settings-subsection">
+                <div class="ct-settings-subsection__title"><i data-lucide="calendar-clock"></i><div><strong>Λήξεις πιστοποιητικών</strong><span>Ορίστε κανάλι και χρονικά όρια προειδοποίησης.</span></div></div>
+                <div class="ct-settings-options-grid">
+                  <label class="ct-setting-option"><span class="ct-setting-option__copy"><strong>In-app λήξεις</strong><span>Προειδοποιήσεις για λήξη ή ληγμένα.</span></span><span class="ct-switch"><input id="prefExpiryInApp" type="checkbox" checked><span></span></span></label>
+                  <label class="ct-setting-option"><span class="ct-setting-option__copy"><strong>Email λήξεων</strong><span>Email στα επιλεγμένα χρονικά όρια.</span></span><span class="ct-switch"><input id="prefExpiryEmail" type="checkbox" checked><span></span></span></label>
+                </div>
+                <div class="ct-warning-block">
+                  <span class="ct-warning-block__label">Προειδοποίηση πριν από τη λήξη</span>
+                  <div class="ct-warning-days" id="warningDays">
+                    <label class="ct-warning-day"><input type="checkbox" value="90" checked><span>90 ημ.</span></label>
+                    <label class="ct-warning-day"><input type="checkbox" value="60" checked><span>60 ημ.</span></label>
+                    <label class="ct-warning-day"><input type="checkbox" value="30" checked><span>30 ημ.</span></label>
+                    <label class="ct-warning-day"><input type="checkbox" value="15" checked><span>15 ημ.</span></label>
+                    <label class="ct-warning-day"><input type="checkbox" value="7" checked><span>7 ημ.</span></label>
+                    <label class="ct-warning-day"><input type="checkbox" value="0" checked><span>Ημέρα λήξης</span></label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ct-settings-subsection">
+                <div class="ct-settings-subsection__title"><i data-lucide="handshake"></i><div><strong>Συνεργασίες & αλλαγές</strong><span>Ενημερώσεις για σχέσεις οργανισμών και κοινόχρηστα πιστοποιητικά.</span></div></div>
+                <div class="ct-settings-options-grid">
+                  <label class="ct-setting-option"><span class="ct-setting-option__copy"><strong>Συνεργασίες</strong><span>Προσκλήσεις, αποδοχές και λήξη σχέσεων.</span></span><span class="ct-switch"><input id="prefRelationships" type="checkbox" checked><span></span></span></label>
+                  <label class="ct-setting-option"><span class="ct-setting-option__copy"><strong>Αλλαγές πιστοποιητικών</strong><span>Σημαντικές αλλαγές στα έγγραφα συνεργατών.</span></span><span class="ct-switch"><input id="prefCertificateChanges" type="checkbox" checked><span></span></span></label>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -136,9 +135,7 @@
             <div id="closureStatus" class="ct-inline-note"></div>
           </section>
 
-          <section class="ct-settings-actions">
-            <button class="ct-btn ct-btn-primary" id="saveBtn" type="submit"><i class="hidden" data-lucide="loader-circle" id="saveSpinner"></i><span>Αποθήκευση</span></button>
-          </section>
+          <section class="ct-settings-actions"><span class="ct-settings-actions__hint">Οι αλλαγές εφαρμόζονται στον λογαριασμό σας.</span><button class="ct-btn ct-btn-primary" id="saveBtn" type="submit"><i class="hidden" data-lucide="loader-circle" id="saveSpinner"></i><span>Αποθήκευση αλλαγών</span></button></section>
         </form>
       </main>
     </div>
