@@ -1,14 +1,22 @@
-# Next Action
+# Next Action — CertiTrack Phase 48.1
 
-The Production Pack is ready, but **do not run the main schema yet**.
+This repository is the canonical CertiTrack frontend + Supabase source pack.
 
-Next, in the Supabase SQL Editor:
+## For the current live Supabase project
 
-1. Open `supabase/production/00_preflight_assertions.sql`.
-2. Run the whole file.
-3. Send the result to ChatGPT.
+Do **not** run `supabase/FULL_SETUP.sql` and do **not** rerun the files in `supabase/current/` just because they are present in this repository. The live database was already assembled phase-by-phase and is currently the active environment.
 
-If it passes, the following step will be the first real write:
-`01_certitrack_production_schema.sql`.
+Your next safe action is application-level testing:
 
-Do not run steps 01–05 ahead of the guided sequence.
+1. Upload this repository to GitHub.
+2. Deploy the same repository to the existing Netlify site.
+3. Test sign-in / registration only with the intended Supabase project configuration.
+4. Create or use a test organization.
+5. Verify certificates, partner relationships, private PDF access and logout/login behavior.
+6. Keep Platform Admin in read-only mode until its server-controlled cross-tenant policies and write RPCs are implemented and tested as a separate backend phase.
+
+## For a brand-new / recovery Supabase project only
+
+Use the canonical setup documented in `supabase/current/README.md` or run `supabase/FULL_SETUP.sql` once on an empty project.
+
+Never paste service-role keys, MailerSend tokens, cron secrets or `.env` values into frontend files or GitHub.
