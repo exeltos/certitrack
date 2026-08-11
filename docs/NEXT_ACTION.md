@@ -19,4 +19,6 @@ Your next safe action is application-level testing:
 
 Use the canonical setup documented in `supabase/current/README.md` or run `supabase/FULL_SETUP.sql` once on an empty project.
 
-Never paste service-role keys, MailerSend tokens, cron secrets or `.env` values into frontend files or GitHub.
+Never paste service-role keys, Resend API keys, cron secrets or `.env` values into frontend files or GitHub.
+
+Phase 48.3 adds the collaboration email outbox pipeline and worker RPCs.

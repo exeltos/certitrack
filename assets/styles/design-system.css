@@ -109,7 +109,6 @@
 .ct-field:focus { outline: none; }
 
 
-
 .ct-demo-launcher {
   width: min(100%, 34rem);
   padding: 1rem;
@@ -255,7 +254,6 @@
   .demo-detail-stats{grid-template-columns:1fr 1fr;}
   .ct-demo-launcher__actions{display:grid;grid-template-columns:1fr;width:100%;}
 }
-
 
 
 /* Mobile-first corrections for existing CertiTrack screens */
@@ -451,7 +449,6 @@
 }
 
 
-
 .ct-app-layout {
   display: grid;
   grid-template-columns: 15.5rem minmax(0, 1fr);
@@ -533,7 +530,6 @@
 .ct-sidebar[data-nav-count="1"]{--ct-mobile-nav-count:1}.ct-sidebar[data-nav-count="2"]{--ct-mobile-nav-count:2}.ct-sidebar[data-nav-count="3"]{--ct-mobile-nav-count:3}.ct-sidebar[data-nav-count="4"]{--ct-mobile-nav-count:4}.ct-sidebar[data-nav-count="5"]{--ct-mobile-nav-count:5}
 
 
-
 .ct-table-shell {
   width: 100%;
   overflow: hidden;
@@ -544,7 +540,6 @@
 }
 .dark .ct-table-shell { background: rgba(31,41,55,.92); }
 .ct-table-shell table { width: 100%; border-collapse: collapse; }
-
 
 
 .ct-page-header {
@@ -592,7 +587,6 @@
 @media (max-width: 640px) {
   .ct-page-header { width: calc(100% - 1rem); align-items: flex-start; flex-direction: column; margin-top: .9rem; }
 }
-
 
 
 /* CertiTrack canonical UI — single visual source of truth */
@@ -720,7 +714,6 @@ body.ct-auth-page{background:var(--ct-bg)!important;color:var(--ct-text)!importa
 @media(max-width:900px){.ct-supplier-detail-grid{grid-template-columns:1fr}.ct-supplier-summary__stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ct-profile-demo-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.ct-supplier-summary__head{align-items:flex-start;flex-direction:column}.ct-supplier-summary__stats{grid-template-columns:1fr 1fr}.ct-profile-demo-grid{grid-template-columns:1fr}.ct-compact-row{grid-template-columns:minmax(0,1fr) auto}.ct-compact-row>.ct-status{grid-column:1}.ct-compact-row>.ct-row-action{grid-column:2;grid-row:1}}
 .ct-profile-shell{max-width:none}.ct-profile-card{max-width:58rem}.ct-profile-form>.ct-field{max-width:36rem}
-
 
 
 /* Theme: one coherent surface palette, with a calm transition */
@@ -888,7 +881,6 @@ html.ct-theme-changing *,html.ct-theme-changing *::before,html.ct-theme-changing
   .ct-home{padding-top:2.25rem;gap:3rem}.ct-home h1{font-size:2.55rem}
   .ct-home__features{grid-template-columns:1fr}.ct-home__features article{border-right:0!important;border-bottom:1px solid #e4e7ec!important}.ct-home__features article:last-child{border-bottom:0!important}
 }
-
 
 
 .ct-shell-brand{display:inline-flex;align-items:center;gap:.55rem;color:var(--ct-text);font-weight:800;letter-spacing:-.025em;text-decoration:none}
@@ -1137,7 +1129,6 @@ html{min-height:100%}body{min-height:100vh}.ct-page{width:100%}
 .ct-public-page{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--ct-bg,#f7f9fc);color:var(--ct-text,#0f172a);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.ct-public-page .ct-home{flex:1}
 
 
-
 .ct-settings-grid{display:grid;gap:1rem;padding-bottom:2rem}
 .ct-settings-section{overflow:hidden!important;padding:0!important;margin:0!important;box-shadow:none!important}
 .ct-settings-section__head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.05rem 1.15rem;border-bottom:1px solid var(--ct-border)}
@@ -1311,7 +1302,6 @@ html,body,button,input,select,textarea,.swal2-container{font-family:var(--ct-fon
 .ct-viewport-page{display:flex!important;flex-direction:column!important;gap:.65rem!important;overflow:hidden!important}.ct-viewport-page .ct-overview-kpis{flex:0 0 auto!important;margin:0!important}.ct-viewport-page .ct-kpi-card{min-height:4.8rem!important;padding:.65rem .75rem!important}.ct-viewport-page .ct-kpi-card strong{font-size:1.2rem!important}.ct-overview-grid--viewport{display:grid!important;grid-template-columns:minmax(0,1.45fr) minmax(18rem,.75fr)!important;gap:.65rem!important;flex:1 1 auto!important;min-height:0!important}.ct-scroll-panel{display:flex!important;flex-direction:column!important;min-height:0!important}.ct-scroll-panel>.ct-panel__header{flex:0 0 auto!important;padding:.72rem .8rem!important}.ct-panel-scroll{flex:1 1 auto!important;min-height:0!important;overflow:auto!important;scrollbar-width:thin}.ct-attention-row{min-height:3.15rem!important;padding:.55rem .75rem!important}.ct-attention-row__main strong{font-size:.72rem!important}.ct-attention-row__main span{font-size:.61rem!important}.ct-attention-row__status{gap:.35rem!important}.ct-attention-row__status svg{width:.85rem!important;height:.85rem!important}
 @media(max-width:1100px){.ct-overview-grid--viewport{grid-template-columns:1fr!important}.ct-dashboard-context__health{display:none}}
 @media(max-width:768px){.ct-dashboard-context{align-items:flex-start;flex-wrap:wrap}.ct-dashboard-context>.ct-btn{width:100%}.ct-viewport-page{overflow:visible!important}.ct-overview-grid--viewport{display:grid!important}.ct-panel-scroll{overflow:visible!important}}
-
 
 
 .ct-row-actions,.ct-certificate-actions,.ct-company-row__actions,.ct-admin-actions,.demo-row-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:.18rem!important;flex-wrap:nowrap!important;margin-left:auto!important;white-space:nowrap!important}
@@ -1752,3 +1742,6 @@ html body .demo-search:focus-within{
   border-color:#84a0ff!important;
   box-shadow:0 0 0 3px rgba(49,94,251,.10)!important;
 }
+
+/* Phase 48.1: Platform Admin remains intentionally read-only until the dedicated server-controlled backend is enabled. */
+.ct-admin-readonly{display:inline-flex!important;align-items:center!important;min-height:1.7rem!important;padding:.22rem .5rem!important;border:1px solid var(--ct-border)!important;border-radius:999px!important;background:var(--ct-surface-muted)!important;color:var(--ct-muted)!important;font-size:.62rem!important;font-weight:700!important;white-space:nowrap!important}

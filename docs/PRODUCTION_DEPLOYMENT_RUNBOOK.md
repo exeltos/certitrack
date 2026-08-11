@@ -1,81 +1,47 @@
-# CertiTrack — Production Supabase Deployment Runbook
+# CertiTrack — Canonical Deployment Runbook (Phase 48.1)
 
-Target Project Ref: `klutmusrabsizqjnzwpu`
+## Source of truth
 
-## Current verified state
-Read-only preflight on 2026-08-10 showed:
-- auth.users: 0
-- companies: 0
-- suppliers: 0
-- company_certificates: 0
-- supplier_certificates: 0
-- company_suppliers: 0
-- requirements/notifications/audit: 0
-- certificate_types: 10
-- legacy buckets: `companycertificates`, `suppliercertificates` (public)
+- Frontend: this repository.
+- Canonical Supabase split setup: `supabase/current/01_schema.sql` through `07_validate.sql`.
+- Clean-project one-shot setup: `supabase/FULL_SETUP.sql`.
+- Current live database: already built phase-by-phase; do not re-run the clean setup on it.
 
-The old buckets are deliberately not deleted by this deployment.
+## Existing live project
 
-## Deployment sequence
+For the existing CertiTrack Supabase project, deployment is frontend-first:
 
-### Stage A — database
-1. Run `00_preflight_assertions.sql`.
-2. If it passes, run `01_certitrack_production_schema.sql`.
-3. Run `03_validate_schema.sql`.
-4. Stop if model version is not `39`, expected tables are missing, or `organizationcertificates` is public.
+1. Commit/push this canonical repository to GitHub.
+2. Deploy the same commit to Netlify.
+3. Confirm the configured Supabase URL and anon key point to the intended project.
+4. Test authentication, organization profile, certificates, partner invitation/acceptance, certificate visibility and private PDF access.
+5. Verify unrelated organizations cannot read each other's private data.
+6. Verify password reset and logout/login flows.
+7. Keep Platform Admin production actions read-only until the dedicated server-controlled cross-tenant backend is completed.
 
-### Stage B — Auth
-Configure the settings in `docs/PRODUCTION_AUTH_SETUP.md`.
-Do not create public users until Confirm Email and redirect URLs are correct.
+## Brand-new or recovery Supabase project
 
-### Stage C — notification infrastructure
-1. Run `02_enable_notification_extensions.sql`.
-2. Deploy `process-notifications`.
-3. Configure Edge Function secrets:
-   - CRON_SECRET
-   - MAILERSEND_TOKEN
-   - EMAIL_FROM
-   - APP_URL
-4. Test the Edge Function manually with the cron secret.
-5. Only then configure Vault/Cron using `05_schedule_notifications.sql.template`.
+Only for an empty replacement/recovery project:
 
-### Stage D — first accounts and security tests
-1. Register Organization A.
-2. Confirm email.
-3. Confirm exactly one Organization and one owner membership were created.
-4. Register Organization B and confirm.
-5. Test relationship invitation/acceptance.
-6. Upload private and partner-visible PDFs.
-7. Verify B sees only shared current PDFs.
-8. Verify unrelated users cannot read A/B data.
-9. Test reset-password flow.
-10. Test expiry notification generation.
+1. Read `supabase/current/README.md`.
+2. Either run the ordered files in `supabase/current/` or run `supabase/FULL_SETUP.sql` once.
+3. Run the canonical validation file (`supabase/current/07_validate.sql`) when using the split setup.
+4. Confirm the `organizationcertificates` bucket is private.
+5. Configure Auth redirect URLs and email confirmation settings before creating production users.
+6. Perform two-organization isolation tests before go-live.
 
-### Stage E — Platform Admin
-Create/confirm the intended admin Auth user, then use
-`04_make_platform_admin.sql.template` after replacing the UUID.
+## Platform Admin
 
-## Legacy cleanup
-Do not remove legacy tables or buckets during initial go-live.
-They are empty but remain a rollback/reference checkpoint.
-Clean them only after the new production flow has been validated.
+The schema contains `platform_admins` and `ct_is_platform_admin()`, but cross-tenant admin reads/writes are intentionally not enabled by the canonical RLS pack yet. The current frontend therefore treats production organization administration as read-only. Do not add broad `using (true)` policies to make it work quickly.
 
+## Secrets
 
-## CLI commands used later
+Never commit:
 
-Project is already linked to:
-`klutmusrabsizqjnzwpu`
+- service-role keys
+- `.env` files
+- Resend API keys
+- cron secrets
+- private API credentials
 
-Deploy the notification function after database/Auth setup:
-
-```powershell
-npx supabase functions deploy process-notifications --project-ref klutmusrabsizqjnzwpu --no-verify-jwt
-```
-
-Set secrets without committing them:
-
-```powershell
-npx supabase secrets set CRON_SECRET="..." MAILERSEND_TOKEN="..." EMAIL_FROM="..." APP_URL="https://www.certitrack.gr" --project-ref klutmusrabsizqjnzwpu
-```
-
-Do not paste secret values into GitHub or frontend `.js` files.
+The public Supabase anon key may exist in frontend configuration; authorization must remain enforced by RLS and private storage policies.
