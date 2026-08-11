@@ -49,7 +49,7 @@ export function certificateStatus(date, now=new Date()) {
 
 export function certificateListHeader({ selectable = false } = {}) {
   const select = selectable ? '<span class="ct-cert-select-head"><input id="certSelectAllHeader" type="checkbox" aria-label="Επιλογή όλων"></span>' : '';
-  return `<div class="ct-certificate-head${selectable ? ' ct-certificate-head--selectable' : ''}">${select}<span>Πιστοποιητικό</span><span>Τύπος</span><span>Λήξη</span><span>Κατάσταση</span><span>Ενέργειες</span></div>`;
+  return `<div class="ct-certificate-head${selectable ? ' ct-certificate-head--selectable' : ''}">${select}<span class="ct-cert-head-title">Πιστοποιητικό</span><span class="ct-cert-head-type">Τύπος</span><span class="ct-cert-head-date">Λήξη</span><span class="ct-cert-head-status">Κατάσταση</span><span class="ct-cert-head-actions">Ενέργειες</span></div>`;
 }
 
 export function certificateRowMarkup(cert, { privacyLabel='', canEdit=true, canDelete=true }={}) {
@@ -63,7 +63,7 @@ export function certificateRowMarkup(cert, { privacyLabel='', canEdit=true, canD
     canEdit ? rowAction({icon:'pencil',label:en?'Edit / replace PDF':'Επεξεργασία / αντικατάσταση PDF',className:'edit-btn',attrs:{id:cert.id||''}}) : '',
     canDelete ? rowAction({icon:'trash-2',label:en?'Delete':'Διαγραφή',className:'ct-row-action--danger delete-btn',attrs:{id:cert.id||'',ref:cert.file_url||''}}) : ''
   ]);
-  return `<div class="ct-certificate-main"><div class="ct-certificate-icon"><i data-lucide="file-text"></i></div><div class="ct-certificate-title"><strong>${escapeHtml(cert.title || (en?'Untitled':'Χωρίς τίτλο'))}</strong><span>${escapeHtml(cert.name || 'PDF')}${privacy}</span></div></div><div class="ct-certificate-cell">${escapeHtml(cert.type || '—')}</div><div class="ct-certificate-cell">${escapeHtml(date)}</div><div>${statusBadge(status.kind,status.label)}</div><div class="ct-certificate-actions">${actions}</div>`;
+  return `<div class="ct-certificate-main"><div class="ct-certificate-icon"><i data-lucide="file-text"></i></div><div class="ct-certificate-title"><strong>${escapeHtml(cert.title || (en?'Untitled':'Χωρίς τίτλο'))}</strong><span>${escapeHtml(cert.name || 'PDF')}${privacy}</span></div></div><div class="ct-certificate-cell ct-certificate-type">${escapeHtml(cert.type || '—')}</div><div class="ct-certificate-cell ct-certificate-date">${escapeHtml(date)}</div><div class="ct-certificate-status">${statusBadge(status.kind,status.label)}</div><div class="ct-certificate-actions">${actions}</div>`;
 }
 
 export function companyAccessRow({ id='', name='', afm='', access='granted' }={}) {

@@ -8,7 +8,7 @@ export function mountCertificatePageChrome({ allowVisibility = false, allowEmail
   if (!host) return;
   host.innerHTML = `
     <section class="ct-toolbar">
-      <div class="ct-toolbar__search"><input id="searchInput" placeholder="Αναζήτηση τίτλου, τύπου ή αρχείου..." type="search" autocomplete="off" aria-label="Αναζήτηση πιστοποιητικών"></div>
+      <div class="ct-toolbar__search"><i data-lucide="search" aria-hidden="true"></i><input id="searchInput" placeholder="Αναζήτηση τίτλου, τύπου ή αρχείου..." type="text" autocomplete="off" aria-label="Αναζήτηση πιστοποιητικών"></div>
       ${allowVisibility ? `<select aria-label="Φίλτρο ορατότητας" id="visibilityFilter"><option value="all">Όλη η ορατότητα</option><option value="shared">Διαθέσιμα σε συνεργάτες</option><option value="private">Ιδιωτικά</option></select>` : ''}
       <div class="ct-toolbar__actions">
         ${allowEmail ? `<button class="ct-btn ct-btn-secondary" id="emailBtn"><i data-lucide="mail"></i>Αποστολή</button>` : ''}

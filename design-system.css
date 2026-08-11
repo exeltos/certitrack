@@ -1457,61 +1457,298 @@ body[data-page="organization-certificates"] .ct-certificate-list{width:100%!impo
 }
 
 
-/* ==========================================================================\n   CertiTrack v41 — certificate search + deterministic list alignment\n   ========================================================================== */
-body[data-page="organization-certificates"] .ct-toolbar__search{position:relative!important;display:block!important;min-width:0!important}
+/* ==========================================================================\n   CertiTrack v42 — final certificate layout + search polish\n   ========================================================================== */
+body[data-page="organization-certificates"] .ct-toolbar{
+  grid-template-columns:minmax(18rem,1fr) minmax(12rem,18rem) auto!important;
+  gap:.65rem!important;
+  align-items:center!important;
+}
+body[data-page="organization-certificates"] .ct-toolbar__search{
+  position:relative!important;
+  display:block!important;
+  min-width:0!important;
+}
 body[data-page="organization-certificates"] .ct-toolbar__search>svg,
-body[data-page="organization-certificates"] .ct-toolbar__search>i{display:none!important}
-body[data-page="organization-certificates"] .ct-toolbar__search input[type="search"]{
-  display:block!important;width:100%!important;height:var(--ct-control-height)!important;
-  padding:.55rem .9rem!important;background-image:none!important;text-indent:0!important;
-  -webkit-appearance:none!important;appearance:none!important
+body[data-page="organization-certificates"] .ct-toolbar__search>i{
+  display:block!important;
+  position:absolute!important;
+  z-index:2!important;
+  left:.85rem!important;
+  top:50%!important;
+  width:1rem!important;
+  height:1rem!important;
+  transform:translateY(-50%)!important;
+  color:var(--ct-muted-2)!important;
+  pointer-events:none!important;
+}
+body[data-page="organization-certificates"] .ct-toolbar__search input{
+  width:100%!important;
+  min-width:0!important;
+  height:var(--ct-control-height)!important;
+  padding:.55rem .9rem .55rem 2.5rem!important;
+  text-indent:0!important;
+  background-image:none!important;
+}
+body[data-page="organization-certificates"] .ct-toolbar__search input::placeholder{
+  color:#98a2b3!important;
+  opacity:1!important;
 }
 
-/* One grid definition shared by header and every certificate row. */
-body[data-page="organization-certificates"] .ct-certificate-list{overflow:hidden!important}
+/* Semantic grid areas remove nth-child/nth-of-type ambiguity completely. */
 body[data-page="organization-certificates"] .ct-certificate-head,
 body[data-page="organization-certificates"] .ct-certificate-row{
-  display:grid!important;
-  grid-template-columns:2rem minmax(15rem,2.35fr) minmax(8rem,.8fr) minmax(7rem,.72fr) minmax(7rem,.72fr) 7.25rem!important;
-  grid-template-rows:1fr!important;
-  column-gap:1rem!important;row-gap:0!important;
-  align-items:center!important;width:100%!important;min-width:0!important
-}
-body[data-page="organization-certificates"] .ct-certificate-head{padding:.72rem 1rem!important}
-body[data-page="organization-certificates"] .ct-certificate-row{padding:.78rem 1rem!important;min-height:4.25rem!important}
-body[data-page="organization-certificates"] .ct-certificate-head>* ,
-body[data-page="organization-certificates"] .ct-certificate-row>*{
-  grid-row:1!important;min-width:0!important;margin:0!important
+  grid-template-columns:2rem minmax(12rem,2.15fr) minmax(7.5rem,.8fr) minmax(7rem,.72fr) minmax(7rem,.72fr) 7.25rem!important;
+  grid-template-areas:"select title type date status actions"!important;
+  column-gap:.9rem!important;
+  min-width:0!important;
 }
 body[data-page="organization-certificates"] .ct-cert-select-head,
-body[data-page="organization-certificates"] .ct-cert-select{grid-column:1!important;justify-self:center!important}
-body[data-page="organization-certificates"] .ct-certificate-head>span:nth-child(2),
-body[data-page="organization-certificates"] .ct-certificate-row>.ct-certificate-main{grid-column:2!important}
-body[data-page="organization-certificates"] .ct-certificate-head>span:nth-child(3),
-body[data-page="organization-certificates"] .ct-certificate-row>.ct-certificate-cell:nth-of-type(1){grid-column:3!important}
-body[data-page="organization-certificates"] .ct-certificate-head>span:nth-child(4),
-body[data-page="organization-certificates"] .ct-certificate-row>.ct-certificate-cell:nth-of-type(2){grid-column:4!important}
-body[data-page="organization-certificates"] .ct-certificate-head>span:nth-child(5){grid-column:5!important}
-body[data-page="organization-certificates"] .ct-certificate-row>div:nth-last-child(2){grid-column:5!important}
-body[data-page="organization-certificates"] .ct-certificate-head>span:last-child,
-body[data-page="organization-certificates"] .ct-certificate-row>.ct-certificate-actions{
-  grid-column:6!important;text-align:right!important;justify-self:end!important
+body[data-page="organization-certificates"] .ct-cert-select{grid-area:select!important;justify-self:center!important}
+body[data-page="organization-certificates"] .ct-cert-head-title,
+body[data-page="organization-certificates"] .ct-certificate-main{grid-area:title!important}
+body[data-page="organization-certificates"] .ct-cert-head-type,
+body[data-page="organization-certificates"] .ct-certificate-type{grid-area:type!important}
+body[data-page="organization-certificates"] .ct-cert-head-date,
+body[data-page="organization-certificates"] .ct-certificate-date{grid-area:date!important}
+body[data-page="organization-certificates"] .ct-cert-head-status,
+body[data-page="organization-certificates"] .ct-certificate-status{grid-area:status!important}
+body[data-page="organization-certificates"] .ct-cert-head-actions,
+body[data-page="organization-certificates"] .ct-certificate-actions{grid-area:actions!important}
+body[data-page="organization-certificates"] .ct-cert-head-actions{text-align:right!important;padding-right:.15rem!important}
+body[data-page="organization-certificates"] .ct-certificate-main,
+body[data-page="organization-certificates"] .ct-certificate-title{min-width:0!important}
+body[data-page="organization-certificates"] .ct-certificate-row{min-height:4.15rem!important;padding:.72rem 1rem!important}
+body[data-page="organization-certificates"] .ct-certificate-head{min-height:2.85rem!important;padding:.65rem 1rem!important}
+body[data-page="organization-certificates"] .ct-certificate-cell{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+body[data-page="organization-certificates"] .ct-certificate-status{justify-self:start!important;min-width:0!important}
+body[data-page="organization-certificates"] .ct-certificate-actions{justify-self:end!important;width:7.25rem!important;min-width:7.25rem!important}
+
+/* Keep the certificate panel compact when only a few rows exist; scroll only when needed. */
+@media(min-width:769px){
+  body[data-page="organization-certificates"] #certContainer{
+    flex:0 1 auto!important;
+    width:100%!important;
+    max-width:100%!important;
+    max-height:clamp(15rem,46vh,35rem)!important;
+    min-height:0!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    scrollbar-gutter:stable!important;
+  }
 }
-body[data-page="organization-certificates"] .ct-certificate-actions{
-  display:flex!important;width:7.25rem!important;min-width:7.25rem!important;
-  align-items:center!important;justify-content:flex-end!important;gap:.18rem!important
+
+@media(max-width:1100px) and (min-width:761px){
+  body[data-page="organization-certificates"] .ct-toolbar{
+    grid-template-columns:minmax(0,1fr) minmax(11rem,15rem)!important;
+  }
+  body[data-page="organization-certificates"] .ct-toolbar__actions{grid-column:1/-1!important;justify-content:flex-end!important}
+  body[data-page="organization-certificates"] .ct-certificate-head,
+  body[data-page="organization-certificates"] .ct-certificate-row{
+    grid-template-columns:2rem minmax(10rem,1.7fr) minmax(6.5rem,.8fr) minmax(6.5rem,.75fr) 7.25rem!important;
+    grid-template-areas:"select title type status actions"!important;
+  }
+  body[data-page="organization-certificates"] .ct-cert-head-date,
+  body[data-page="organization-certificates"] .ct-certificate-date{display:none!important}
 }
-body[data-page="organization-certificates"] .ct-certificate-main{overflow:hidden!important}
 
 @media(max-width:760px){
-  body[data-page="organization-certificates"] .ct-certificate-head{display:none!important}
+  body[data-page="organization-certificates"] .ct-toolbar{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+  body[data-page="organization-certificates"] .ct-toolbar select,
+  body[data-page="organization-certificates"] .ct-toolbar__actions,
+  body[data-page="organization-certificates"] .ct-toolbar__actions .ct-btn{width:100%!important}
   body[data-page="organization-certificates"] .ct-certificate-row{
-    grid-template-columns:2rem minmax(0,1fr) auto!important;
-    grid-template-rows:auto auto!important;column-gap:.65rem!important;row-gap:.35rem!important
+    grid-template-columns:1.8rem minmax(0,1fr) 6.75rem!important;
+    grid-template-rows:auto auto!important;
+    grid-template-areas:"select title actions" "select status actions"!important;
+    column-gap:.6rem!important;
+    row-gap:.3rem!important;
   }
-  body[data-page="organization-certificates"] .ct-cert-select{grid-column:1!important;grid-row:1/3!important}
-  body[data-page="organization-certificates"] .ct-certificate-row>.ct-certificate-main{grid-column:2!important;grid-row:1!important}
-  body[data-page="organization-certificates"] .ct-certificate-row>.ct-certificate-cell{display:none!important}
-  body[data-page="organization-certificates"] .ct-certificate-row>div:nth-last-child(2){grid-column:2!important;grid-row:2!important;justify-self:start!important}
-  body[data-page="organization-certificates"] .ct-certificate-row>.ct-certificate-actions{grid-column:3!important;grid-row:1/3!important}
+  body[data-page="organization-certificates"] .ct-certificate-type,
+  body[data-page="organization-certificates"] .ct-certificate-date{display:none!important}
+  body[data-page="organization-certificates"] .ct-certificate-actions{width:6.75rem!important;min-width:6.75rem!important}
+  body[data-page="organization-certificates"] .ct-row-action{width:2rem!important;height:2rem!important}
+}
+
+
+/* Phase 43 — final flat settings + search alignment */
+body[data-page="organization-profile"] .ct-settings-section{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important}
+body[data-page="organization-profile"] .ct-settings-section__head{padding:.9rem 0!important;border-bottom:1px solid var(--ct-border)!important;background:transparent!important}
+body[data-page="organization-profile"] .ct-settings-fields,body[data-page="organization-profile"] .ct-settings-password,body[data-page="organization-profile"] .ct-settings-body{padding:1rem 0!important}
+body[data-page="organization-profile"] .ct-danger-zone .ct-settings-section__head{border-top:1px solid var(--ct-border)!important;border-bottom:0!important;padding-top:1.1rem!important}
+body[data-page="organization-profile"] .ct-settings-actions{border:0!important;border-top:1px solid var(--ct-border)!important;border-radius:0!important;background:rgba(246,248,251,.94)!important;padding:.75rem 0!important}
+.dark body[data-page="organization-profile"] .ct-settings-actions{background:rgba(11,18,32,.94)!important}
+
+/* Search controls: reserve icon space and remove browser search decoration everywhere */
+.ct-filterbar__search,.ct-toolbar__search,.demo-search{position:relative!important}
+.ct-filterbar__search>svg,.ct-toolbar__search>svg,.demo-search>svg{position:absolute!important;left:.9rem!important;top:50%!important;transform:translateY(-50%)!important;width:1rem!important;height:1rem!important;z-index:3!important;pointer-events:none!important;color:#98a2b3!important}
+.ct-filterbar__search input,.ct-toolbar__search input,.demo-search input{padding-left:2.65rem!important}
+.ct-filterbar__search input[type="search"],.ct-toolbar__search input[type="search"],.demo-search input[type="search"]{-webkit-appearance:none!important;appearance:none!important}
+.ct-filterbar__search input[type="search"]::-webkit-search-decoration,.ct-filterbar__search input[type="search"]::-webkit-search-cancel-button,.ct-filterbar__search input[type="search"]::-webkit-search-results-button,.ct-filterbar__search input[type="search"]::-webkit-search-results-decoration,.ct-toolbar__search input[type="search"]::-webkit-search-decoration,.ct-toolbar__search input[type="search"]::-webkit-search-cancel-button,.ct-toolbar__search input[type="search"]::-webkit-search-results-button,.ct-toolbar__search input[type="search"]::-webkit-search-results-decoration,.demo-search input[type="search"]::-webkit-search-decoration,.demo-search input[type="search"]::-webkit-search-cancel-button,.demo-search input[type="search"]::-webkit-search-results-button,.demo-search input[type="search"]::-webkit-search-results-decoration{-webkit-appearance:none!important;display:none!important}
+body[data-page="organization-partners"] .ct-filterbar{background:transparent!important;border:0!important;border-radius:0!important;padding:0!important}
+
+/* ==========================================================================\n   CertiTrack v44 — canonical search control (no icon/placeholder overlap)\n   The icon participates in layout instead of being absolutely positioned.\n   ========================================================================== */
+.ct-toolbar__search,
+.ct-filterbar__search,
+.demo-search{
+  display:flex!important;
+  align-items:center!important;
+  gap:.62rem!important;
+  min-height:var(--ct-control-height)!important;
+  padding:0 .9rem!important;
+  border:1px solid var(--ct-border-strong)!important;
+  border-radius:var(--ct-radius)!important;
+  background:var(--ct-surface)!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+.ct-toolbar__search:focus-within,
+.ct-filterbar__search:focus-within,
+.demo-search:focus-within{
+  border-color:#84a0ff!important;
+  box-shadow:0 0 0 3px rgba(49,94,251,.10)!important;
+}
+.ct-toolbar__search>svg,
+.ct-filterbar__search>svg,
+.demo-search>svg,
+.ct-toolbar__search>i[data-lucide],
+.ct-filterbar__search>i[data-lucide],
+.demo-search>i[data-lucide]{
+  position:static!important;
+  inset:auto!important;
+  transform:none!important;
+  flex:0 0 1rem!important;
+  width:1rem!important;
+  height:1rem!important;
+  color:#98a2b3!important;
+  pointer-events:none!important;
+}
+.ct-toolbar__search input,
+.ct-filterbar__search input,
+.demo-search input{
+  flex:1 1 auto!important;
+  width:auto!important;
+  min-width:0!important;
+  min-height:calc(var(--ct-control-height) - 2px)!important;
+  height:calc(var(--ct-control-height) - 2px)!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  background-image:none!important;
+  text-indent:0!important;
+  appearance:none!important;
+  -webkit-appearance:none!important;
+}
+.ct-toolbar__search input:hover,
+.ct-toolbar__search input:focus,
+.ct-filterbar__search input:hover,
+.ct-filterbar__search input:focus,
+.demo-search input:hover,
+.demo-search input:focus{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+.ct-toolbar__search input::placeholder,
+.ct-filterbar__search input::placeholder,
+.demo-search input::placeholder{
+  color:#98a2b3!important;
+  opacity:1!important;
+}
+.dark .ct-toolbar__search,
+.dark .ct-filterbar__search,
+.dark .demo-search{background:var(--ct-surface)!important;border-color:var(--ct-border-strong)!important}
+
+/* ==========================================================================\n   CertiTrack v45 — single-border search field fix\n   The wrapper owns the border. Global form-control rules must never draw a\n   second border around the input inside a search control.\n   ========================================================================== */
+html body .ct-toolbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+html body .ct-filterbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+html body .demo-search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]){
+  flex:1 1 auto!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:auto!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  background-image:none!important;
+  color:var(--ct-text)!important;
+  font:inherit!important;
+  line-height:1.35!important;
+  appearance:none!important;
+  -webkit-appearance:none!important;
+}
+html body .ct-toolbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover,
+html body .ct-toolbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+html body .ct-filterbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover,
+html body .ct-filterbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+html body .demo-search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover,
+html body .demo-search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+
+/* ==========================================================================\n   CertiTrack v46 — final search geometry\n   One visual control: wrapper owns border; icon is anchored; input reserves\n   icon space. This prevents Lucide replacement/layout shifts in every view.\n   ========================================================================== */
+html body .ct-toolbar__search,
+html body .ct-filterbar__search,
+html body .demo-search{
+  position:relative!important;
+  display:block!important;
+  min-height:var(--ct-control-height)!important;
+  padding:0!important;
+  border:1px solid var(--ct-border-strong)!important;
+  border-radius:var(--ct-radius)!important;
+  background:var(--ct-surface)!important;
+  overflow:hidden!important;
+}
+html body .ct-toolbar__search > svg,
+html body .ct-filterbar__search > svg,
+html body .demo-search > svg,
+html body .ct-toolbar__search > i[data-lucide],
+html body .ct-filterbar__search > i[data-lucide],
+html body .demo-search > i[data-lucide]{
+  position:absolute!important;
+  left:.9rem!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:1rem!important;
+  height:1rem!important;
+  margin:0!important;
+  z-index:2!important;
+  color:#98a2b3!important;
+  pointer-events:none!important;
+}
+html body .ct-toolbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+html body .ct-filterbar__search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+html body .demo-search > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]){
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:calc(var(--ct-control-height) - 2px)!important;
+  height:calc(var(--ct-control-height) - 2px)!important;
+  padding:0 .9rem 0 2.65rem!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+  line-height:calc(var(--ct-control-height) - 2px)!important;
+  appearance:none!important;
+  -webkit-appearance:none!important;
+}
+html body .ct-toolbar__search:focus-within,
+html body .ct-filterbar__search:focus-within,
+html body .demo-search:focus-within{
+  border-color:#84a0ff!important;
+  box-shadow:0 0 0 3px rgba(49,94,251,.10)!important;
 }
