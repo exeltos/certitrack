@@ -14,11 +14,11 @@ async function loadPreferences(){
   if(!p)return;
   setChecked('prefInApp',p.in_app_enabled);
   setChecked('prefEmail',p.email_enabled);
-  setChecked('prefExpiryInApp',p.expiry_in_app_enabled);
-  setChecked('prefExpiryEmail',p.expiry_email_enabled);
+  setChecked('prefExpiryInApp',p.expiry_notifications);
+  setChecked('prefExpiryEmail',p.expiry_notifications);
   setChecked('prefRelationships',p.relationship_notifications);
   setChecked('prefCertificateChanges',p.certificate_change_notifications);
-  const selected=new Set((p.expiry_warning_days||[90,60,30,15,7,0]).map(Number));
+  const selected=new Set((p.warning_days||[60,30,15,7,1]).map(Number));
   document.querySelectorAll('#warningDays input').forEach(x=>x.checked=selected.has(Number(x.value)));
 }
 
@@ -86,9 +86,8 @@ async function save(e){
     await notificationService.savePreferences(ctx.organization.id,{
       in_app_enabled:document.getElementById('prefInApp').checked,
       email_enabled:document.getElementById('prefEmail').checked,
-      expiry_in_app_enabled:document.getElementById('prefExpiryInApp').checked,
-      expiry_email_enabled:document.getElementById('prefExpiryEmail').checked,
-      expiry_warning_days:days,
+      expiry_notifications:document.getElementById('prefExpiryInApp').checked || document.getElementById('prefExpiryEmail').checked,
+      warning_days:days,
       relationship_notifications:document.getElementById('prefRelationships').checked,
       certificate_change_notifications:document.getElementById('prefCertificateChanges').checked
     });
