@@ -5,9 +5,17 @@
   "main": "index.js",
   "scripts": {
     "build": "echo \"Static CertiTrack: no build step required\"",
-    "dev": "node scripts/dev-server.js"
+    "dev": "node scripts/dev-server.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.25.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11"
   }
 }
