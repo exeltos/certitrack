@@ -22,7 +22,7 @@ There is no build step — pages import ES modules directly via `<script type="m
 
 | Path | What's there |
 |---|---|
-| `pages/`, `src/pages/` | HTML pages and their page-specific JS, grouped by role (`organization`, `company`, `supplier`, `admin`, `auth`) |
+| `pages/`, `src/pages/` | HTML pages and their page-specific JS. `organization/` is the only user-facing flow (`admin/`, `auth/`, `shared/`, `demo/` support it). |
 | `src/services/` | Supabase data-access layer |
 | `src/core/`, `src/shared/`, `src/components/` | Shared logic, utilities, and UI building blocks |
 | `netlify/functions/` | Serverless functions: email sending, password reset, scheduled notification jobs |
