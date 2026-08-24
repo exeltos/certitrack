@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
+import nodemailer from 'npm:nodemailer@6.9.16';
 
 const SUPABASE_URL=Deno.env.get('SUPABASE_URL')!;
 const legacyServiceRole=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -164,38 +164,41 @@ function template(row:any){
   };
 }
 
-let smtpClient: SMTPClient | null = null;
-function getSmtpClient(): SMTPClient | null {
-  if (smtpClient) return smtpClient;
-  if (!SMTP_HOST) return null;
-  smtpClient = new SMTPClient({
-    debug: { encodeLB: true },
-    connection: {
-      hostname: SMTP_HOST,
-      port: SMTP_PORT,
-      tls: SMTP_SECURE,
-      auth: { username: SMTP_USER, password: SMTP_PASSWORD }
+let transporter:any=null;
+
+function getTransporter(){
+  if(transporter)return transporter;
+  if(!SMTP_HOST)throw new Error('SMTP_HOST is not configured');
+
+  transporter=nodemailer.createTransport({
+    host:SMTP_HOST,
+    port:SMTP_PORT,
+    secure:SMTP_SECURE,
+    requireTLS:!SMTP_SECURE,
+    auth:{
+      user:SMTP_USER,
+      pass:SMTP_PASSWORD
     }
   });
-  return smtpClient;
+  return transporter;
 }
 
 async function sendViaSmtp(row:any){
-  const client=getSmtpClient();
-  if(!client) throw new Error('SMTP_HOST is not configured');
+  const mailer=getTransporter();
   const t=template(row);
-  await client.send({
-    from:`${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
+
+  const info=await mailer.sendMail({
+    from:{
+      name:EMAIL_FROM_NAME,
+      address:EMAIL_FROM
+    },
     to:row.recipient_email,
     subject:t.subject,
-    content:t.text,
-    html:t.html,
-    headers:{
-      'MIME-Version':'1.0',
-      'X-Mailer':'CertiTrack Notifications'
-    }
+    text:t.text,
+    html:t.html
   });
-  return null; // denomailer doesn't return a provider message id
+
+  return info?.messageId||null;
 }
 
 Deno.serve(async req=>{
@@ -234,6 +237,5 @@ Deno.serve(async req=>{
       });
     }
   }
-  if(smtpClient){ try{ await smtpClient.close(); }catch{ /* best-effort */ } }
   return Response.json({ok:true,generated:generated?.[0]||generated||null,claimed:(batch||[]).length,sent,failed});
 });

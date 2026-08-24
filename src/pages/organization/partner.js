@@ -2,7 +2,7 @@ import { getOrganizationContext, bindOrganizationLogout } from './guard.js';
 import { organizationService } from '../../services/organizationService.js';
 import { mountCertificatePageChrome, renderCertificateCollection, bindCertificateStats } from '../../components/certificateUi.js';
 import { openCertificatePreview } from '../../core/certificateStorage.js';
-import { escapeHtml, statusBadge } from '../../components/uiPrimitives.js';
+import { escapeHtml, statusBadge, certificateStatus } from '../../components/uiPrimitives.js';
 import { handleError } from '../../shared/common.js';
 
 let ctx, relation, certificates=[];
@@ -25,8 +25,71 @@ function identity(){
     <div class="ct-partner-meta-item ct-partner-meta-item--email"><span>Email</span><strong>${escapeHtml(p.email||'—')}</strong></div>
     <div class="ct-partner-meta-item"><span>Σχέση</span><strong>${escapeHtml(relationLabel())}</strong></div>`;
 }
-function bindActions(){if(relation.status!=='active')return;const bucket=organizationService.partnerCertificateBucket(relation.partner);document.querySelectorAll('.view-btn').forEach(btn=>btn.onclick=()=>openCertificatePreview(bucket,btn.dataset.ref,btn.dataset.title||'Πιστοποιητικό').catch(handleError));}
-function render(){const panel=document.getElementById('partnerCertificatesPanel');if(relation.status!=='active'){panel.classList.add('hidden');return;}panel.classList.remove('hidden');const q=(document.getElementById('searchInput')?.value||'').toLowerCase();const filtered=certificates.filter(c=>`${c.title||''} ${c.type||''} ${c.name||''}`.toLowerCase().includes(q));const draw=list=>renderCertificateCollection({certificates:list,container:document.getElementById('certContainer'),onBindActions:bindActions,permissions:{edit:false,delete:false,selectable:false}});bindCertificateStats({certificates:filtered,onRender:draw});draw(filtered);document.getElementById('certContainer')?.classList.remove('hidden');document.getElementById('noCertificatesMessage')?.classList.toggle('hidden',filtered.length>0);}
+function bindActions(){
+  if(relation.status!=='active')return;
+  const bucket=organizationService.partnerCertificateBucket(relation.partner);
+  document.querySelectorAll('.ct-partner-cert-view').forEach(btn=>{
+    btn.onclick=()=>openCertificatePreview(
+      bucket,
+      btn.dataset.ref,
+      btn.dataset.title||'Πιστοποιητικό'
+    ).catch(handleError);
+  });
+}
+
+function partnerCertificateRow(c){
+  const st=certificateStatus(c.date);
+  const date=c.date?new Date(c.date).toLocaleDateString('el-GR'):'—';
+  return `<article class="ct-partner-cert-row">
+    <div class="ct-partner-cert-file">
+      <span class="ct-partner-cert-icon"><i data-lucide="file-text"></i></span>
+      <span class="ct-partner-cert-copy">
+        <strong title="${escapeHtml(c.title||'Πιστοποιητικό')}">${escapeHtml(c.title||'Πιστοποιητικό')}</strong>
+        <small title="${escapeHtml(c.name||'PDF')}">${escapeHtml(c.name||'PDF')}</small>
+      </span>
+    </div>
+    <div class="ct-partner-cert-type" title="${escapeHtml(c.type||'—')}">${escapeHtml(c.type||'—')}</div>
+    <div class="ct-partner-cert-date">${escapeHtml(date)}</div>
+    <div class="ct-partner-cert-status">${statusBadge(st.kind,st.label)}</div>
+    <button type="button" class="ct-row-action ct-partner-cert-view"
+      data-ref="${escapeHtml(c.file_url||'')}"
+      data-title="${escapeHtml(c.title||'Πιστοποιητικό')}"
+      aria-label="Προβολή ${escapeHtml(c.title||'πιστοποιητικού')}"
+      title="Προβολή"><i data-lucide="eye"></i></button>
+  </article>`;
+}
+
+function drawPartnerCertificates(list){
+  const host=document.getElementById('certContainer');
+  const empty=document.getElementById('noCertificatesMessage');
+  if(!host)return;
+  if(!list.length){
+    host.innerHTML='';
+    host.classList.add('hidden');
+    empty?.classList.remove('hidden');
+    return;
+  }
+  empty?.classList.add('hidden');
+  host.classList.remove('hidden');
+  host.innerHTML=`<div class="ct-partner-cert-head">
+      <span>Πιστοποιητικό</span><span>Τύπος</span><span>Λήξη</span><span>Κατάσταση</span><span></span>
+    </div>${list.map(partnerCertificateRow).join('')}`;
+  bindActions();
+  window.lucide?.createIcons();
+}
+
+function render(){
+  const panel=document.getElementById('partnerCertificatesPanel');
+  if(relation.status!=='active'){
+    panel.classList.add('hidden');
+    return;
+  }
+  panel.classList.remove('hidden');
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const filtered=certificates.filter(c=>`${c.title||''} ${c.type||''} ${c.name||''}`.toLowerCase().includes(q));
+  bindCertificateStats({certificates:filtered,onRender:drawPartnerCertificates});
+  drawPartnerCertificates(filtered);
+}
 async function removeRelation(){const ask=await Swal.fire({title:'Κατάργηση συνεργασίας;',text:`Θα διαγραφεί μόνο η σχέση με ${relation.partner?.name||'τον οργανισμό'}. Ο οργανισμός, ο λογαριασμός και τα πιστοποιητικά του παραμένουν στην πλατφόρμα.`,icon:'warning',showCancelButton:true,confirmButtonText:'Κατάργηση σχέσης',cancelButtonText:'Ακύρωση'});if(!ask.isConfirmed)return;await organizationService.deleteRelationship(ctx.organization,relation);await Swal.fire('Η σχέση καταργήθηκε','Δεν διαγράφηκε κανένας οργανισμός ή πιστοποιητικό.','success');location.href='./partners.html';}
 
 async function reloadCanonicalRelation(){
