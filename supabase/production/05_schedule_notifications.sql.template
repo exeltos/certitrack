@@ -1,0 +1,34 @@
+-- CertiTrack Production Scheduler TEMPLATE
+-- Do not run until the Edge Function has been deployed and secrets configured.
+-- Replace the two placeholders before running.
+
+-- Store only scheduler values in Vault. The email provider token stays in Edge Function secrets.
+select vault.create_secret('__PROJECT_URL__', 'certitrack_project_url');
+select vault.create_secret('__CRON_SECRET__', 'certitrack_cron_secret');
+
+-- Safe re-deploy: remove the previous job if it exists.
+select cron.unschedule(jobid)
+from cron.job
+where jobname='certitrack-daily-notifications';
+
+-- Daily at 08:00 UTC.
+select cron.schedule(
+  'certitrack-daily-notifications',
+  '0 8 * * *',
+  $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name='certitrack_project_url')
+           || '/functions/v1/process-notifications',
+    headers := jsonb_build_object(
+      'Content-Type','application/json',
+      'x-cron-secret',(select decrypted_secret from vault.decrypted_secrets where name='certitrack_cron_secret')
+    ),
+    body := jsonb_build_object('scheduled_at',now()),
+    timeout_milliseconds := 10000
+  );
+  $$
+);
+
+select jobid,jobname,schedule,active
+from cron.job
+where jobname='certitrack-daily-notifications';
