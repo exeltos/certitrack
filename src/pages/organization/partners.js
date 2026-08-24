@@ -4,10 +4,10 @@ import { escapeHtml, emptyState, statusBadge } from '../../components/uiPrimitiv
 import { appUrl } from '../../shared/paths.js';
 
 const safe=escapeHtml; let rows=[]; let ctx;
-function label(r){if(r.status==='pending')return r.direction==='incoming'?'Αίτημα προς εσάς':'Αναμονή αποδοχής';if(r.status==='blocked')return'Αποκλεισμένη';if(r.status==='rejected')return'Απορρίφθηκε';if(r.status==='ended')return'Ανενεργή';return'Ενεργή';}
+function label(r){if(r.status==='pending')return r.direction==='incoming'?'Αίτημα προς εσάς':'Αναμονή αποδοχής';if(r.status==='blocked')return'Αποκλεισμένη';if(r.status==='declined')return'Απορρίφθηκε';if(r.status==='ended')return'Ανενεργή';return'Ενεργή';}
 function partnerRow(r){
   const p=r.partner||{}; const initials=String(p.name||'').trim().split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase()||'—';
-  const state=statusBadge(r.status==='blocked'||r.status==='rejected'?'danger':r.status==='pending'?'warning':r.status==='active'?'success':'neutral',label(r));
+  const state=statusBadge(r.status==='blocked'||r.status==='declined'?'danger':r.status==='pending'?'warning':r.status==='active'?'success':'neutral',label(r));
   return `<article class="ct-company-row ct-company-row--clickable" data-relation-id="${safe(r.id)}" tabindex="0" role="link" aria-label="Προβολή ${safe(p.name||'συνεργάτη')}"><div class="ct-company-avatar">${safe(initials)}</div><div class="ct-company-row__main"><strong>${safe(p.name||'Χωρίς επωνυμία')}</strong><span>ΑΦΜ ${safe(p.afm||'—')}${p.email?` · ${safe(p.email)}`:''}</span></div><div>${state}</div><i class="ct-company-row__chevron" data-lucide="chevron-right"></i></article>`;
 }
 function openRelation(id){location.href=appUrl(`pages/organization/partner.html?relation=${encodeURIComponent(id)}`);}

@@ -4,6 +4,9 @@ import { renderSidebar } from './sidebar.js';
 import { renderPageHeader } from './pageHeader.js';
 import { appUrl } from '../shared/paths.js';
 import { initNotificationCenter } from './notificationCenter.js';
+import { initMonitoring } from '../shared/monitoring.js';
+
+initMonitoring();
 
 
 function iconButton({ id = '', icon, label, danger = false, hidden = false }) {

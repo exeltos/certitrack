@@ -36,5 +36,5 @@ The repository contains `supabase/deployment/phase37_schedule.sql.template`.
 It is intentionally not a migration because it depends on production project URL and secrets.
 
 ## Email provider
-The canonical worker now uses Resend as the single transactional email provider.
+The current worker is prepared for MailerSend because the project already used that provider.
 Provider access is isolated to the Edge Function and can be swapped later without changing certificate/notification tables.

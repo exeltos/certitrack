@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, clientIp, tooManyRequestsResponse } from './_lib/rateLimit.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -24,6 +25,15 @@ export async function handler(event) {
     const { email } = JSON.parse(event.body);
     if (!email) {
       return { statusCode: 400, body: 'Missing email' };
+    }
+
+    // Throttle per-email (stop reset-spam against one victim) and per-IP
+    // (stop one caller enumerating many emails).
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const emailAllowed = await checkRateLimit(supabase, `reset_password:email:${normalizedEmail}`, 5, 15 * 60);
+    const ipAllowed = await checkRateLimit(supabase, `reset_password:ip:${clientIp(event)}`, 20, 15 * 60);
+    if (!emailAllowed || !ipAllowed) {
+      return tooManyRequestsResponse();
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {

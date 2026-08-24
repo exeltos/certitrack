@@ -9,17 +9,17 @@ const TYPE_CODE_BY_LABEL = new Map([
 ]);
 
 function latestFile(files=[]){
-  return [...(Array.isArray(files)?files:[])].sort((a,b)=>(b.version_number||0)-(a.version_number||0))[0]||null;
+  return [...(Array.isArray(files)?files:[])].sort((a,b)=>(b.version_no||0)-(a.version_no||0))[0]||null;
 }
 function canonicalCertificate(row={}) {
   const file=latestFile(row.files);
-  const typeName=row.certificate_type_name||row.certificate_type?.name||'Πιστοποιητικό';
+  const typeName=row.certificate_type?.name||'Πιστοποιητικό';
   return {
     ...row,
     title:row.title||typeName,
     type:typeName,
     date:row.expiry_date||null,
-    issuer:row.issuer_name||null,
+    issuer:row.issuer||null,
     file_url:file?.storage_path||'',
     name:file?.original_file_name||'certificate.pdf',
     is_private:row.visibility==='private',
@@ -39,7 +39,9 @@ async function resolveCertificateType(label) {
 function certificatePayload(record={}) {
   const payload={
     certificate_number:record.certificate_number||null,
-    issuer_name:record.issuer||record.issuer_name||null,
+    // Was writing to a non-existent "issuer_name" column (real column is
+    // "issuer"), so every certificate create/update failed. Fixed 2026-08-24.
+    issuer:record.issuer||record.issuer_name||null,
     issue_date:record.issue_date||null,
     expiry_date:record.date||record.expiry_date||null,
     notes:record.notes||null,
@@ -56,7 +58,7 @@ const CERT_SELECT=`
   *,
   certificate_type:certificate_types!certificates_certificate_type_id_fkey(id,code,name),
   files:certificate_files!certificate_files_certificate_id_fkey(
-    id,storage_path,original_file_name,mime_type,file_size_bytes,version_number,created_at
+    id,storage_path,original_file_name,mime_type,file_size_bytes,version_no,created_at
   )
 `;
 
@@ -79,10 +81,19 @@ export const organizationService={
     return {...data,source:'organizations',member_role:org.member_role};
   },
 
-  async requestClosure(){
-    throw new Error('Η ελεγχόμενη διαγραφή λογαριασμού θα ενεργοποιηθεί στην επόμενη backend φάση.');
+  async requestClosure(org,reason){
+    requireOrg(org);
+    // Was a permanent stub that always threw "will be enabled in a future
+    // backend phase" -- the backend RPC (ct_request_organization_closure)
+    // has existed in the canonical schema all along. Wired up 2026-08-24.
+    const res=await supabase.rpc('ct_request_organization_closure',{p_org:org.id,p_reason:reason||null});
+    if(res.error)throw res.error; return res.data;
   },
-  async cancelClosure(){ return null; },
+  async cancelClosure(org){
+    requireOrg(org);
+    const res=await supabase.rpc('ct_cancel_organization_closure',{p_org:org.id});
+    if(res.error)throw res.error; return res.data;
+  },
 
   async listOwnCertificates(org){
     requireOrg(org);
@@ -117,20 +128,22 @@ export const organizationService={
 
   async registerCertificateFile(org,certificateId,{path,file}){
     requireOrg(org);
+    // Was: selecting/inserting "version_number" (real column: version_no),
+    // and inserting "organization_name" / "certificate_type_name" columns
+    // that don't exist on certificate_files at all. Every file upload
+    // failed. Fixed 2026-08-24.
     const {data:versions,error:versionError}=await supabase.from('certificate_files')
-      .select('version_number').eq('certificate_id',certificateId).order('version_number',{ascending:false}).limit(1);
+      .select('version_no').eq('certificate_id',certificateId).order('version_no',{ascending:false}).limit(1);
     if(versionError)throw versionError;
-    const version=(versions?.[0]?.version_number||0)+1;
+    const version=(versions?.[0]?.version_no||0)+1;
     const {data,error}=await supabase.from('certificate_files').insert([{
       certificate_id:certificateId,
       organization_id:org.id,
-      organization_name:org.display_name||org.legal_name,
-      certificate_type_name:'Πιστοποιητικό',
       storage_path:path,
       original_file_name:file.name||'certificate.pdf',
       mime_type:file.type||'application/pdf',
       file_size_bytes:file.size,
-      version_number:version,
+      version_no:version,
       uploaded_by:(await supabase.auth.getUser()).data?.user?.id||null
     }]).select('*').single();
     if(error)throw error;
@@ -160,7 +173,13 @@ export const organizationService={
 
   async requestPartner(org,lookup){
     requireOrg(org);
-    const res=await supabase.rpc('ct_request_relationship',{p_requester_org:org.id,p_lookup:String(lookup||'').trim()});
+    // Was calling the RPC name 'ct_request_relationship' with a 'p_lookup'
+    // parameter -- that function actually takes (p_requester_org, p_target_org),
+    // not a lookup string, so every call failed with a "function not found"
+    // error from PostgREST. The function that actually does VAT/email lookup
+    // and creates both the relationship AND the invitation row (with
+    // notifications) is ct_create_relationship_invitation. Fixed 2026-08-24.
+    const res=await supabase.rpc('ct_create_relationship_invitation',{p_requester_org:org.id,p_lookup:String(lookup||'').trim()});
     if(res.error)throw res.error; return res.data;
   },
 
@@ -190,16 +209,20 @@ export const organizationService={
 
   async listPartners(org){
     requireOrg(org);
+    // Was selecting requester_organization_id/partner_organization_id and
+    // matching foreign-key embed names that don't exist -- the real columns
+    // are requester_id/partner_id (see organization_relationships table),
+    // so this query failed every time. Fixed 2026-08-24.
     const res=await supabase.from('organization_relationships')
       .select(`
-        id,requester_organization_id,partner_organization_id,status,created_at,updated_at,
-        requester:organizations!organization_relationships_requester_organization_id_fkey(id,legal_name,display_name,vat_number,contact_email,status),
-        partner_org:organizations!organization_relationships_partner_organization_id_fkey(id,legal_name,display_name,vat_number,contact_email,status)
+        id,requester_id,partner_id,status,created_at,updated_at,
+        requester:organizations!organization_relationships_requester_id_fkey(id,legal_name,display_name,vat_number,contact_email,status),
+        partner_org:organizations!organization_relationships_partner_id_fkey(id,legal_name,display_name,vat_number,contact_email,status)
       `)
-      .or(`requester_organization_id.eq.${org.id},partner_organization_id.eq.${org.id}`);
+      .or(`requester_id.eq.${org.id},partner_id.eq.${org.id}`);
     if(res.error)throw res.error;
     return (res.data||[]).map(r=>{
-      const outgoing=String(r.requester_organization_id)===String(org.id);
+      const outgoing=String(r.requester_id)===String(org.id);
       const raw=outgoing?r.partner_org:r.requester;
       return {...r,direction:outgoing?'outgoing':'incoming',partner:{...raw,name:raw?.display_name||raw?.legal_name||'',afm:raw?.vat_number||'',email:raw?.contact_email||'',source:'organizations'}};
     });

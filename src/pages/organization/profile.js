@@ -3,6 +3,7 @@ import { organizationService } from '../../services/organizationService.js';
 import { authService } from '../../services/authService.js';
 import { notificationService } from '../../services/notificationService.js';
 import { validatePassword, passwordPolicyMessage } from '../../auth/passwordPolicy.js';
+import { mountMfaSettings } from '../../components/mfaSettings.js';
 
 let ctx;
 
@@ -14,11 +15,17 @@ async function loadPreferences(){
   if(!p)return;
   setChecked('prefInApp',p.in_app_enabled);
   setChecked('prefEmail',p.email_enabled);
-  setChecked('prefExpiryInApp',p.expiry_notifications);
-  setChecked('prefExpiryEmail',p.expiry_notifications);
+  // The schema has one global expiry_warning_days array, not a separate
+  // per-channel toggle for "expiry" notifications specifically -- both
+  // checkboxes reflect whether that array is non-empty. Fixed 2026-08-24
+  // (was reading a non-existent "expiry_notifications" column, always
+  // undefined -> checkboxes silently reset to unchecked on every load).
+  const hasExpiryReminders=Array.isArray(p.expiry_warning_days)&&p.expiry_warning_days.length>0;
+  setChecked('prefExpiryInApp',hasExpiryReminders);
+  setChecked('prefExpiryEmail',hasExpiryReminders);
   setChecked('prefRelationships',p.relationship_notifications);
   setChecked('prefCertificateChanges',p.certificate_change_notifications);
-  const selected=new Set((p.warning_days||[60,30,15,7,1]).map(Number));
+  const selected=new Set((p.expiry_warning_days||[60,30,15,7,1]).map(Number));
   document.querySelectorAll('#warningDays input').forEach(x=>x.checked=selected.has(Number(x.value)));
 }
 
@@ -40,6 +47,7 @@ async function init(){
     if(closureBtn){closureBtn.innerHTML='<i data-lucide="rotate-ccw"></i> Ακύρωση αιτήματος';closureBtn.dataset.mode='cancel';}
   }
   closureBtn?.addEventListener('click',handleClosure);
+  mountMfaSettings('mfaSettingsMount');
   window.lucide?.createIcons();
 }
 
@@ -83,11 +91,14 @@ async function save(e){
       const r=await authService.updateUser(payload);if(r.error)throw r.error;
     }
 
+    // If the person unchecked BOTH expiry-reminder checkboxes, save an
+    // empty array so no expiry notification is ever generated (the schema
+    // has no separate per-channel toggle for this -- see loadPreferences).
+    const wantsExpiryReminders=document.getElementById('prefExpiryInApp').checked || document.getElementById('prefExpiryEmail').checked;
     await notificationService.savePreferences(ctx.organization.id,{
       in_app_enabled:document.getElementById('prefInApp').checked,
       email_enabled:document.getElementById('prefEmail').checked,
-      expiry_notifications:document.getElementById('prefExpiryInApp').checked || document.getElementById('prefExpiryEmail').checked,
-      warning_days:days,
+      expiry_warning_days:wantsExpiryReminders?days:[],
       relationship_notifications:document.getElementById('prefRelationships').checked,
       certificate_change_notifications:document.getElementById('prefCertificateChanges').checked
     });

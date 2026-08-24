@@ -21,7 +21,7 @@ Keep this Phase37 ZIP as the current checkpoint.
 - Do not enable Cron manually.
 - Do not deploy the Edge Function yet.
 - Do not create Vault secrets.
-- Do not add your Resend API key to the repository.
+- Do not add your MailerSend token to the repository.
 - Do not run `phase37_schedule.sql.template`.
 - Do not delete legacy tables or notification tables.
 
@@ -30,7 +30,7 @@ At the controlled deployment checkpoint we will need:
 1. Supabase Project Ref / CLI access.
 2. A backup/preflight of the actual project.
 3. A verified sender/domain in the chosen transactional email provider.
-4. `RESEND_API_KEY` as an Edge Function secret.
+4. `MAILERSEND_TOKEN` as an Edge Function secret.
 5. A new random `CRON_SECRET`.
 6. `EMAIL_FROM` and production `APP_URL`.
 7. Deployment of `process-notifications`.

@@ -20,13 +20,14 @@ export const notificationService = {
   },
   async savePreferences(organizationId,prefs){
     const {data:{user}}=await supabase.auth.getUser(); if(!user)throw new Error('Δεν υπάρχει ενεργός χρήστης.');
+    // Was sending "expiry_notifications" (no such column) and "warning_days"
+    // (real column: expiry_warning_days) -- every save failed. Fixed 2026-08-24.
     const payload={
       in_app_enabled:!!prefs.in_app_enabled,
       email_enabled:!!prefs.email_enabled,
-      expiry_notifications:!!prefs.expiry_notifications,
       relationship_notifications:!!prefs.relationship_notifications,
       certificate_change_notifications:!!prefs.certificate_change_notifications,
-      warning_days:prefs.warning_days
+      expiry_warning_days:prefs.expiry_warning_days
     };
     const res=await supabase.from('notification_preferences').update(payload).eq('organization_id',organizationId).eq('user_id',user.id).select('*').single();
     if(res.error) throw res.error; return res.data;

@@ -1,17 +1,24 @@
 # Current RLS review — based on repository migrations only
 
-This is not a live Supabase snapshot. The definitive review must use `supabase/AUDIT_DATABASE_AND_RLS.sql` against the current project.
+**Updated:** reviewed against the canonical Phase 49 schema (`supabase/production/01_certitrack_production_schema.sql`), not the legacy pre-Phase-33 model. The findings below dated to the legacy `suppliers`/`company_suppliers` tables, which the canonical schema replaces with `organizations` / `organization_relationships`. That legacy review is kept in `docs/archive/` for history; it no longer describes the schema this repo is about to deploy.
 
-## Important findings already visible in the repository
+This is still not a live Supabase snapshot. The definitive review must use `supabase/AUDIT_DATABASE_AND_RLS.sql` against the current project after the canonical schema is applied.
 
-1. `suppliers_insert_authenticated` uses `WITH CHECK (true)`. Any authenticated account can insert a supplier row. This should be replaced with a controlled registration/import path.
-2. `company_suppliers_update_members` lets either relationship member update the row and its WITH CHECK only verifies membership after the update. A supplier can potentially change `company_id` while keeping its own `supplier_id`, which is too broad. Access/status fields should be controlled separately from relationship identity.
-3. Platform Admin currently has no explicit RLS policy in the migrations. Phase 15 intentionally does not weaken RLS to make the admin UI work.
-4. `audit_log` has tenant read access but no authenticated insert policy. This is acceptable only if audit events are written by trusted server/service-role functions; confirm this in the live database/functions.
-5. Certificate UPDATE/DELETE policies still rely partly on legacy `*_user_id` ownership instead of consistently checking stable organization IDs. This should be normalized after data backfill is confirmed.
-6. The repository migrations assume several core tables already existed before Phase 3. Therefore the repository alone is not sufficient to prove the complete live schema.
-7. Storage is private in Phase 3C and supplier document reads are relationship + visibility gated. This is directionally correct, but live storage policies must be checked for leftover legacy policies.
+## Status of the previously flagged items
+
+1. ~~`suppliers_insert_authenticated` uses `WITH CHECK (true)`~~ — table no longer exists in the canonical model. `organizations` insert/update is gated by `ct_has_org_role(...)`.
+2. ~~`company_suppliers_update_members` lets either member change `company_id`~~ — `organization_relationships` has **no direct client INSERT/UPDATE/DELETE policy at all**; lifecycle changes go only through `security definer` RPC functions. This is a stronger design than what was flagged.
+3. ~~Platform Admin has no explicit RLS policy~~ — resolved. `ct_is_platform_admin()` is checked explicitly in every table's policies, and `platform_admins` itself has a `select` policy scoped to `ct_is_platform_admin()`.
+4. `audit_log` — confirmed: no authenticated insert policy in the canonical schema, select is gated to `ct_is_platform_admin()` or org owner/admin. Insert path must remain service-role/trigger only. **Still worth a live check** that no code path inserts into `audit_log` using the anon/authenticated client.
+5. ~~Certificate UPDATE/DELETE rely on legacy `*_user_id`~~ — resolved. Canonical `certificates` policies check `ct_has_org_role(organization_id, ...)` consistently; there is intentionally **no client DELETE policy** (UI deletion is soft-delete via UPDATE), which is good practice.
+6. Storage — confirmed private (`organizationcertificates` bucket, `public=false`), policies scoped by `ct_storage_org_id()` derived from the path, plus a partner-visibility branch for `visibility='partners'` certificates. Application code (`storageService.js`, `certificateStorage.js`) only calls `createSignedUrl()` — no `getPublicUrl()` usage found anywhere in the codebase.
+
+## Still open
+
+- The repository alone cannot prove the live schema state. Run `supabase/AUDIT_DATABASE_AND_RLS.sql` after deployment and compare policy names/definitions against this file.
+- Confirm no leftover legacy storage policies remain on `storage.objects` after the canonical migration's `drop policy if exists` statements run (the migration drops known legacy names, but any policy created outside these migrations won't be caught).
+- ~~Rotate the MailerSend token that was previously committed (tracked in `docs/SECURITY_HARDENING.md`).~~ **Done 2026-08-24** — MailerSend removed entirely; both API tokens revoked in the MailerSend dashboard.
 
 ## Next step
 
-Run the read-only audit SQL and export/copy the result sets. Then review every table, FK, index, RLS policy, storage policy, function and trigger before applying an Admin RLS migration.
+Run the read-only audit SQL and export/copy the result sets after deployment. Then diff against the policy list above before relying on this document again.

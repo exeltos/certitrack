@@ -135,8 +135,10 @@ end $$;
 create table if not exists public.certificate_types (
   id uuid primary key default gen_random_uuid(),
   code text not null unique,
-  name_el text not null,
-  name_en text not null,
+  name text,
+  requires_expiry boolean not null default true,
+  name_el text,
+  name_en text,
   active boolean not null default true,
   sort_order integer not null default 100,
   created_at timestamptz not null default now(),

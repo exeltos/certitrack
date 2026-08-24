@@ -26,6 +26,24 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: "Invalid session." }) };
   }
 
+  // Throttle per authenticated user: 30 emails per 15 minutes is generous for
+  // legitimate certificate-notification usage but stops a compromised/scripted
+  // session from mail-bombing recipients. See supabase/migrations/20260824_phase50_rate_limiting.sql.
+  const { data: rateOk, error: rateError } = await supabase.rpc('ct_check_rate_limit', {
+    p_bucket_key: `send_email:user:${authData.user.id}`,
+    p_max_count: 30,
+    p_window_seconds: 15 * 60
+  });
+  if (rateError) {
+    console.error('[send_email] rate limit check failed, allowing request:', rateError.message);
+  } else if (rateOk === false) {
+    return {
+      statusCode: 429,
+      headers: { 'Retry-After': '900' },
+      body: JSON.stringify({ error: 'Too many emails sent recently. Please try again later.' })
+    };
+  }
+
   const { email, type, certificates = [], subject, companyName } = JSON.parse(event.body || '{}');
   if (!email || !type) {
     return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields." }) };
@@ -98,27 +116,23 @@ exports.handler = async (event) => {
   }
 
   try {
-    const response = await fetch("https://api.mailersend.com/v1/email", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.MAILERSEND_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: { email: "noreply@certitrack.gr", name: "CertiTrack" },
-        to: [{ email }],
-        subject: usedSubject,
-        html: htmlContent
-      })
-    });
-
-    const responseBody = await response.text();
-    if (!response.ok) {
-      console.error("Mail provider error:", response.status, responseBody.slice(0, 300));
-      throw new Error("Αποτυχία αποστολής email");
+    const { sendMail } = require('./_lib/mailer.js');
+    const sent = await sendMail({ to: email, subject: usedSubject, html: htmlContent });
+    if (!sent) {
+      throw new Error('Αποτυχία αποστολής email');
     }
 
     if (type === "invite") {
+      // NOTE: supplier_invites is a legacy table that no longer exists in
+      // the canonical schema (verified 2026-08-24, see
+      // docs/CURRENT_SUPABASE_STATE_2026-08-24.md). This whole "invite" email
+      // type is called only from the legacy src/pages/company/* flow, which
+      // itself queries tables (companies, suppliers, company_certificates)
+      // that also no longer exist. This insert WILL fail until that legacy
+      // flow is either migrated to the canonical organization_relationships
+      // model (see ct_request_relationship) or removed. Left as-is rather
+      // than silently papered over, since fixing it requires a product
+      // decision about the company/supplier pages, not just a code fix.
       const inviteToken = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString();
 
@@ -132,13 +146,13 @@ exports.handler = async (event) => {
 
       if (inviteErr) {
         console.error('❌ Σφάλμα κατά την εισαγωγή πρόσκλησης:', inviteErr);
-      } else {
       }
     }
 
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   } catch (err) {
     console.error("Email send error:", err);
+    require('./_lib/monitoring.js').captureError(err, { function: 'send_email' });
     return { statusCode: 500, body: JSON.stringify({ error: "Email sending failed" }) };
   }
 };

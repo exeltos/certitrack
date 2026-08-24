@@ -1,12 +1,18 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
 
 const SUPABASE_URL=Deno.env.get('SUPABASE_URL')!;
 const legacyServiceRole=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const namedSecretKeys=Deno.env.get('SUPABASE_SECRET_KEYS');
 const SERVICE_ROLE=legacyServiceRole || (()=>{try{return JSON.parse(namedSecretKeys||'{}')?.default||'';}catch{return '';}})();
 const CRON_SECRET=Deno.env.get('CRON_SECRET') || '';
-const MAILERSEND_TOKEN=Deno.env.get('MAILERSEND_TOKEN') || '';
+const SMTP_HOST=Deno.env.get('SMTP_HOST') || '';
+const SMTP_PORT=Number(Deno.env.get('SMTP_PORT') || '587');
+const SMTP_SECURE=Deno.env.get('SMTP_SECURE') === 'true';
+const SMTP_USER=Deno.env.get('SMTP_USER') || '';
+const SMTP_PASSWORD=Deno.env.get('SMTP_PASSWORD') || '';
 const EMAIL_FROM=Deno.env.get('EMAIL_FROM') || 'noreply@certitrack.gr';
+const EMAIL_FROM_NAME=Deno.env.get('EMAIL_FROM_NAME') || 'CertiTrack';
 const APP_URL=Deno.env.get('APP_URL') || 'https://www.certitrack.gr';
 
 const esc=(v:unknown)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] as string));
@@ -50,21 +56,32 @@ function template(row:any){
   return {subject:row.subject,html:`<p>${esc(row.subject)}</p><p><a href="${esc(APP_URL)}">Άνοιγμα CertiTrack</a></p>`};
 }
 
-async function sendMailerSend(row:any){
-  if(!MAILERSEND_TOKEN) throw new Error('MAILERSEND_TOKEN is not configured');
-  const t=template(row);
-  const response=await fetch('https://api.mailersend.com/v1/email',{
-    method:'POST',
-    headers:{Authorization:`Bearer ${MAILERSEND_TOKEN}`,'Content-Type':'application/json'},
-    body:JSON.stringify({
-      from:{email:EMAIL_FROM,name:'CertiTrack'},
-      to:[{email:row.recipient_email}],
-      subject:t.subject,
-      html:t.html
-    })
+let smtpClient: SMTPClient | null = null;
+function getSmtpClient(): SMTPClient | null {
+  if (smtpClient) return smtpClient;
+  if (!SMTP_HOST) return null;
+  smtpClient = new SMTPClient({
+    connection: {
+      hostname: SMTP_HOST,
+      port: SMTP_PORT,
+      tls: SMTP_SECURE,
+      auth: { username: SMTP_USER, password: SMTP_PASSWORD }
+    }
   });
-  if(!response.ok) throw new Error(`MailerSend ${response.status}: ${await response.text()}`);
-  return response.headers.get('x-message-id')||response.headers.get('X-Message-Id')||null;
+  return smtpClient;
+}
+
+async function sendViaSmtp(row:any){
+  const client=getSmtpClient();
+  if(!client) throw new Error('SMTP_HOST is not configured');
+  const t=template(row);
+  await client.send({
+    from:`${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
+    to:row.recipient_email,
+    subject:t.subject,
+    html:t.html
+  });
+  return null; // denomailer doesn't return a provider message id
 }
 
 Deno.serve(async req=>{
@@ -73,8 +90,16 @@ Deno.serve(async req=>{
 
   if(!SUPABASE_URL || !SERVICE_ROLE) return Response.json({ok:false,error:'Supabase server credentials are unavailable'},{status:500});
   const sb=createClient(SUPABASE_URL,SERVICE_ROLE,{auth:{persistSession:false,autoRefreshToken:false}});
-  const {data:generated,error:genError}=await sb.rpc('ct_generate_expiry_notifications');
-  if(genError) return Response.json({ok:false,stage:'generate',error:genError.message},{status:500});
+  // Expiry generation is optional in this worker. Collaboration email delivery must not
+  // fail when the expiry-notification RPC is not installed yet.
+  let generated:any=null;
+  try{
+    const result=await sb.rpc('ct_generate_expiry_notifications');
+    if(!result.error) generated=result.data;
+    else console.warn('Expiry notification generation skipped:',result.error.message);
+  }catch(error){
+    console.warn('Expiry notification generation skipped:',error);
+  }
 
   const worker=crypto.randomUUID();
   const {data:batch,error:claimError}=await sb.rpc('ct_claim_email_batch',{p_worker:worker,p_limit:50});
@@ -83,7 +108,7 @@ Deno.serve(async req=>{
   let sent=0,failed=0;
   for(const row of batch||[]){
     try{
-      const providerId=await sendMailerSend(row);
+      const providerId=await sendViaSmtp(row);
       const {error}=await sb.rpc('ct_complete_email',{p_id:row.id,p_success:true,p_provider_message_id:providerId,p_error:null});
       if(error) throw error;
       sent++;
@@ -95,5 +120,6 @@ Deno.serve(async req=>{
       });
     }
   }
+  if(smtpClient){ try{ await smtpClient.close(); }catch{ /* best-effort */ } }
   return Response.json({ok:true,generated:generated?.[0]||generated||null,claimed:(batch||[]).length,sent,failed});
 });
