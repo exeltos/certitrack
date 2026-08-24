@@ -8,7 +8,23 @@ import { handleError } from '../../shared/common.js';
 let ctx, relation, certificates=[];
 function relationLabel(){if(relation.status==='pending')return relation.direction==='incoming'?'Εκκρεμεί η αποδοχή σας':'Αναμονή αποδοχής';if(relation.status==='rejected')return'Απορρίφθηκε';if(relation.status==='ended')return'Ανενεργή σχέση';if(relation.status==='blocked')return'Αποκλεισμένη σχέση';return'Ενεργή συνεργασία';}
 function relationKind(){return relation.status==='active'?'success':relation.status==='pending'?'warning':relation.status==='rejected'||relation.status==='blocked'?'danger':'neutral';}
-function identity(){const p=relation.partner||{};const initials=String(p.name||'').trim().split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase()||'—';document.getElementById('partnerIdentity').innerHTML=`<div class="ct-partner-identity__avatar">${escapeHtml(initials)}</div><div class="ct-partner-identity__main"><span>ΣΥΝΕΡΓΑΖΟΜΕΝΟΣ ΟΡΓΑΝΙΣΜΟΣ</span><h2>${escapeHtml(p.name||'Χωρίς επωνυμία')}</h2><p>ΑΦΜ ${escapeHtml(p.afm||'—')}${p.email?` · ${escapeHtml(p.email)}`:''}</p></div>${statusBadge(relationKind(),relationLabel())}`;document.getElementById('partnerMeta').innerHTML=`<dl class="ct-detail-grid"><div><dt>Επωνυμία</dt><dd>${escapeHtml(p.name||'—')}</dd></div><div><dt>ΑΦΜ</dt><dd>${escapeHtml(p.afm||'—')}</dd></div><div><dt>Email</dt><dd>${escapeHtml(p.email||'—')}</dd></div><div><dt>Κατάσταση σχέσης</dt><dd>${escapeHtml(relationLabel())}</dd></div></dl>`;}
+function identity(){
+  const p=relation.partner||{};
+  const initials=String(p.name||'').trim().split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase()||'—';
+  document.getElementById('partnerIdentity').innerHTML=`
+    <div class="ct-partner-identity__avatar">${escapeHtml(initials)}</div>
+    <div class="ct-partner-identity__main">
+      <span>ΣΥΝΕΡΓΑΖΟΜΕΝΟΣ ΟΡΓΑΝΙΣΜΟΣ</span>
+      <h2>${escapeHtml(p.name||'Χωρίς επωνυμία')}</h2>
+      <p>${p.afm?`ΑΦΜ ${escapeHtml(p.afm)}`:'ΑΦΜ —'}${p.email?` · ${escapeHtml(p.email)}`:''}</p>
+    </div>
+    ${statusBadge(relationKind(),relationLabel())}`;
+  document.getElementById('partnerMeta').innerHTML=`
+    <div class="ct-partner-meta-item"><span>Επωνυμία</span><strong>${escapeHtml(p.name||'—')}</strong></div>
+    <div class="ct-partner-meta-item"><span>ΑΦΜ</span><strong>${escapeHtml(p.afm||'—')}</strong></div>
+    <div class="ct-partner-meta-item ct-partner-meta-item--email"><span>Email</span><strong>${escapeHtml(p.email||'—')}</strong></div>
+    <div class="ct-partner-meta-item"><span>Σχέση</span><strong>${escapeHtml(relationLabel())}</strong></div>`;
+}
 function bindActions(){if(relation.status!=='active')return;const bucket=organizationService.partnerCertificateBucket(relation.partner);document.querySelectorAll('.view-btn').forEach(btn=>btn.onclick=()=>openCertificatePreview(bucket,btn.dataset.ref,btn.dataset.title||'Πιστοποιητικό').catch(handleError));}
 function render(){const panel=document.getElementById('partnerCertificatesPanel');if(relation.status!=='active'){panel.classList.add('hidden');return;}panel.classList.remove('hidden');const q=(document.getElementById('searchInput')?.value||'').toLowerCase();const filtered=certificates.filter(c=>`${c.title||''} ${c.type||''} ${c.name||''}`.toLowerCase().includes(q));const draw=list=>renderCertificateCollection({certificates:list,container:document.getElementById('certContainer'),onBindActions:bindActions,permissions:{edit:false,delete:false,selectable:false}});bindCertificateStats({certificates:filtered,onRender:draw});draw(filtered);document.getElementById('certContainer')?.classList.remove('hidden');document.getElementById('noCertificatesMessage')?.classList.toggle('hidden',filtered.length>0);}
 async function removeRelation(){const ask=await Swal.fire({title:'Κατάργηση συνεργασίας;',text:`Θα διαγραφεί μόνο η σχέση με ${relation.partner?.name||'τον οργανισμό'}. Ο οργανισμός, ο λογαριασμός και τα πιστοποιητικά του παραμένουν στην πλατφόρμα.`,icon:'warning',showCancelButton:true,confirmButtonText:'Κατάργηση σχέσης',cancelButtonText:'Ακύρωση'});if(!ask.isConfirmed)return;await organizationService.deleteRelationship(ctx.organization,relation);await Swal.fire('Η σχέση καταργήθηκε','Δεν διαγράφηκε κανένας οργανισμός ή πιστοποιητικό.','success');location.href='./partners.html';}
