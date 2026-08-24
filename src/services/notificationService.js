@@ -5,6 +5,14 @@ export const notificationService = {
     const res=await supabase.from('notifications').select('*').order('created_at',{ascending:false}).limit(limit);
     if(res.error) throw res.error; return res.data||[];
   },
+  async listUnread(limit=50){
+    const res=await supabase.from('notifications')
+      .select('*')
+      .is('read_at',null)
+      .order('created_at',{ascending:false})
+      .limit(limit);
+    if(res.error) throw res.error; return res.data||[];
+  },
   async unreadCount(){
     const res=await supabase.from('notifications').select('id',{count:'exact',head:true}).is('read_at',null);
     if(res.error) throw res.error; return res.count||0;

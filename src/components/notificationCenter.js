@@ -57,7 +57,7 @@ async function refreshCount(){
   }catch{badge.classList.add('hidden');}
 }
 export async function openNotificationCenter(){
-  const rows=await notificationService.listCurrent(50);
+  const rows=await notificationService.listUnread(50);
   await Swal.fire({
     title:'Ειδοποιήσεις',
     html:markup(rows),
@@ -70,9 +70,16 @@ export async function openNotificationCenter(){
       Swal.getPopup()?.querySelectorAll('[data-notification-id]').forEach(el=>el.addEventListener('click',async()=>{
         const id=el.dataset.notificationId;
         await notificationService.markRead(id,true).catch(()=>{});
-        el.classList.remove('is-unread');
+        const href=el.dataset.href;
+        el.remove();
+        const list=Swal.getPopup()?.querySelector('.ct-notification-center-list');
+        if(list && !list.querySelector('[data-notification-id]')){
+          const host=Swal.getHtmlContainer();
+          if(host)host.innerHTML=markup([]);
+          window.lucide?.createIcons();
+        }
         await refreshCount();
-        if(el.dataset.href){Swal.close();location.href=el.dataset.href;}
+        if(href){Swal.close();location.href=href;}
       }));
     }
   });

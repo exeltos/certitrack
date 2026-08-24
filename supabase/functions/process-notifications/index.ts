@@ -17,43 +17,139 @@ const APP_URL=Deno.env.get('APP_URL') || 'https://www.certitrack.gr';
 
 const esc=(v:unknown)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] as string));
 
+
+function emailShell({eyebrow,title,body,buttonLabel,buttonHref}:{
+  eyebrow:string; title:string; body:string; buttonLabel:string; buttonHref:string;
+}){
+  return `<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${esc(title)}</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#12213a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:32px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border:1px solid #e4eaf3;border-radius:18px;overflow:hidden;">
+        <tr><td style="padding:26px 32px 14px;">
+          <div style="font-size:20px;font-weight:800;color:#17315f;">Certi<span style="color:#315efb;">Track</span></div>
+        </td></tr>
+        <tr><td style="padding:8px 32px 32px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#74829a;text-transform:uppercase;margin-bottom:12px;">${esc(eyebrow)}</div>
+          <h1 style="font-size:25px;line-height:1.25;margin:0 0 16px;color:#0d1b31;">${esc(title)}</h1>
+          <div style="font-size:16px;line-height:1.65;color:#4b5b73;">${body}</div>
+          <div style="margin-top:28px;">
+            <a href="${esc(buttonHref)}" style="display:inline-block;background:#315efb;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 22px;border-radius:10px;">${esc(buttonLabel)}</a>
+          </div>
+        </td></tr>
+        <tr><td style="border-top:1px solid #edf1f6;padding:18px 32px;font-size:12px;line-height:1.5;color:#8a96a8;">
+          Αυτό είναι αυτοματοποιημένο μήνυμα του CertiTrack. Αν δεν αναγνωρίζετε την ενέργεια, μπορείτε να αγνοήσετε το μήνυμα.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 function template(row:any){
   const p=row.payload||{};
-  const title=esc(p.certificate_title||'Πιστοποιητικό');
+  const title=String(p.certificate_title||'Πιστοποιητικό');
   const expiry=p.expiry_date?new Date(`${p.expiry_date}T00:00:00`).toLocaleDateString('el-GR'):'';
-  if(row.template_key==='certificate_expired'){
+
+  if(row.template_key==='relationship_invite'){
+    const requester=String(p.requester_name||'Ένας οργανισμός');
+    const href=`${APP_URL}/pages/organization/partners.html`;
     return {
-      subject:row.subject,
-      html:`<h2>Ληγμένο πιστοποιητικό</h2><p>Το πιστοποιητικό <strong>${title}</strong> έχει λήξει${expiry?` στις ${esc(expiry)}`:''}.</p><p><a href="${esc(APP_URL)}/pages/organization/certificates.html">Άνοιγμα CertiTrack</a></p>`
+      subject:'CertiTrack — Νέο αίτημα συνεργασίας',
+      text:`${requester} σας προσκαλεί σε συνεργασία στο CertiTrack.\n\nΠροβολή αιτήματος: ${href}`,
+      html:emailShell({
+        eyebrow:'Νέο αίτημα συνεργασίας',
+        title:`${requester} σας προσκαλεί σε συνεργασία`,
+        body:`Ο οργανισμός <strong style="color:#12213a;">${esc(requester)}</strong> θέλει να συνδεθεί μαζί σας στο CertiTrack. Ανοίξτε το αίτημα για να το αποδεχθείτε ή να το απορρίψετε.`,
+        buttonLabel:'Προβολή αιτήματος',
+        buttonHref:href
+      })
     };
   }
+
+  if(row.template_key==='relationship_accepted'){
+    const partner=String(p.partner_name||'Ο συνεργαζόμενος οργανισμός');
+    const href=`${APP_URL}/pages/organization/partners.html`;
+    return {
+      subject:'CertiTrack — Η συνεργασία έγινε αποδεκτή',
+      text:`${partner} αποδέχθηκε το αίτημα συνεργασίας σας.\n\nΠροβολή συνεργατών: ${href}`,
+      html:emailShell({
+        eyebrow:'Ενημέρωση συνεργασίας',
+        title:'Η συνεργασία ενεργοποιήθηκε',
+        body:`Ο οργανισμός <strong style="color:#12213a;">${esc(partner)}</strong> αποδέχθηκε το αίτημα συνεργασίας σας.`,
+        buttonLabel:'Προβολή συνεργατών',
+        buttonHref:href
+      })
+    };
+  }
+
+  if(row.template_key==='relationship_declined'){
+    const partner=String(p.partner_name||'Ο οργανισμός');
+    const href=`${APP_URL}/pages/organization/partners.html`;
+    return {
+      subject:'CertiTrack — Το αίτημα συνεργασίας απορρίφθηκε',
+      text:`${partner} απέρριψε το αίτημα συνεργασίας σας.\n\nΠροβολή συνεργατών: ${href}`,
+      html:emailShell({
+        eyebrow:'Ενημέρωση συνεργασίας',
+        title:'Το αίτημα συνεργασίας απορρίφθηκε',
+        body:`Ο οργανισμός <strong style="color:#12213a;">${esc(partner)}</strong> απέρριψε το αίτημα συνεργασίας σας.`,
+        buttonLabel:'Προβολή συνεργατών',
+        buttonHref:href
+      })
+    };
+  }
+
+  if(row.template_key==='certificate_expired'){
+    const href=`${APP_URL}/pages/organization/certificates.html`;
+    return {
+      subject:row.subject,
+      text:`Το πιστοποιητικό ${title} έχει λήξει${expiry?` στις ${expiry}`:''}.\n\nΆνοιγμα CertiTrack: ${href}`,
+      html:emailShell({
+        eyebrow:'Ειδοποίηση πιστοποιητικού',
+        title:'Ληγμένο πιστοποιητικό',
+        body:`Το πιστοποιητικό <strong style="color:#12213a;">${esc(title)}</strong> έχει λήξει${expiry?` στις ${esc(expiry)}`:''}.`,
+        buttonLabel:'Προβολή πιστοποιητικών',
+        buttonHref:href
+      })
+    };
+  }
+
   if(row.template_key==='certificate_expiry'){
     const days=Number(p.warning_days);
     const phrase=days===0?'λήγει σήμερα':`λήγει σε ${days} ημέρες`;
+    const href=`${APP_URL}/pages/organization/certificates.html`;
     return {
       subject:row.subject,
-      html:`<h2>Πιστοποιητικό προς λήξη</h2><p>Το πιστοποιητικό <strong>${title}</strong> ${phrase}${expiry?` (${esc(expiry)})`:''}.</p><p><a href="${esc(APP_URL)}/pages/organization/certificates.html">Άνοιγμα CertiTrack</a></p>`
+      text:`Το πιστοποιητικό ${title} ${phrase}${expiry?` (${expiry})`:''}.\n\nΆνοιγμα CertiTrack: ${href}`,
+      html:emailShell({
+        eyebrow:'Ειδοποίηση πιστοποιητικού',
+        title:'Πιστοποιητικό προς λήξη',
+        body:`Το πιστοποιητικό <strong style="color:#12213a;">${esc(title)}</strong> ${esc(phrase)}${expiry?` (${esc(expiry)})`:''}.`,
+        buttonLabel:'Προβολή πιστοποιητικών',
+        buttonHref:href
+      })
     };
   }
-  if(row.template_key==='relationship_invite'){
-    return {
-      subject:row.subject,
-      html:`<h2>Πρόσκληση συνεργασίας</h2><p>Ο οργανισμός <strong>${esc(p.requester_name||'')}</strong> σας προσκαλεί να συνδεθείτε στο CertiTrack.</p><p><a href="${esc(APP_URL)}/pages/organization/partners.html">Άνοιγμα CertiTrack</a></p>`
-    };
-  }
-  if(row.template_key==='relationship_accepted'){
-    return {
-      subject:row.subject,
-      html:`<h2>Η συνεργασία ενεργοποιήθηκε</h2><p>Ο οργανισμός <strong>${esc(p.partner_name||'')}</strong> αποδέχθηκε το αίτημα συνεργασίας.</p><p><a href="${esc(APP_URL)}/pages/organization/partners.html">Προβολή συνεργατών</a></p>`
-    };
-  }
-  if(row.template_key==='relationship_declined'){
-    return {
-      subject:row.subject,
-      html:`<h2>Το αίτημα συνεργασίας απορρίφθηκε</h2><p>Ο οργανισμός <strong>${esc(p.partner_name||'')}</strong> απέρριψε το αίτημα συνεργασίας.</p><p><a href="${esc(APP_URL)}/pages/organization/partners.html">Προβολή συνεργατών</a></p>`
-    };
-  }
-  return {subject:row.subject,html:`<p>${esc(row.subject)}</p><p><a href="${esc(APP_URL)}">Άνοιγμα CertiTrack</a></p>`};
+
+  const href=APP_URL;
+  return {
+    subject:row.subject,
+    text:`${row.subject}\n\n${href}`,
+    html:emailShell({
+      eyebrow:'CertiTrack',
+      title:String(row.subject||'Ενημέρωση'),
+      body:'Υπάρχει νέα ενημέρωση στον λογαριασμό σας.',
+      buttonLabel:'Άνοιγμα CertiTrack',
+      buttonHref:href
+    })
+  };
 }
 
 let smtpClient: SMTPClient | null = null;
@@ -61,6 +157,7 @@ function getSmtpClient(): SMTPClient | null {
   if (smtpClient) return smtpClient;
   if (!SMTP_HOST) return null;
   smtpClient = new SMTPClient({
+    debug: { encodeLB: true },
     connection: {
       hostname: SMTP_HOST,
       port: SMTP_PORT,
@@ -79,7 +176,12 @@ async function sendViaSmtp(row:any){
     from:`${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
     to:row.recipient_email,
     subject:t.subject,
-    html:t.html
+    content:t.text,
+    html:t.html,
+    headers:{
+      'MIME-Version':'1.0',
+      'X-Mailer':'CertiTrack Notifications'
+    }
   });
   return null; // denomailer doesn't return a provider message id
 }
