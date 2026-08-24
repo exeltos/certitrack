@@ -128,39 +128,42 @@ export const organizationService={
 
   async registerCertificateFile(org,certificateId,{path,file}){
     requireOrg(org);
-    // Was: selecting/inserting "version_number" (real column: version_no),
-    // and inserting "organization_name" / "certificate_type_name" columns
-    // that don't exist on certificate_files at all. Every file upload
-    // failed. Fixed 2026-08-24.
-    const {data:versions,error:versionError}=await supabase.from('certificate_files')
-      .select('version_no').eq('certificate_id',certificateId).order('version_no',{ascending:false}).limit(1);
-    if(versionError)throw versionError;
-    const version=(versions?.[0]?.version_no||0)+1;
-    const {data,error}=await supabase.from('certificate_files').insert([{
-      certificate_id:certificateId,
-      organization_id:org.id,
-      storage_path:path,
-      original_file_name:file.name||'certificate.pdf',
-      mime_type:file.type||'application/pdf',
-      file_size_bytes:file.size,
-      version_no:version,
-      uploaded_by:(await supabase.auth.getUser()).data?.user?.id||null
-    }]).select('*').single();
-    if(error)throw error;
-    return data;
+    // Was doing a direct client-side INSERT into certificate_files, but the
+    // canonical schema deliberately has NO client insert/update/delete
+    // policy on that table -- file rows can only be registered through the
+    // ct_register_certificate_file() RPC, which also validates the storage
+    // path, retires the previous version, and updates the parent
+    // certificate's denormalized file fields atomically. Fixed 2026-08-24.
+    const res=await supabase.rpc('ct_register_certificate_file',{
+      p_certificate:certificateId,
+      p_storage_path:path,
+      p_original_file_name:file.name||'certificate.pdf',
+      p_mime_type:file.type||'application/pdf',
+      p_file_size_bytes:file.size
+    });
+    if(res.error)throw res.error;
+    return res.data;
   },
 
   async abortCertificateDraft(org,id){
     requireOrg(org);
-    const {error}=await supabase.from('certificates').delete().eq('id',id).eq('organization_id',org.id);
-    if(error)throw error;
+    // Was a direct client-side DELETE, but the canonical schema grants no
+    // client DELETE on certificates at all ("No client DELETE policy: UI
+    // deletion is soft delete via UPDATE" -- see schema comment). Aborting
+    // a still-fileless draft goes through ct_abort_certificate_draft().
+    // Fixed 2026-08-24.
+    const res=await supabase.rpc('ct_abort_certificate_draft',{p_certificate:id});
+    if(res.error)throw res.error;
   },
 
   async deleteCertificate(org,id){
     requireOrg(org);
-    const user=(await supabase.auth.getUser()).data?.user;
-    const {error}=await supabase.from('certificates').update({deleted_at:new Date().toISOString(),deleted_by:user?.id||null,updated_by:user?.id||null}).eq('id',id).eq('organization_id',org.id);
-    if(error)throw error;
+    // Was a direct client-side UPDATE setting deleted_at/deleted_by, but a
+    // trigger explicitly blocks that for non-admins ("Use the certificate
+    // delete function"). Soft-delete goes through ct_soft_delete_certificate().
+    // Fixed 2026-08-24.
+    const res=await supabase.rpc('ct_soft_delete_certificate',{p_certificate:id});
+    if(res.error)throw res.error;
   },
 
   async findPartnerCandidate(value){

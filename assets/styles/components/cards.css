@@ -1,6 +1,0 @@
-/* Shared card primitives */
-.ct-card {
-  border-radius: var(--ct-radius);
-  border: 1px solid var(--ct-border);
-  box-shadow: var(--ct-shadow);
-}
