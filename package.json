@@ -10,10 +10,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.25.0"
-  },
-  "devDependencies": {
-    "vitest": "^4.1.11"
+    "@supabase/supabase-js": "^2.25.0",
+    "nodemailer": "^9.0.5"
   },
   "devDependencies": {
     "vitest": "^4.1.11"
