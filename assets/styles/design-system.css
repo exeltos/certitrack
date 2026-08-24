@@ -1745,3 +1745,48 @@ html body .demo-search:focus-within{
 
 /* Phase 48.1: Platform Admin remains intentionally read-only until the dedicated server-controlled backend is enabled. */
 .ct-admin-readonly{display:inline-flex!important;align-items:center!important;min-height:1.7rem!important;padding:.22rem .5rem!important;border:1px solid var(--ct-border)!important;border-radius:999px!important;background:var(--ct-surface-muted)!important;color:var(--ct-muted)!important;font-size:.62rem!important;font-weight:700!important;white-space:nowrap!important}
+
+
+/* ==========================================================================\n   CertiTrack v55 — partner invitation UX + subtle navigation color\n   ========================================================================== */
+.ct-sidebar{
+  background:linear-gradient(180deg,#f7faff 0%,#f4f7fb 58%,#f8fafc 100%)!important;
+  border-right-color:#dbe4f0!important;
+}
+.ct-sidebar__label{color:#718096!important;}
+.ct-nav-item{position:relative;color:#526176!important;}
+.ct-nav-item__icon{color:#7387a5!important;transition:color .15s ease,transform .15s ease;}
+.ct-nav-item:hover{background:#edf4ff!important;color:#274c77!important;}
+.ct-nav-item:hover .ct-nav-item__icon{color:#3b6fd8!important;transform:translateX(1px);}
+.ct-nav-item.is-active{
+  background:linear-gradient(90deg,#e6efff 0%,#eef4ff 100%)!important;
+  color:#1e4fb5!important;
+  box-shadow:inset 3px 0 0 #3b66f5!important;
+}
+.ct-nav-item.is-active .ct-nav-item__icon{color:#315fe8!important;}
+.dark .ct-sidebar{background:linear-gradient(180deg,#111827 0%,#0f172a 100%)!important;border-right-color:#243047!important;}
+.dark .ct-nav-item:hover{background:rgba(59,130,246,.1)!important;color:#bfdbfe!important;}
+.dark .ct-nav-item.is-active{background:linear-gradient(90deg,rgba(59,130,246,.18),rgba(59,130,246,.08))!important;color:#bfdbfe!important;box-shadow:inset 3px 0 0 #60a5fa!important;}
+.dark .ct-nav-item__icon,.dark .ct-nav-item.is-active .ct-nav-item__icon{color:#93c5fd!important;}
+
+.ct-incoming-requests{display:grid;gap:.55rem;margin-bottom:.75rem;}
+.ct-incoming-requests.is-empty{display:none;}
+.ct-incoming-requests__label{padding:0 .15rem;color:#7c5b12;font-size:.61rem;font-weight:800;letter-spacing:.055em;}
+.ct-incoming-request{
+  width:100%;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.8rem;
+  padding:.85rem 1rem;border:1px solid #f0cf7a;border-radius:var(--ct-radius-lg);background:linear-gradient(100deg,#fffaf0,#fffdf8);
+  color:var(--ct-text);text-align:left;cursor:pointer;box-shadow:0 4px 18px rgba(146,104,20,.06);transition:.15s ease;
+}
+.ct-incoming-request:hover{border-color:#e1b84d;transform:translateY(-1px);box-shadow:0 7px 20px rgba(146,104,20,.09);}
+.ct-incoming-request__icon{display:grid;place-items:center;width:2.35rem;height:2.35rem;border-radius:.72rem;background:#fff0c2;color:#9a6500;}
+.ct-incoming-request__icon svg{width:1.1rem;height:1.1rem;}
+.ct-incoming-request__copy strong,.ct-incoming-request__copy span{display:block;}
+.ct-incoming-request__copy strong{font-size:.78rem;color:#3f3420;}
+.ct-incoming-request__copy span{margin-top:.15rem;font-size:.67rem;color:#806f50;}
+.ct-incoming-request__action{display:inline-flex;align-items:center;gap:.25rem;color:#805d13;font-size:.68rem;font-weight:750;white-space:nowrap;}
+.ct-incoming-request__action svg{width:.9rem;height:.9rem;}
+.ct-attention-row--incoming{background:#fffaf0!important;}
+.dark .ct-incoming-requests__label{color:#f4cf70;}
+.dark .ct-incoming-request{background:linear-gradient(100deg,#261f11,#1e1b16);border-color:#5e4a1d;}
+.dark .ct-incoming-request__icon{background:#3b2d0d;color:#f3cb64;}
+.dark .ct-incoming-request__copy strong{color:#fff3d0;}.dark .ct-incoming-request__copy span{color:#c9b98f;}.dark .ct-incoming-request__action{color:#f0ca67;}
+@media(max-width:640px){.ct-incoming-request{grid-template-columns:auto minmax(0,1fr)}.ct-incoming-request__action{grid-column:2;justify-self:start;}}

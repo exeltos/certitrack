@@ -23,7 +23,14 @@ async function init(){
   $('healthScore').textContent=score; $('healthLabel').textContent = score>=85?'Πολύ καλή εικόνα':score>=65?'Χρειάζεται παρακολούθηση':'Χρειάζεται ενέργεια';
   const attention = certs.filter(c=>daysUntil(c.date)<=30).sort((a,b)=>new Date(a.date)-new Date(b.date));
   $('attentionList').innerHTML = attention.length ? attention.slice(0,6).map(c=>`<a class="ct-attention-row" href="./certificates.html" title="Προβολή"><div class="ct-attention-row__main"><strong>${safe(c.title||'Πιστοποιητικό')}</strong><span>${safe(c.type||'')} · λήξη ${new Date(c.date).toLocaleDateString(locale())}</span></div><div class="ct-attention-row__status">${daysUntil(c.date)<0?statusBadge('danger','Ληγμένο'):statusBadge('warning','Προς λήξη')}<i data-lucide="chevron-right"></i></div></a>`).join('') : emptyState({icon:'circle-check-big',title:'Δεν υπάρχουν άμεσες εκκρεμότητες',text:'Τα δικά σας πιστοποιητικά δεν έχουν λήξει και δεν λήγουν εντός 30 ημερών.'});
-  $('partnerList').innerHTML = partners.length ? partners.slice(0,10).map(r=>`<a class="ct-attention-row" href="${r.status==='active'?`./partner.html?relation=${encodeURIComponent(r.id)}`:'./partners.html'}"><div class="ct-attention-row__main"><strong>${safe(r.partner?.name||'Συνεργάτης')}</strong><span>ΑΦΜ ${safe(r.partner?.afm||'—')}</span></div><div class="ct-attention-row__status">${statusBadge(r.status==='blocked'?'danger':'success',r.status==='blocked'?'Αποκλεισμένη':'Ενεργή')}<i data-lucide="chevron-right"></i></div></a>`).join('') : emptyState({icon:'users',title:'Δεν υπάρχουν συνεργάτες',text:'Προσθέστε τον πρώτο συνεργάτη σας για να μοιράζεστε πιστοποιητικά.'});
+  $('partnerList').innerHTML = partners.length ? partners.slice(0,10).map(r=>{
+    const incoming=r.status==='pending'&&r.direction==='incoming';
+    const outgoing=r.status==='pending'&&!incoming;
+    const kind=r.status==='blocked'?'danger':r.status==='active'?'success':'warning';
+    const state=r.status==='blocked'?'Αποκλεισμένη':incoming?'Αίτημα προς εσάς':outgoing?'Αναμονή αποδοχής':r.status==='active'?'Ενεργή':'Ανενεργή';
+    const href=r.status==='active'||incoming?`./partner.html?relation=${encodeURIComponent(r.id)}`:'./partners.html';
+    return `<a class="ct-attention-row${incoming?' ct-attention-row--incoming':''}" href="${href}"><div class="ct-attention-row__main"><strong>${safe(r.partner?.name||'Συνεργάτης')}</strong><span>${incoming?'Σας προσκαλεί σε συνεργασία · ':''}ΑΦΜ ${safe(r.partner?.afm||'—')}</span></div><div class="ct-attention-row__status">${statusBadge(kind,state)}<i data-lucide="chevron-right"></i></div></a>`;
+  }).join('') : emptyState({icon:'users',title:'Δεν υπάρχουν συνεργάτες',text:'Προσθέστε τον πρώτο συνεργάτη σας για να μοιράζεστε πιστοποιητικά.'});
   window.lucide?.createIcons();
 }
 init().catch(err=>{console.error(err); Swal.fire('Σφάλμα',err.message||'Αποτυχία φόρτωσης','error');});

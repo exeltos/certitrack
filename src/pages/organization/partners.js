@@ -4,6 +4,32 @@ import { escapeHtml, emptyState, statusBadge } from '../../components/uiPrimitiv
 import { appUrl } from '../../shared/paths.js';
 
 const safe=escapeHtml; let rows=[]; let ctx;
+function friendlyPartnerError(error){
+  const raw=String(error?.message||error||'').trim();
+  const msg=raw.toLowerCase();
+  if(msg.includes('already')||msg.includes('duplicate')||msg.includes('εκκρεμ')||msg.includes('υπάρχει ήδη')){
+    return {title:'Υπάρχει ήδη αίτημα συνεργασίας',text:'Έχει ήδη σταλεί αίτημα ή υπάρχει ενεργή σχέση με αυτόν τον οργανισμό. Δείτε τη λίστα συνεργατών για την τρέχουσα κατάσταση.'};
+  }
+  if(msg.includes('not found')||msg.includes('δεν βρέθηκε')){
+    return {title:'Δεν βρέθηκε οργανισμός',text:'Ελέγξτε το ΑΦΜ ή το email και δοκιμάστε ξανά.'};
+  }
+  return {title:'Δεν ολοκληρώθηκε',text:'Δεν ήταν δυνατή η δημιουργία του αιτήματος συνεργασίας. Δοκιμάστε ξανά σε λίγο.'};
+}
+function incomingRequestCard(r){
+  const p=r.partner||{};
+  return `<button type="button" class="ct-incoming-request" data-incoming-relation="${safe(r.id)}">
+    <span class="ct-incoming-request__icon"><i data-lucide="user-plus"></i></span>
+    <span class="ct-incoming-request__copy"><strong>${safe(p.name||'Ένας οργανισμός')} σας προσκαλεί σε συνεργασία</strong><span>Δείτε το αίτημα και επιλέξτε Αποδοχή ή Απόρριψη.</span></span>
+    <span class="ct-incoming-request__action">Προβολή <i data-lucide="chevron-right"></i></span>
+  </button>`;
+}
+function renderIncomingRequests(){
+  const host=document.getElementById('incomingRequests'); if(!host)return;
+  const incoming=rows.filter(r=>r.status==='pending'&&r.direction==='incoming');
+  host.innerHTML=incoming.length?`<div class="ct-incoming-requests__label">ΝΕΑ ΑΙΤΗΜΑΤΑ ΣΥΝΕΡΓΑΣΙΑΣ</div>${incoming.map(incomingRequestCard).join('')}`:'';
+  host.classList.toggle('is-empty',incoming.length===0);
+  host.querySelectorAll('[data-incoming-relation]').forEach(el=>el.addEventListener('click',()=>openRelation(el.dataset.incomingRelation)));
+}
 function label(r){if(r.status==='pending')return r.direction==='incoming'?'Αίτημα προς εσάς':'Αναμονή αποδοχής';if(r.status==='blocked')return'Αποκλεισμένη';if(r.status==='declined')return'Απορρίφθηκε';if(r.status==='ended')return'Ανενεργή';return'Ενεργή';}
 function partnerRow(r){
   const p=r.partner||{}; const initials=String(p.name||'').trim().split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase()||'—';
@@ -14,6 +40,7 @@ function openRelation(id){location.href=appUrl(`pages/organization/partner.html?
 function render(){
   const q=(document.getElementById('partnerSearch')?.value||'').toLowerCase();
   const f=rows.filter(r=>`${r.partner?.name||''} ${r.partner?.afm||''} ${r.partner?.email||''}`.toLowerCase().includes(q));
+  renderIncomingRequests();
   document.getElementById('partnerCount').textContent=`${f.length} συνεργάτες`;
   document.getElementById('partnersList').innerHTML=f.length?f.map(partnerRow).join(''):emptyState({icon:'users',title:'Δεν βρέθηκαν συνεργάτες',text:'Συνδέστε έναν οργανισμό για να ανταλλάσσετε κοινόχρηστα πιστοποιητικά.'});
   document.querySelectorAll('[data-relation-id]').forEach(row=>{
@@ -40,7 +67,7 @@ async function addPartner(){
     const invitation=await organizationService.requestPartner(ctx.organization,lookup);
     await Swal.fire('Η πρόσκληση καταχωρήθηκε',candidate?'Ο οργανισμός θα τη δει ως εκκρεμές αίτημα και πρέπει να την αποδεχθεί.':'Η πρόσκληση παραμένει εκκρεμής μέχρι να εγγραφεί/συνδεθεί ο οργανισμός.','success');
     await refresh();
-  }catch(e){Swal.fire('Δεν ολοκληρώθηκε',e.message||'Αποτυχία δημιουργίας συνεργασίας.','error')}
+  }catch(e){const friendly=friendlyPartnerError(e);Swal.fire({title:friendly.title,text:friendly.text,icon:'info',confirmButtonText:'ΟΚ'});}
 }
 async function init(){ctx=await getOrganizationContext();if(!ctx)return;bindOrganizationLogout();await refresh();document.getElementById('partnerSearch')?.addEventListener('input',render);document.getElementById('addPartnerBtn')?.addEventListener('click',addPartner);}
 init().catch(e=>{console.error(e);Swal.fire('Σφάλμα',e.message||'Αποτυχία φόρτωσης','error')});
