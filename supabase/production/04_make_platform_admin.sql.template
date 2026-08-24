@@ -1,8 +1,0 @@
--- Run only after your Platform Admin auth user has been created and email-confirmed.
--- Replace the placeholder UUID with the auth.users.id shown in Supabase Authentication > Users.
-
-insert into public.platform_admins(user_id,created_by)
-values ('__PLATFORM_ADMIN_USER_UUID__'::uuid,'__PLATFORM_ADMIN_USER_UUID__'::uuid)
-on conflict (user_id) do nothing;
-
-select user_id,created_at from public.platform_admins;
