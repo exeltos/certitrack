@@ -228,10 +228,37 @@ export const organizationService={
       `)
       .or(`requester_id.eq.${org.id},partner_id.eq.${org.id}`);
     if(res.error)throw res.error;
-    return (res.data||[]).map(r=>{
+    const rows=(res.data||[]).map(r=>{
       const outgoing=String(r.requester_id)===String(org.id);
       const raw=outgoing?r.partner_org:r.requester;
       return {...r,direction:outgoing?'outgoing':'incoming',partner:{...raw,name:raw?.display_name||raw?.legal_name||'',afm:raw?.vat_number||'',email:raw?.contact_email||'',source:'organizations'}};
     });
+
+    // A partner is a business entity, not a history row. Keep a single canonical
+    // relationship per partner so ended/re-invited test records cannot appear as
+    // duplicate companies in Partners/Compliance. Prefer active, then pending,
+    // then the newest historical relationship.
+    const rank={active:4,pending:3,blocked:2,rejected:1,declined:1,ended:0};
+    const byPartner=new Map();
+    for(const row of rows){
+      const key=String(row.partner?.id||'');
+      if(!key)continue;
+      const prev=byPartner.get(key);
+      const rowRank=rank[row.status]??-1, prevRank=rank[prev?.status]??-1;
+      const newer=String(row.updated_at||row.created_at||'')>String(prev?.updated_at||prev?.created_at||'');
+      if(!prev||rowRank>prevRank||(rowRank===prevRank&&newer))byPartner.set(key,row);
+    }
+    return [...byPartner.values()];
+  },
+
+  async listRelationshipRequirements(org,relationshipId){
+    requireOrg(org);
+    if(!relationshipId)return[];
+    const res=await supabase.from('relationship_requirements')
+      .select('id,relationship_id,required_from_organization_id,certificate_type_id,required,profile_id')
+      .eq('relationship_id',relationshipId)
+      .eq('required',true);
+    if(res.error)throw res.error;
+    return res.data||[];
   }
 };
