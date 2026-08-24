@@ -58,29 +58,49 @@ async function refreshCount(){
 }
 export async function openNotificationCenter(){
   const rows=await notificationService.listUnread(50);
+  const visibleIds=rows.map(n=>n.id).filter(Boolean);
+  let handled=false;
+
+  const markVisibleRead=async()=>{
+    if(handled||!visibleIds.length)return;
+    handled=true;
+    await notificationService.markManyRead(visibleIds).catch(console.error);
+    await refreshCount();
+  };
+
   await Swal.fire({
     title:'Ειδοποιήσεις',
     html:markup(rows),
     width:'min(620px,96vw)',
-    showConfirmButton:false,
+    showConfirmButton:rows.length>0,
+    confirmButtonText:'Όλες ως διαβασμένες',
     showCloseButton:true,
     customClass:{htmlContainer:'ct-notification-center-modal'},
     didOpen:()=>{
       window.lucide?.createIcons();
       Swal.getPopup()?.querySelectorAll('[data-notification-id]').forEach(el=>el.addEventListener('click',async()=>{
         const id=el.dataset.notificationId;
-        await notificationService.markRead(id,true).catch(()=>{});
         const href=el.dataset.href;
+        await notificationService.markRead(id,true).catch(console.error);
+        const idx=visibleIds.indexOf(id);
+        if(idx>=0)visibleIds.splice(idx,1);
         el.remove();
-        const list=Swal.getPopup()?.querySelector('.ct-notification-center-list');
-        if(list && !list.querySelector('[data-notification-id]')){
-          const host=Swal.getHtmlContainer();
-          if(host)host.innerHTML=markup([]);
-          window.lucide?.createIcons();
-        }
         await refreshCount();
-        if(href){Swal.close();location.href=href;}
+        if(href){
+          // Remaining notifications are considered viewed when leaving the center.
+          await markVisibleRead();
+          Swal.close();
+          location.href=href;
+        }
       }));
+    },
+    preConfirm:async()=>{
+      await markVisibleRead();
+      return true;
+    },
+    didClose:()=>{
+      // Opening and then closing the notification center means the user reviewed them.
+      markVisibleRead().catch(()=>{});
     }
   });
 }

@@ -60,15 +60,27 @@ function template(row:any){
 
   if(row.template_key==='relationship_invite'){
     const requester=String(p.requester_name||'Ένας οργανισμός');
-    const href=`${APP_URL}/pages/organization/partners.html`;
+    const isRegistrationInvite=!p.relationship_id;
+    const href=isRegistrationInvite
+      ? `${APP_URL}/pages/auth/register.html?invite=${encodeURIComponent(String(p.invitation_id||''))}`
+      : `${APP_URL}/pages/organization/partners.html`;
+
     return {
-      subject:'CertiTrack — Νέο αίτημα συνεργασίας',
-      text:`${requester} σας προσκαλεί σε συνεργασία στο CertiTrack.\n\nΠροβολή αιτήματος: ${href}`,
+      subject:isRegistrationInvite
+        ? 'CertiTrack — Πρόσκληση εγγραφής και συνεργασίας'
+        : 'CertiTrack — Νέο αίτημα συνεργασίας',
+      text:isRegistrationInvite
+        ? `${requester} σας προσκαλεί να εγγραφείτε στο CertiTrack και να συνδεθείτε ως συνεργάτες.\n\nΕγγραφή: ${href}`
+        : `${requester} σας προσκαλεί σε συνεργασία στο CertiTrack.\n\nΠροβολή αιτήματος: ${href}`,
       html:emailShell({
-        eyebrow:'Νέο αίτημα συνεργασίας',
-        title:`${requester} σας προσκαλεί σε συνεργασία`,
-        body:`Ο οργανισμός <strong style="color:#12213a;">${esc(requester)}</strong> θέλει να συνδεθεί μαζί σας στο CertiTrack. Ανοίξτε το αίτημα για να το αποδεχθείτε ή να το απορρίψετε.`,
-        buttonLabel:'Προβολή αιτήματος',
+        eyebrow:isRegistrationInvite?'Πρόσκληση εγγραφής':'Νέο αίτημα συνεργασίας',
+        title:isRegistrationInvite
+          ? `${requester} σας προσκαλεί στο CertiTrack`
+          : `${requester} σας προσκαλεί σε συνεργασία`,
+        body:isRegistrationInvite
+          ? `Ο οργανισμός <strong style="color:#12213a;">${esc(requester)}</strong> θέλει να συνεργαστεί μαζί σας μέσω του CertiTrack. Δημιουργήστε λογαριασμό οργανισμού για να συνεχίσετε.`
+          : `Ο οργανισμός <strong style="color:#12213a;">${esc(requester)}</strong> θέλει να συνδεθεί μαζί σας στο CertiTrack. Ανοίξτε το αίτημα για να το αποδεχθείτε ή να το απορρίψετε.`,
+        buttonLabel:isRegistrationInvite?'Εγγραφή στο CertiTrack':'Προβολή αιτήματος',
         buttonHref:href
       })
     };

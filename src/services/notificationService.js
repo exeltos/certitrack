@@ -18,8 +18,14 @@ export const notificationService = {
     if(res.error) throw res.error; return res.count||0;
   },
   async markRead(id,read=true){
-    const {error}=await supabase.from('notifications').update({read_at:read?new Date().toISOString():null}).eq('id',id);
-    if(error) throw error;
+    const res=await supabase.rpc('ct_set_notification_read',{p_notification:id,p_read:!!read});
+    if(res.error) throw res.error; return res.data;
+  },
+  async markManyRead(ids=[]){
+    const clean=[...new Set((ids||[]).filter(Boolean))];
+    if(!clean.length)return;
+    const res=await supabase.rpc('ct_mark_notifications_read',{p_notifications:clean});
+    if(res.error) throw res.error; return res.data;
   },
   async preferences(organizationId){
     const {data:{user}}=await supabase.auth.getUser(); if(!user)return null;

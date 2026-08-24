@@ -51,24 +51,102 @@ function render(){
   window.lucide?.createIcons();
 }
 async function refresh(){rows=await organizationService.listPartners(ctx.organization);render();}
+async function askRegistrationInviteEmail(initial=''){
+  const info=await Swal.fire({
+    title:'Ο οργανισμός δεν είναι ακόμη στο CertiTrack',
+    html:`<p class="ct-swal-copy">Δεν βρέθηκε εγγεγραμμένος οργανισμός με τα στοιχεία που δώσατε.</p>
+          <p>Μπορείτε να του στείλετε <strong>πρόσκληση εγγραφής και συνεργασίας</strong>. Μετά την εγγραφή του, θα μπορέσετε να ολοκληρώσετε τη συνεργασία μέσα από το CertiTrack.</p>`,
+    icon:'info',
+    showCancelButton:true,
+    confirmButtonText:'Πρόσκληση εγγραφής',
+    cancelButtonText:'Ακύρωση'
+  });
+  if(!info.isConfirmed)return null;
+
+  const mail=await Swal.fire({
+    title:'Email πρόσκλησης',
+    input:'email',
+    inputLabel:'Email οργανισμού',
+    inputValue:String(initial||'').includes('@')?String(initial||''):'',
+    inputPlaceholder:'π.χ. quality@company.gr',
+    showCancelButton:true,
+    confirmButtonText:'Συνέχεια',
+    cancelButtonText:'Ακύρωση',
+    inputValidator:v=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim())?'Συμπληρώστε έγκυρο email.':undefined
+  });
+  return mail.isConfirmed?String(mail.value||'').trim():null;
+}
+
 async function addPartner(){
-  const res=await Swal.fire({title:'Νέα συνεργασία',input:'text',inputLabel:'ΑΦΜ ή email οργανισμού',inputPlaceholder:'π.χ. 099999999 ή quality@company.gr',showCancelButton:true,confirmButtonText:'Συνέχεια',cancelButtonText:'Ακύρωση',inputValidator:v=>!String(v||'').trim()?'Συμπληρώστε ΑΦΜ ή email.':undefined});
+  const res=await Swal.fire({
+    title:'Νέα συνεργασία',
+    input:'text',
+    inputLabel:'ΑΦΜ ή email οργανισμού',
+    inputPlaceholder:'π.χ. 099999999 ή quality@company.gr',
+    showCancelButton:true,
+    confirmButtonText:'Αναζήτηση',
+    cancelButtonText:'Ακύρωση',
+    inputValidator:v=>!String(v||'').trim()?'Συμπληρώστε ΑΦΜ ή email.':undefined
+  });
   if(!res.isConfirmed)return;
-  const lookup=String(res.value||'').trim();
+
+  let lookup=String(res.value||'').trim();
+
   try{
     const candidate=await organizationService.findPartnerCandidate(lookup);
-    const targetHtml=candidate
-      ? `<p class="ct-swal-copy"><strong>${safe(candidate.name||'Οργανισμός')}</strong><br>ΑΦΜ ${safe(candidate.afm||'—')}<br>${safe(candidate.email||'')}</p><p>Θα σταλεί αίτημα μέσα στο CertiTrack και θα απαιτείται αποδοχή.</p>`
-      : lookup.includes('@')
-        ? `<p class="ct-swal-copy"><strong>${safe(lookup)}</strong></p><p>Δεν υπάρχει ακόμη εγγεγραμμένος οργανισμός με αυτό το email. Θα δημιουργηθεί εκκρεμής πρόσκληση εγγραφής/συνεργασίας.</p>`
-        : '';
-    if(!candidate&&!lookup.includes('@')) return Swal.fire('Δεν βρέθηκε','Δεν βρέθηκε εγγεγραμμένος οργανισμός με αυτό το ΑΦΜ. Για μη εγγεγραμμένο οργανισμό χρησιμοποίησε email.','info');
-    const ask=await Swal.fire({title:'Αποστολή πρόσκλησης συνεργασίας;',html:targetHtml,icon:'question',showCancelButton:true,confirmButtonText:'Αποστολή',cancelButtonText:'Ακύρωση'});
+
+    if(!candidate){
+      const inviteEmail=await askRegistrationInviteEmail(lookup);
+      if(!inviteEmail)return;
+      lookup=inviteEmail;
+
+      const ask=await Swal.fire({
+        title:'Αποστολή πρόσκλησης εγγραφής;',
+        html:`<p class="ct-swal-copy"><strong>${safe(inviteEmail)}</strong></p>
+              <p>Θα σταλεί email για εγγραφή στο CertiTrack και πρόσκληση συνεργασίας.</p>
+              <p class="ct-swal-muted">Η συνεργασία θα παραμείνει σε αναμονή μέχρι ο οργανισμός να δημιουργήσει λογαριασμό και να συνδεθεί.</p>`,
+        icon:'question',
+        showCancelButton:true,
+        confirmButtonText:'Αποστολή πρόσκλησης',
+        cancelButtonText:'Ακύρωση'
+      });
+      if(!ask.isConfirmed)return;
+
+      await organizationService.requestPartner(ctx.organization,lookup);
+      await Swal.fire({
+        title:'Η πρόσκληση εγγραφής στάλθηκε',
+        text:'Ο παραλήπτης θα λάβει email με σύνδεσμο εγγραφής στο CertiTrack.',
+        icon:'success',
+        confirmButtonText:'ΟΚ'
+      });
+      await refresh();
+      return;
+    }
+
+    const ask=await Swal.fire({
+      title:'Αποστολή αιτήματος συνεργασίας;',
+      html:`<p class="ct-swal-copy"><strong>${safe(candidate.name||'Οργανισμός')}</strong><br>
+            ΑΦΜ ${safe(candidate.afm||'—')}<br>${safe(candidate.email||'')}</p>
+            <p>Ο οργανισμός είναι ήδη εγγεγραμμένος στο CertiTrack. Θα λάβει νέο αίτημα συνεργασίας για Αποδοχή ή Απόρριψη.</p>`,
+      icon:'question',
+      showCancelButton:true,
+      confirmButtonText:'Αποστολή αιτήματος',
+      cancelButtonText:'Ακύρωση'
+    });
     if(!ask.isConfirmed)return;
-    const invitation=await organizationService.requestPartner(ctx.organization,lookup);
-    await Swal.fire('Η πρόσκληση καταχωρήθηκε',candidate?'Ο οργανισμός θα τη δει ως εκκρεμές αίτημα και πρέπει να την αποδεχθεί.':'Η πρόσκληση παραμένει εκκρεμής μέχρι να εγγραφεί/συνδεθεί ο οργανισμός.','success');
+
+    await organizationService.requestPartner(ctx.organization,lookup);
+    await Swal.fire({
+      title:'Το αίτημα συνεργασίας στάλθηκε',
+      text:`Το αίτημα προς ${candidate.name||'τον οργανισμό'} καταχωρήθηκε και αναμένει αποδοχή.`,
+      icon:'success',
+      confirmButtonText:'ΟΚ'
+    });
     await refresh();
-  }catch(e){const friendly=friendlyPartnerError(e);Swal.fire({title:friendly.title,text:friendly.text,icon:'info',confirmButtonText:'ΟΚ'});}
+  }catch(e){
+    const friendly=friendlyPartnerError(e);
+    Swal.fire({title:friendly.title,text:friendly.text,icon:'info',confirmButtonText:'ΟΚ'});
+  }
 }
 async function init(){ctx=await getOrganizationContext();if(!ctx)return;bindOrganizationLogout();await refresh();document.getElementById('partnerSearch')?.addEventListener('input',render);document.getElementById('addPartnerBtn')?.addEventListener('click',addPartner);}
 init().catch(e=>{console.error(e);Swal.fire('Σφάλμα',e.message||'Αποτυχία φόρτωσης','error')});
