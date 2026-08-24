@@ -1353,6 +1353,49 @@ end; $$;
 grant execute on function public.ct_create_relationship_invitation(uuid,text) to authenticated;
 grant execute on function public.ct_cancel_relationship_invitation(uuid) to authenticated;
 
+-- Canonical pending-request cancellation: hard delete
+create or replace function public.ct_cancel_relationship(p_relationship uuid)
+returns void
+language plpgsql
+security definer
+set search_path=public
+as $$
+declare
+  r public.organization_relationships;
+begin
+  select * into r
+  from public.organization_relationships
+  where id=p_relationship
+  for update;
+
+  if r.id is null then
+    return;
+  end if;
+
+  if r.status <> 'pending' then
+    raise exception 'Only a pending relationship request can be cancelled';
+  end if;
+
+  if not public.ct_has_org_role(r.requester_id,array['owner','admin','member']) then
+    raise exception 'Insufficient permission';
+  end if;
+
+  delete from public.relationship_invitations
+  where relationship_id=p_relationship
+    and status='pending';
+
+  delete from public.email_outbox
+  where template_key='relationship_invite'
+    and payload->>'relationship_id'=p_relationship::text
+    and status in ('pending','processing','failed');
+
+  delete from public.organization_relationships
+  where id=p_relationship;
+end;
+$$;
+
+grant execute on function public.ct_cancel_relationship(uuid) to authenticated;
+
 -- Client invitation writes now go only through lifecycle RPCs.
 drop policy if exists ct_relationship_invitations_insert on public.relationship_invitations;
 revoke insert,update,delete on public.relationship_invitations from authenticated;
@@ -2129,3 +2172,46 @@ revoke all on function public.organization_model_version() from public;
 grant execute on function public.organization_model_version() to anon,authenticated;
 
 commit;
+
+
+-- Integrated Phase 54 partner lookup
+-- Phase 54 — Add the missing ct_find_partner_candidate() function.
+--
+-- src/services/organizationService.js has always called
+-- supabase.rpc('ct_find_partner_candidate', {p_lookup: term}) as a
+-- read-only "preview" step before sending a partner invitation (so the UI
+-- can show "is this the organization you mean?" before committing). This
+-- function was never actually created anywhere in the schema -- every call
+-- failed with a PostgREST "function not found" error, meaning the entire
+-- "add partner" flow never got past the first step.
+--
+-- Mirrors the exact lookup logic already used inside
+-- ct_create_relationship_invitation() (match by contact_email or
+-- normalized VAT number, active + not-deleted organizations only).
+-- Read-only, no side effects.
+
+create or replace function public.ct_find_partner_candidate(p_lookup text)
+returns table(id uuid, name text, afm text, email text)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select o.id,
+         coalesce(o.display_name, o.legal_name) as name,
+         o.vat_number as afm,
+         o.contact_email as email
+  from public.organizations o
+  where o.deleted_at is null
+    and o.status = 'active'
+    and (
+      lower(o.contact_email) = lower(trim(p_lookup))
+      or public.ct_normalize_vat(o.vat_number) = public.ct_normalize_vat(p_lookup)
+    )
+  limit 1;
+$$;
+
+grant execute on function public.ct_find_partner_candidate(text) to authenticated;
+
+-- Verification query (run manually after applying):
+--   select proname from pg_proc where proname = 'ct_find_partner_candidate';

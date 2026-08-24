@@ -6,7 +6,7 @@
   `docs/CURRENT_SUPABASE_STATE_2026-08-24.md`.
 - All four Phase 50-53 hardening migrations applied (rate limiting, audit
   coverage, account erasure, notification idempotency).
-- MailerSend fully removed from code, secrets, and the MailerSend account
+- SMTP provider fully removed from code, secrets, and the SMTP provider account
   itself (both API tokens revoked).
 - `process-notifications` Edge Function deployed with SMTP (Gmail),
   `Verify JWT with legacy secret` disabled, tested live with a 200 OK.
@@ -14,7 +14,7 @@
   correct function URL.
 - The 4 stale/broken Edge Functions (`dynamic-api`,
   `notify_expiring_certificates`, `notify_subscription_expiry`,
-  `send_certificate_email`) and the unused `RESEND_API_KEY` secret have
+  `send_certificate_email`) and the unused `SMTP provider_API_KEY` secret have
   been deleted. Only `process-notifications` remains.
 
 ## What's left

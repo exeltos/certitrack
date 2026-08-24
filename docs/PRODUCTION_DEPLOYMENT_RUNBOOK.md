@@ -33,7 +33,7 @@ Do not create public users until Confirm Email and redirect URLs are correct.
 2. Deploy `process-notifications`.
 3. Configure Edge Function secrets:
    - CRON_SECRET
-   - MAILERSEND_TOKEN
+   - SMTP_PASSWORD
    - EMAIL_FROM
    - APP_URL
 4. Test the Edge Function manually with the cron secret.
@@ -75,7 +75,7 @@ npx supabase functions deploy process-notifications --project-ref klutmusrabsizq
 Set secrets without committing them:
 
 ```powershell
-npx supabase secrets set CRON_SECRET="..." MAILERSEND_TOKEN="..." EMAIL_FROM="..." APP_URL="https://www.certitrack.gr" --project-ref klutmusrabsizqjnzwpu
+npx supabase secrets set CRON_SECRET="..." SMTP_PASSWORD="..." EMAIL_FROM="..." APP_URL="https://www.certitrack.gr" --project-ref klutmusrabsizqjnzwpu
 ```
 
 Do not paste secret values into GitHub or frontend `.js` files.

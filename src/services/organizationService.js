@@ -186,7 +186,11 @@ export const organizationService={
     if(res.error)throw res.error; return res.data;
   },
 
-  async cancelRelationshipInvitation(org,relationshipId){ return this.deleteRelationship(org,{id:relationshipId}); },
+  async cancelRelationshipInvitation(org,relationshipId){
+    requireOrg(org);
+    const res=await supabase.rpc('ct_cancel_relationship',{p_relationship:relationshipId});
+    if(res.error)throw res.error; return res.data;
+  },
 
   async respondToRelationship(org,relationshipId,status){
     requireOrg(org);

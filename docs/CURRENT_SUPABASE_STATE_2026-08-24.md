@@ -49,7 +49,7 @@ including an older audit-trigger design that broke on cascading deletes).
 - `04_make_platform_admin.sql.template` — no platform admin configured yet.
 - `05_schedule_notifications.sql.template` — cron scheduling for expiry
   notifications not yet configured.
-- Netlify environment variables (`MAILERSEND_TOKEN`, `CRON_SECRET`,
+- Netlify environment variables (`SMTP_PASSWORD`, `CRON_SECRET`,
   `SENTRY_DSN`, etc.) not yet confirmed set.
 - End-to-end signup/login/certificate-upload test with a real (non-demo)
   account not yet performed against this fresh schema.
@@ -62,20 +62,20 @@ Found 5 Edge Functions total; only `process-notifications` is real/current:
 - `dynamic-api` — default Supabase "hello world" template, never used. **Deleted.**
 - `notify_expiring_certificates` — pre-canonical version of the notifier.
   Queried legacy tables (`suppliers`, `companies`, etc.) that no longer
-  exist. **Had a live MailerSend API key hardcoded in the source
-  (`mlsn.9e5839...`) — revoked in the MailerSend dashboard.** **Deleted.**
+  exist. **Had a live SMTP provider API key hardcoded in the source
+  (`mlsn.9e5839...`) — revoked in the SMTP provider dashboard.** **Deleted.**
 - `notify_subscription_expiry` — same legacy-table problem, plus relied on
   a "subscription expiry" concept that doesn't exist in the canonical
   schema (see the disabled Netlify stub for the same reasoning). **Deleted.**
 - `send_certificate_email` — written in Netlify Functions syntax
   (`export async function handler(event)`), not valid Deno/Edge Function
   syntax — never actually worked regardless of schema issues. Used a third
-  email provider (Resend) via `RESEND_API_KEY`. **Deleted, along with the
-  `RESEND_API_KEY` secret.**
+  email provider (SMTP provider) via `SMTP provider_API_KEY`. **Deleted, along with the
+  `SMTP provider_API_KEY` secret.**
 
-Also revoked the second MailerSend API token found in the MailerSend
+Also revoked the second SMTP provider API token found in the SMTP provider
 dashboard (`mlsn.628266...`, "CertiTrack Supabase Notifications") — was the
-value previously stored as the `MAILERSEND_TOKEN` Supabase secret, now
+value previously stored as the `SMTP_PASSWORD` Supabase secret, now
 unused since the switch to SMTP.
 
 Remaining Edge Function: `process-notifications` only. Remaining secrets:
