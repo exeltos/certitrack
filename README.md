@@ -28,6 +28,7 @@ There is no build step — pages import ES modules directly via `<script type="m
 | `netlify/functions/` | Serverless functions: email sending, password reset, scheduled notification jobs |
 | `supabase/production/` | The canonical schema + preflight/validation scripts — **read `docs/NEXT_ACTION.md` before running anything here** |
 | `supabase/migrations/` | Incremental migrations, applied in order |
+| `supabase/legacy/` | Archived, superseded schema definitions — history only, never run against the live database |
 | `tests/` | Unit tests (vitest) |
 | `docs/` | All project documentation — architecture history, security review, operations runbooks, legal drafts |
 
@@ -41,7 +42,7 @@ There is no build step — pages import ES modules directly via `<script type="m
 
 ## Documentation index
 
-- **Architecture history**: `docs/PHASE*.md` — one file per development phase, oldest to newest. `docs/CANONICAL_RELEASE.md` tells you which baseline is current.
+- **Architecture history**: `docs/archive/` — one file per development phase (2 through 49), oldest to newest, history only. `docs/CANONICAL_RELEASE.md` is the current baseline.
 - **Security**: `docs/SECURITY_HARDENING.md`, `docs/CURRENT_RLS_REVIEW_BEFORE_LIVE_AUDIT.md`
 - **Operations**: `docs/operations/` — monitoring, backups/DR, staging setup, SLA
 - **Legal (drafts, need lawyer review)**: `docs/legal/` — privacy policy, terms of service, data retention
