@@ -2,9 +2,8 @@ import { getLanguage, locale } from '../shared/i18n.js';
 /** CertiTrack shared markup primitives.
  * Keep recurring UI structures here so semantic/markup changes propagate globally.
  */
-export function escapeHtml(value='') {
-  return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-}
+import { escapeHtml } from '../shared/html.js';
+export { escapeHtml };
 
 export function statusBadge(kind='neutral', text='') {
   return `<span class="ct-status ct-status--${escapeHtml(kind)}">${escapeHtml(text)}</span>`;

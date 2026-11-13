@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
     const btn=form.querySelector('button[type="submit"]'); btn.disabled=true;
     const {error}=await authService.updateUser({password});
     btn.disabled=false;
-    if(error) return Swal.fire('Σφάλμα',error.message||'Δεν ήταν δυνατή η αλλαγή κωδικού.','error');
+    if(error) return Swal.fire({title:'Σφάλμα',text:error.message||'Δεν ήταν δυνατή η αλλαγή κωδικού.',icon:'error'});
     await authService.signOut();
     await Swal.fire('Ο κωδικός άλλαξε','Συνδεθείτε ξανά με τον νέο κωδικό.','success');
     location.href='./login.html';

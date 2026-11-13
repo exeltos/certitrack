@@ -101,13 +101,14 @@ describe('filterCertificatesByStatus', () => {
 describe('escapeHtml', () => {
   it('escapes the five HTML-significant characters', () => {
     expect(escapeHtml(`<script>alert('x')&"y"</script>`)).toBe(
-      '&lt;script&gt;alert(&#039;x&#039;)&amp;&quot;y&quot;&lt;/script&gt;'
+      '&lt;script&gt;alert(&#39;x&#39;)&amp;&quot;y&quot;&lt;/script&gt;'
     );
   });
 
   it('handles non-string input by coercing to string', () => {
     expect(escapeHtml(123)).toBe('123');
     expect(escapeHtml(undefined)).toBe('');
+    expect(escapeHtml(null)).toBe('');
   });
 
   it('is idempotent-safe for plain text with no special characters', () => {

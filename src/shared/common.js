@@ -22,7 +22,7 @@ export function hideLoading() {
 
 export function handleError(error) {
   console.error('[CertiTrack Error]', error);
-  Swal.fire('Σφάλμα', error.message || 'Παρουσιάστηκε σφάλμα.', 'error');
+  Swal.fire({title:'Σφάλμα',text:error.message || 'Παρουσιάστηκε σφάλμα.',icon:'error'});
 }
 
 export function toggleDarkMode() {

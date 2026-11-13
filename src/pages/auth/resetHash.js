@@ -4,5 +4,7 @@ const urlParams = new URLSearchParams(window.location.hash.substring(1));
       if (errorCode === 'otp_expired') {
         Swal.fire('Το link έληξε', 'Το link επαναφοράς έχει λήξει ή είναι άκυρο. Παρακαλώ δοκιμάστε ξανά.', 'error');
       } else if (errorCode || errorDesc) {
-        Swal.fire('Σφάλμα επαναφοράς', decodeURIComponent(errorDesc || 'Μη αναγνωρίσιμο σφάλμα.'), 'error');
+        // URLSearchParams already decodes; render as plain text (never HTML) since
+        // anyone can craft this URL.
+        Swal.fire({ title: 'Σφάλμα επαναφοράς', text: errorDesc || 'Μη αναγνωρίσιμο σφάλμα.', icon: 'error' });
       }

@@ -56,7 +56,7 @@ async function handleClosure(){
   if(btn?.dataset.mode==='cancel'){
     const ask=await Swal.fire({title:'Ακύρωση αιτήματος αποχώρησης;',text:'Ο οργανισμός θα παραμείνει ενεργός στο CertiTrack.',icon:'question',showCancelButton:true,confirmButtonText:'Ναι, ακύρωση',cancelButtonText:'Πίσω'});
     if(!ask.isConfirmed)return;
-    try{await organizationService.cancelClosure(ctx.organization);await Swal.fire('Ακυρώθηκε','Το αίτημα αποχώρησης ακυρώθηκε.','success');location.reload();}catch(err){Swal.fire('Σφάλμα',err.message||'Η ενέργεια απέτυχε.','error');}
+    try{await organizationService.cancelClosure(ctx.organization);await Swal.fire('Ακυρώθηκε','Το αίτημα αποχώρησης ακυρώθηκε.','success');location.reload();}catch(err){Swal.fire({title:'Σφάλμα',text:err.message||'Η ενέργεια απέτυχε.',icon:'error'});}
     return;
   }
   const ask=await Swal.fire({
@@ -66,7 +66,7 @@ async function handleClosure(){
     icon:'warning',showCancelButton:true,confirmButtonText:'Υποβολή αιτήματος',cancelButtonText:'Ακύρωση',confirmButtonColor:'#b42318'
   });
   if(!ask.isConfirmed)return;
-  try{await organizationService.requestClosure(ctx.organization,String(ask.value||'').trim());await Swal.fire('Το αίτημα καταχωρήθηκε','Ο οργανισμός δεν διαγράφεται άμεσα. Το αίτημα θα ολοκληρωθεί με ελεγχόμενη διαδικασία.','success');location.reload();}catch(err){Swal.fire('Σφάλμα',err.message||'Η ενέργεια απέτυχε.','error');}
+  try{await organizationService.requestClosure(ctx.organization,String(ask.value||'').trim());await Swal.fire('Το αίτημα καταχωρήθηκε','Ο οργανισμός δεν διαγράφεται άμεσα. Το αίτημα θα ολοκληρωθεί με ελεγχόμενη διαδικασία.','success');location.reload();}catch(err){Swal.fire({title:'Σφάλμα',text:err.message||'Η ενέργεια απέτυχε.',icon:'error'});}
 }
 
 async function save(e){
@@ -105,7 +105,7 @@ async function save(e){
 
     await Swal.fire('Αποθηκεύτηκε','Οι ρυθμίσεις ενημερώθηκαν.','success');
   }catch(err){
-    Swal.fire('Σφάλμα',err.message||'Η αποθήκευση απέτυχε.','error');
+    Swal.fire({title:'Σφάλμα',text:err.message||'Η αποθήκευση απέτυχε.',icon:'error'});
   }
 }
-init().catch(err=>Swal.fire('Σφάλμα',err.message||'Αποτυχία φόρτωσης','error'));
+init().catch(err=>Swal.fire({title:'Σφάλμα',text:err.message||'Αποτυχία φόρτωσης',icon:'error'}));

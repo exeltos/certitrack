@@ -106,7 +106,7 @@ export async function openNotificationCenter(){
 }
 export function initNotificationCenter(){
   const btn=document.getElementById('notifyBtn');if(!btn)return;
-  btn.addEventListener('click',()=>openNotificationCenter().catch(err=>Swal.fire('Σφάλμα',err.message||'Δεν ήταν δυνατή η φόρτωση ειδοποιήσεων.','error')));
+  btn.addEventListener('click',()=>openNotificationCenter().catch(err=>Swal.fire({title:'Σφάλμα',text:err.message||'Δεν ήταν δυνατή η φόρτωση ειδοποιήσεων.',icon:'error'})));
   refreshCount();
   window.addEventListener('focus',refreshCount);
 }

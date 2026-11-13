@@ -34,4 +34,4 @@ async function init(){
   }).join('') : emptyState({icon:'users',title:'Δεν υπάρχουν συνεργάτες',text:'Προσθέστε τον πρώτο συνεργάτη σας για να μοιράζεστε πιστοποιητικά.'});
   window.lucide?.createIcons();
 }
-init().catch(err=>{console.error(err); Swal.fire('Σφάλμα',err.message||'Αποτυχία φόρτωσης','error');});
+init().catch(err=>{console.error(err); Swal.fire({title:'Σφάλμα',text:err.message||'Αποτυχία φόρτωσης',icon:'error'});});

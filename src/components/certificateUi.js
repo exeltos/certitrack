@@ -104,7 +104,7 @@ export function bindPdfPreview(popup) {
 }
 
 const typeOptions = `<option value="ISO 9001">ISO 9001</option><option value="ISO 13485">ISO 13485</option><option value="ISO 14001">ISO 14001</option><option value="ISO 27001">ISO 27001</option><option value="ISO 45001">ISO 45001</option><option value="CE">CE</option><option value="Άδεια λειτουργίας">Άδεια λειτουργίας</option><option value="Πιστοποιητικό">Πιστοποιητικό</option><option value="Απόφαση">Απόφαση</option><option value="Άλλο">Άλλο</option>`;
-function escAttr(value=''){ return String(value ?? '').replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
+const escAttr = escapeHtml;
 function formHtml(cert={}, {allowVisibility=false,allowFile=true,isEdit=false}={}) {
   const visibility = allowVisibility ? `<div class="ct-swal-field"><label for="swal-visibility">Ορατότητα</label><select id="swal-visibility" class="swal2-select"><option value="shared">Διαθέσιμο στους συνεργάτες</option><option value="private">Ιδιωτικό — κρυφό από συνεργάτες</option></select></div>` : '';
   const fileLabel = isEdit ? 'Αντικατάσταση PDF (προαιρετικά)' : 'Αρχείο PDF';

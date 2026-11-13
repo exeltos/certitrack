@@ -29,14 +29,7 @@ export function filterCertificatesByStatus(certificates = [], status = 'all', no
   return certificates.filter(certificate => certificateStatus(certificate?.date, now, soonDays) === status);
 }
 
-export function escapeHtml(value = '') {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
+export { escapeHtml } from '../shared/html.js';
 
 export function storageObjectPath(fileUrl, bucketName) {
   if (!fileUrl) return '';

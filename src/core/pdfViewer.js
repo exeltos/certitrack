@@ -1,6 +1,4 @@
-function escapeAttr(value = '') {
-  return String(value).replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[ch]));
-}
+import { escapeHtml as escapeAttr } from '../shared/html.js';
 
 export async function openPdfViewer(url, title = 'Προβολή πιστοποιητικού') {
   if (!url) throw new Error('Δεν βρέθηκε αρχείο για προβολή.');

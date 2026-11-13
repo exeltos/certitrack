@@ -149,4 +149,4 @@ async function addPartner(){
   }
 }
 async function init(){ctx=await getOrganizationContext();if(!ctx)return;bindOrganizationLogout();await refresh();document.getElementById('partnerSearch')?.addEventListener('input',render);document.getElementById('addPartnerBtn')?.addEventListener('click',addPartner);}
-init().catch(e=>{console.error(e);Swal.fire('Σφάλμα',e.message||'Αποτυχία φόρτωσης','error')});
+init().catch(e=>{console.error(e);Swal.fire({title:'Σφάλμα',text:e.message||'Αποτυχία φόρτωσης',icon:'error'})});

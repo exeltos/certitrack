@@ -2,6 +2,7 @@
 // Self-contained: injects its own markup into a mount point so pages only
 // need one call (mountMfaSettings) instead of hand-wiring a form each time.
 import { authService } from '../services/authService.js';
+import { escapeHtml } from '../shared/html.js';
 
 function render(container, { enrolled }) {
   container.innerHTML = enrolled
@@ -29,15 +30,15 @@ async function startEnrollment(container) {
 
   const { data, error } = await authService.mfaEnroll();
   if (error) {
-    panel.innerHTML = `<p class="ct-inline-note ct-inline-note--error">${error.message}</p>`;
+    panel.innerHTML = `<p class="ct-inline-note ct-inline-note--error">${escapeHtml(error.message)}</p>`;
     return;
   }
 
   const { id: factorId, totp } = data;
   panel.innerHTML = `
     <p>Σαρώστε τον κωδικό QR με την εφαρμογή ταυτοποίησης, ή εισάγετε το κλειδί χειροκίνητα:</p>
-    <img src="${totp.qr_code}" alt="QR code" style="width:180px;height:180px;margin:8px 0;" />
-    <p><code>${totp.secret}</code></p>
+    <img src="${escapeHtml(totp.qr_code)}" alt="QR code" style="width:180px;height:180px;margin:8px 0;" />
+    <p><code>${escapeHtml(totp.secret)}</code></p>
     <input type="text" id="mfaVerifyCode" inputmode="numeric" maxlength="6" placeholder="6-ψήφιος κωδικός" class="ct-input" style="max-width:160px;" />
     <button class="ct-btn ct-btn-primary ct-btn-sm" id="mfaVerifyBtn" type="button">Επιβεβαίωση</button>
     <div id="mfaVerifyStatus" class="ct-inline-note"></div>

@@ -47,4 +47,4 @@ async function init(){
   document.querySelectorAll('[data-relation]').forEach(el=>{const go=()=>location.href=`./partner.html?relation=${encodeURIComponent(el.dataset.relation)}`;el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
   window.lucide?.createIcons();
 }
-init().catch(e=>Swal.fire('Σφάλμα',e.message||'Αποτυχία φόρτωσης','error'));
+init().catch(e=>Swal.fire({title:'Σφάλμα',text:e.message||'Αποτυχία φόρτωσης',icon:'error'}));

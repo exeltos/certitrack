@@ -1,7 +1,8 @@
 import { adminService } from '../../services/adminService.js';
 import { requirePlatformAdmin, safeDate } from './adminCommon.js';
+import { escapeHtml } from '../../shared/html.js';
 let rows=[];
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=escapeHtml;
 const demoRows=[
  {created_at:new Date().toISOString(),action:'update',entity_type:'certificates',organization:'MedSupply A.E.',details:'ISO 13485 renewed'},
  {created_at:new Date(Date.now()-3600000).toISOString(),action:'insert',entity_type:'organization_relationships',organization:'DEMO COMPANY S.A.',details:'Partner relationship created'},
