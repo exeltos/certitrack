@@ -7,12 +7,13 @@ const node = (name, sub) => html`<div class="preview__node">${avatar(name, { siz
 
 publicPage({
   titleKey: 'public.homeTitle',
+  brand: true,
   nav: html`<a class="btn btn--ghost btn--sm" href="/pages/auth/login.html">${t('auth.signIn')}</a>`,
   body: html`<main id="main">
     <section class="hero">
       <div>
         <span class="eyebrow">${icon('shield-check', { size: 14 })}${t('home.eyebrow')}</span>
-        <h1>${t('home.headline')}</h1>
+        <h1>${t('home.headline')} <em>${t('home.headlineAccent')}</em></h1>
         <p class="hero__lead">${t('home.lead')}</p>
         <div class="hero__cta">
           <a class="btn btn--primary btn--lg" href="/pages/auth/register.html">${t('home.ctaRegister')}</a>

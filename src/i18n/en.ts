@@ -188,7 +188,8 @@ export const en: Record<keyof typeof el, string> = {
   'entity.document_requests': 'Document request',
 
   'public.footer': 'Certificates and compliance between partners', 'public.homeTitle': 'Certificates between partners',
-  'home.eyebrow': 'A network of equal organizations', 'home.headline': 'Share certificates with whoever you choose. Only with them.',
+  'home.eyebrow': 'A network of equal organizations', 'home.headline': 'Share certificates with whoever you choose.', 'home.headlineAccent': 'Only with them.',
+  'auth.asideTitle': 'Your certificates, under your control.', 'auth.asideText': 'Connect with your partners as equals and decide what each of them sees.',
   'home.lead': 'Connect with suppliers, customers and partners. Each side decides what the other sees, and CertiTrack warns you before anything expires.',
   'home.ctaRegister': 'Create an account', 'home.ctaDemo': 'Try the demo',
   'home.point1': 'Nothing to install', 'home.point2': 'Private PDFs', 'home.point3': 'Every view is logged',
