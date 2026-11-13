@@ -278,4 +278,12 @@ select t_ok(exists(select 1 from connections c join organizations o on o.id = c.
                    where o.vat_number = '555555555' and c.requester_org_id = (select d from ids) and c.status = 'pending'),
             'the invitation becomes a pending connection when they register');
 
+-- ---------------------------------------------------------------------------
+-- Deleting a whole organization (cascades through certificates, connections…)
+-- ---------------------------------------------------------------------------
+reset role;
+delete from organizations where vat_number = '222222222';
+select t_ok(not exists(select 1 from organizations where vat_number = '222222222'), 'an organization with data can be deleted');
+select t_ok(not exists(select 1 from certificates c where not exists(select 1 from organizations o where o.id = c.organization_id)), 'its certificates are deleted with it');
+
 \warn 'ALL TESTS PASSED'
