@@ -12,7 +12,7 @@ const path = require('path');
 const env = k => { if (!process.env[k]) throw new Error(`missing ${k}`); return process.env[k]; };
 const pw = { a: env('E2E_A_PASSWORD'), b: env('E2E_B_PASSWORD'), adm: env('E2E_ADMIN_PASSWORD') };
 const B = process.env.BASE_URL || 'http://127.0.0.1:8888';
-const PDF = path.join(__dirname, '../../assets/demo-certificates/sample-certificate.pdf');
+const PDF = path.join(__dirname, '../../public/demo/sample-certificate.pdf');
 const OUT = process.argv[2] || require('os').tmpdir();
 const errors = [];
 const step = async (name, fn) => { try { await fn(); console.log('ok -', name); } catch (e) { console.log('FAIL -', name, '::', e.message.split('\n')[0]); errors.push(name); } };

@@ -1,10 +1,10 @@
-import { api } from '../../api/index.js';
-import { html, mount, raw } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { startPage } from '../../ui/shell.js';
-import { icon, badge, errorState, friendlyError } from '../../ui/components.js';
-import { openDialog, confirmDialog, toast, toastError } from '../../ui/dialog.js';
-import { passwordField, bindPasswordFields, checkNewPassword } from '../../ui/password.js';
+import { api } from '../../api/index';
+import { html, mount, raw } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { startPage } from '../../ui/shell';
+import { icon, badge, errorState, friendlyError } from '../../ui/components';
+import { openDialog, confirmDialog, toast, toastError } from '../../ui/dialog';
+import { passwordField, bindPasswordFields, checkNewPassword } from '../../ui/password';
 
 const { ctx, content } = await startPage({ area: 'organization', page: 'settings', title: 'settings.title', subtitle: 'settings.subtitle' });
 const canEditOrg = ['owner', 'admin'].includes(ctx.role);

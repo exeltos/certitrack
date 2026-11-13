@@ -1,9 +1,9 @@
-import { supabaseApi } from '../../api/supabase.js';
-import { html, mount } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { icon, friendlyError } from '../../ui/components.js';
-import { passwordField, bindPasswordFields, checkNewPassword } from '../../ui/password.js';
-import { publicPage, authCard, formError, busy } from '../public/layout.js';
+import { supabaseApi } from '../../api/supabase';
+import { html, mount } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { icon, friendlyError } from '../../ui/components';
+import { passwordField, bindPasswordFields, checkNewPassword } from '../../ui/password';
+import { publicPage, authCard, formError, busy } from '../public/layout';
 
 const root = publicPage({ titleKey: 'auth.resetTitle', body: authCard(html`<div class="loading"><span class="spinner"></span></div>`) });
 const card = root.querySelector('.auth-card');

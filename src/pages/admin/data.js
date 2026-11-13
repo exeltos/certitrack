@@ -1,6 +1,6 @@
 // Shared helpers for platform admin pages.
-import { t } from '../../lib/i18n.js';
-import { badge } from '../../ui/components.js';
+import { t } from '../../lib/i18n';
+import { badge } from '../../ui/components';
 
 const ORG_KIND = { active: 'success', pending_verification: 'warning', suspended: 'danger', closure_requested: 'warning', closed: 'neutral' };
 export const orgStatusBadge = status => badge(ORG_KIND[status] || 'neutral', t(`orgStatusShort.${status}`));

@@ -1,22 +1,24 @@
-import { html } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { icon, avatar } from '../../ui/components.js';
-import { publicPage } from './layout.js';
+import { html } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { icon, avatar } from '../../ui/components';
+import { publicPage } from './layout';
+import { DEMO_ENABLED } from '../../api/index';
 
 const node = (name, sub) => html`<div class="preview__node">${avatar(name, { size: 'lg' })}<span>${name}</span><small>${sub}</small></div>`;
 
 publicPage({
   titleKey: 'public.homeTitle',
+  brand: true,
   nav: html`<a class="btn btn--ghost btn--sm" href="/pages/auth/login.html">${t('auth.signIn')}</a>`,
   body: html`<main id="main">
     <section class="hero">
       <div>
         <span class="eyebrow">${icon('shield-check', { size: 14 })}${t('home.eyebrow')}</span>
-        <h1>${t('home.headline')}</h1>
+        <h1>${t('home.headline')} <em>${t('home.headlineAccent')}</em></h1>
         <p class="hero__lead">${t('home.lead')}</p>
         <div class="hero__cta">
           <a class="btn btn--primary btn--lg" href="/pages/auth/register.html">${t('home.ctaRegister')}</a>
-          <a class="btn btn--secondary btn--lg" href="/pages/demo/index.html">${icon('eye')}${t('home.ctaDemo')}</a>
+          ${DEMO_ENABLED ? html`<a class="btn btn--secondary btn--lg" href="/pages/demo/index.html">${icon('eye')}${t('home.ctaDemo')}</a>` : html`<a class="btn btn--secondary btn--lg" href="/pages/auth/login.html">${t('auth.signIn')}</a>`}
         </div>
         <div class="hero__points">
           <span>${icon('check', { size: 16 })}${t('home.point1')}</span>

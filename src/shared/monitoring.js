@@ -10,7 +10,7 @@
 // This module intentionally has zero effect if no DSN is configured, so it
 // is safe to import from appShell.js unconditionally.
 
-import { SENTRY_DSN } from '../config/appConfig.js';
+import { SENTRY_DSN } from '../config/appConfig';
 
 let initialized = false;
 

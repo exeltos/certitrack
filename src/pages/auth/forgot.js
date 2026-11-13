@@ -1,8 +1,8 @@
-import { supabaseApi } from '../../api/supabase.js';
-import { html, mount } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { icon } from '../../ui/components.js';
-import { publicPage, authCard, formError, busy } from '../public/layout.js';
+import { supabaseApi } from '../../api/supabase';
+import { html, mount } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { icon } from '../../ui/components';
+import { publicPage, authCard, formError, busy } from '../public/layout';
 
 const root = publicPage({
   titleKey: 'auth.forgotTitle',

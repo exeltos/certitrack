@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 
 beforeAll(() => { globalThis.localStorage = { getItem: () => null, setItem: () => {} }; });
-const load = () => import('../../src/lib/format.js');
+const load = () => import('../../src/lib/format');
 const NOW = new Date('2026-11-13T10:00:00');
 
 describe('daysUntil', () => {

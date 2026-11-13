@@ -1,10 +1,10 @@
 // Document request dialogs (ask a partner / answer a partner).
-import { api } from '../../api/index.js';
-import { html, raw } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { icon, typeName, stateBadge, expiryText } from '../../ui/components.js';
-import { openDialog } from '../../ui/dialog.js';
-import { certificateDialog } from './certificateForms.js';
+import { api } from '../../api/index';
+import { html, raw } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { icon, typeName, stateBadge, expiryText } from '../../ui/components';
+import { openDialog } from '../../ui/dialog';
+import { certificateDialog } from './certificateForms';
 
 export async function askDialog({ connections, types, connectionId = null }) {
   const usable = types.filter(ty => ty.code !== 'OTHER');

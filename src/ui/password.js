@@ -1,8 +1,9 @@
+import { UserError } from './dialog';
 // Password input with show/hide and live policy checklist.
-import { html, raw } from '../lib/html.js';
-import { t } from '../lib/i18n.js';
-import { icon } from './components.js';
-import { validatePassword } from '../auth/passwordPolicy.js';
+import { html, raw } from '../lib/html';
+import { t } from '../lib/i18n';
+import { icon } from './components';
+import { validatePassword } from '../auth/passwordPolicy';
 
 export function passwordField({ name, id = name, label, autocomplete = 'new-password', rules = false, autofocus = false }) {
   return html`<div class="field"><label for="${id}">${label}</label>
@@ -26,7 +27,7 @@ export function bindPasswordFields(root) {
 
 export function checkNewPassword(form, field = 'password', confirm = 'confirm') {
   const pw = form[field].value;
-  if (!validatePassword(pw).valid) throw Object.assign(new Error('weak'), { userMessage: t('pw.weak') });
-  if (confirm && pw !== form[confirm].value) throw Object.assign(new Error('mismatch'), { userMessage: t('pw.mismatch') });
+  if (!validatePassword(pw).valid) throw new UserError(t('pw.weak'));
+  if (confirm && pw !== form[confirm].value) throw new UserError(t('pw.mismatch'));
   return pw;
 }
