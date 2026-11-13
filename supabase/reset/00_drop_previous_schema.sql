@@ -22,10 +22,10 @@ drop trigger if exists on_auth_user_created_certitrack_org on auth.users;
 do $$
 declare r record;
 begin
-  -- Storage policies created by earlier CertiTrack versions.
-  for r in select policyname from pg_policies
-           where schemaname = 'storage' and tablename = 'objects'
-             and (policyname like 'ct\_%' or coalesce(qual, '') || coalesce(with_check, '') like '%organizationcertificates%')
+  -- Every policy on storage.objects. The baseline recreates the ones it needs;
+  -- older dashboard-made policies (e.g. "Enable insert for authenticated users
+  -- only", which let anyone upload anything) must not survive.
+  for r in select policyname from pg_policies where schemaname = 'storage' and tablename = 'objects'
   loop
     execute format('drop policy if exists %I on storage.objects', r.policyname);
   end loop;
