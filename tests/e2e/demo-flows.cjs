@@ -73,6 +73,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
     await p.waitForSelector('text=SterilePro');
   });
   await step('accept incoming connection', async () => {
+    await p.click('[data-tab="incoming"]');
     await p.click('[data-accept]');
     await p.locator('[data-active]', { hasText: 'SafeWaste' }).waitFor();
   });

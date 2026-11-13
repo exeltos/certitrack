@@ -1,14 +1,17 @@
-// Whether the in-browser demo exists in this build. It is off in production
-// (the public site has no demo); development and the e2e tests turn it on with
-// VITE_ENABLE_DEMO=true. When off, the demo code and data are not even bundled.
-export const DEMO_ENABLED: boolean = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO === 'true';
+// The in-browser demo: a network of sample organizations that lives only in
+// this browser tab. It contains no real data.
+//
+// DEMO_OPEN (development and the e2e tests, VITE_ENABLE_DEMO=true): anyone can
+// start it, and the home page offers it. On the real site it is reached only
+// from the platform owner's menu, and every demo page first checks with the
+// server that the signed-in user is a platform administrator (see shell.js).
+export const DEMO_OPEN: boolean = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO === 'true';
 
 const ROLE_KEY = 'certitrack.demo';
 const STORE_KEY = 'certitrack.demo.store.v2';
 export type DemoRole = 'organization' | 'admin';
 
 export function demoRole(): DemoRole | null {
-  if (!DEMO_ENABLED) return null;
   try { const r = localStorage.getItem(ROLE_KEY); return r === 'admin' || r === 'organization' ? r : null; } catch { return null; }
 }
 export function startDemo(role: DemoRole): void {

@@ -1,6 +1,7 @@
 // Application shell: access guard, top bar, navigation, notifications,
 // theme and language. Every authenticated page starts with startPage().
-import { api, isDemo, endDemo } from '../api/index';
+import { api, isDemo, endDemo, DEMO_OPEN } from '../api/index';
+import { supabaseApi } from '../api/supabase';
 import { html, mount } from '../lib/html';
 import { t, getLanguage, setLanguage } from '../lib/i18n';
 import { relativeTime } from '../lib/format';
@@ -27,7 +28,9 @@ const NAV = {
     ['adminDashboard', 'layout-dashboard', '/pages/admin/dashboard.html'],
     ['organizations', 'building', '/pages/admin/organizations.html'],
     ['network', 'network', '/pages/admin/network.html'],
-    ['audit', 'list-checks', '/pages/admin/audit.html']
+    ['audit', 'list-checks', '/pages/admin/audit.html'],
+    ['demo', 'eye', '/pages/demo/index.html?role=organization'],
+    ['adminSettings', 'settings', '/pages/admin/settings.html']
   ]
 };
 
@@ -174,7 +177,7 @@ function renderShell({ area, page, ctx, title, subtitle, back }) {
     await api.signOut().catch(() => {});
     location.href = PATHS.home;
   });
-  document.querySelector('[data-action=exit-demo]')?.addEventListener('click', () => { endDemo(); location.href = PATHS.home; });
+  document.querySelector('[data-action=exit-demo]')?.addEventListener('click', () => { endDemo(); location.href = DEMO_OPEN ? PATHS.home : PATHS.adminHome; });
   if (documentListeners) return;
   documentListeners = true;
   document.addEventListener('click', e => {
@@ -199,13 +202,64 @@ export function setNavCount(key, count) {
 const SNAPSHOT_KEY = 'certitrack.shell';
 const snapshotOf = ctx => ({ email: ctx.user.email, org: ctx.organization?.name || null, isAdmin: !!ctx.isAdmin, status: ctx.organization?.status || null });
 function readSnapshot() { try { return JSON.parse(sessionStorage.getItem(SNAPSHOT_KEY) || 'null'); } catch { return null; } }
-function writeSnapshot(snap) { try { snap ? sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap)) : sessionStorage.removeItem(SNAPSHOT_KEY); } catch { /* ignore */ } }
+function writeSnapshot(snap) { if (!snap) clearViews(); try { snap ? sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap)) : sessionStorage.removeItem(SNAPSHOT_KEY); } catch { /* ignore */ } }
 const sameSnapshot = (a, b) => !!a && !!b && a.email === b.email && a.org === b.org && a.isAdmin === b.isAdmin && a.status === b.status;
 const snapshotFits = (snap, area) => !!snap && (area === 'admin' ? snap.isAdmin : !!snap.org);
+
+// Last view of each page, kept for this tab only. When the user comes back to a
+// page (or moves between menu items) its last content is shown at once, frozen,
+// and replaced by the fresh content as soon as the page has loaded it. Without
+// this every menu click showed a spinner in place of the content for a moment.
+const VIEW_PREFIX = 'certitrack.view:';
+const viewKey = () => VIEW_PREFIX + location.pathname + location.search;
+let viewOwner = null;   // email of the account the visible shell belongs to
+
+function clearViews() {
+  try { for (const k of Object.keys(sessionStorage)) if (k.startsWith(VIEW_PREFIX)) sessionStorage.removeItem(k); } catch { /* ignore */ }
+}
+
+function saveView() {
+  const main = document.getElementById('main');
+  if (!viewOwner || !main || main.hasAttribute('data-stale') || main.querySelector('.loading, .spinner')) return;
+  const counts = {};
+  document.querySelectorAll('[data-count]').forEach(el => { if (!el.hidden) counts[el.dataset.count] = el.textContent; });
+  const view = { email: viewOwner, main: main.innerHTML, counts };
+  try {
+    const text = JSON.stringify(view);
+    if (text.length < 400_000) sessionStorage.setItem(viewKey(), text);
+  } catch { /* storage full or blocked: just skip */ }
+}
+window.addEventListener('pagehide', saveView);
+
+function restoreView(email) {
+  let view = null;
+  try { view = JSON.parse(sessionStorage.getItem(viewKey()) || 'null'); } catch { /* ignore */ }
+  const main = document.getElementById('main');
+  const content = document.getElementById('content');
+  if (!view || view.email !== email || !main || !content) return;
+  main.innerHTML = view.main;
+  // Frozen until the page puts its own content in: no clicks on stale buttons.
+  main.inert = true;
+  main.setAttribute('data-stale', '');
+  for (const [key, text] of Object.entries(view.counts || {})) {
+    const el = document.querySelector(`[data-count="${key}"]`);
+    if (el) { el.textContent = text; el.hidden = false; }
+  }
+  const fresh = document.getElementById('content');
+  new MutationObserver((_, obs) => {
+    obs.disconnect();
+    main.inert = false;
+    main.removeAttribute('data-stale');
+  }).observe(fresh, { childList: true });
+}
 
 // Guard + shell. Returns { ctx, content, actions } or never resolves when redirecting.
 export async function startPage({ area, page, title, subtitle, back }) {
   prepareDocument(`nav.${page}`);
+  // On the real site the demo is for the platform owner only: confirm it with
+  // the server (in parallel with drawing the page) before showing anything.
+  const demoAllowed = !isDemo() || DEMO_OPEN ? Promise.resolve(true)
+    : supabaseApi.context().then(c => !!c?.isAdmin, () => false);
   const shellArgs = ctx => ({ area, page, ctx, title: t(title), subtitle: subtitle ? t(subtitle) : '', back });
   // Draw the frame right away from the last known account; it is confirmed below.
   const snap = readSnapshot();
@@ -213,6 +267,8 @@ export async function startPage({ area, page, title, subtitle, back }) {
   if (snapshotFits(snap, area)) {
     renderShell(shellArgs({ user: { email: snap.email }, organization: snap.org ? { name: snap.org } : null, isAdmin: snap.isAdmin }));
     drawn = snap;
+    viewOwner = snap.email;
+    restoreView(snap.email);
   }
   let ctx;
   try {
@@ -223,6 +279,7 @@ export async function startPage({ area, page, title, subtitle, back }) {
     return new Promise(() => {});
   }
   const redirect = to => { writeSnapshot(null); location.replace(to); return new Promise(() => {}); };
+  if (!await demoAllowed) { endDemo(); return redirect(PATHS.home); }
   if (!ctx) return redirect(`${PATHS.login}?next=${encodeURIComponent(location.pathname + location.search)}`);
   if (area === 'admin' && !ctx.isAdmin) return redirect(ctx.organization ? PATHS.orgHome : PATHS.login);
   if (area === 'organization' && !ctx.organization) {
@@ -233,7 +290,12 @@ export async function startPage({ area, page, title, subtitle, back }) {
   }
   const fresh = snapshotOf(ctx);
   writeSnapshot(fresh);
-  if (!sameSnapshot(drawn, fresh)) renderShell(shellArgs(ctx));
+  if (!sameSnapshot(drawn, fresh)) {
+    if (drawn && drawn.email !== fresh.email) clearViews();
+    renderShell(shellArgs(ctx));
+    viewOwner = fresh.email;
+    restoreView(fresh.email);
+  }
 
   const status = ctx.organization?.status;
   if (status && status !== 'active') {

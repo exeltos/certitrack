@@ -67,7 +67,7 @@ function render({ certs, connections, requests, partnerCerts, views }) {
         ${todo.length ? html`<ul class="rows">${todo}</ul>` : emptyState({ iconName: 'circle-check', title: t('dash.allClear'), text: t('dash.allClearText') })}
       </section>
 
-      <div class="stack">
+      <div class="stack stack--split">
         <section class="card">
           <div class="card__head"><div><h2>${t('dash.partnersTitle')}</h2><p>${t('dash.partnersText')}</p></div>
             <a class="btn btn--sm btn--ghost" href="/pages/organization/requests.html">${t('common.viewAll')}</a></div>

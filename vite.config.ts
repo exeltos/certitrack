@@ -2,9 +2,21 @@ import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
 import { PAGES } from './scripts/build-pages.mjs';
 
+// The browser must not paint a page before its script has drawn the frame,
+// otherwise every menu click flashes an empty page. Vite drops the attribute
+// from the page entry script while bundling, so it is put back here.
+const renderBlockingEntry = {
+  name: 'render-blocking-entry',
+  transformIndexHtml: {
+    order: 'post' as const,
+    handler: (html: string) => html.replace(/<script type="module" crossorigin src=/, '<script type="module" blocking="render" crossorigin src=')
+  }
+};
+
 // Multi-page app: every HTML shell is an entry point.
 export default defineConfig({
   root: '.',
+  plugins: [renderBlockingEntry],
   publicDir: 'public',
   build: {
     outDir: 'dist',
@@ -13,8 +25,6 @@ export default defineConfig({
     rollupOptions: {
       input: Object.fromEntries(
         [...Object.keys(PAGES), 'pages/organization/compliance.html']
-          // The demo is not part of the public site; only test builds include it.
-          .filter(f => f !== 'pages/demo/index.html' || process.env.VITE_ENABLE_DEMO === 'true')
           .map(f => [f.replace(/\.html$/, ''), resolve(__dirname, f)])
       )
     }

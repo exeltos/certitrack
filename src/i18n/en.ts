@@ -18,7 +18,7 @@ export const en: Record<keyof typeof el, string> = {
 
   'nav.dashboard': 'Overview', 'nav.certificates': 'Certificates', 'nav.connections': 'Connections',
   'nav.requests': 'Requests', 'nav.settings': 'Settings', 'nav.adminDashboard': 'Overview',
-  'nav.organizations': 'Organizations', 'nav.network': 'Network', 'nav.audit': 'Activity log',
+  'nav.organizations': 'Organizations', 'nav.network': 'Network', 'nav.audit': 'Activity log', 'nav.adminSettings': 'Settings', 'nav.demo': 'Demo',
 
   'orgStatus.pending_verification.title': 'Email confirmation pending',
   'orgStatus.pending_verification.text': 'Your organization will be activated once the account email is confirmed.',
@@ -193,6 +193,8 @@ export const en: Record<keyof typeof el, string> = {
   'home.lead': 'Connect with suppliers, customers and partners. Each side decides what the other sees, and CertiTrack warns you before anything expires.',
   'home.ctaPresentation': 'Request a presentation', 'home.presentationSubject': 'CertiTrack presentation',
   'home.contactTitle': 'Contact', 'home.contactEmail': 'Email', 'home.contactPhone': 'Phone', 'home.contactWebsite': 'Website',
+  'admin.settingsTitle': 'Settings', 'admin.settingsSubtitle': 'Platform settings.',
+  'conn.tabActive': 'Active',
   'admin.contactTitle': 'Home page contact details', 'admin.contactText': 'Shown on the home page, in the “Contact” card.',
   'admin.contactInvalid.email': 'The email is not valid.', 'admin.contactInvalid.phone': 'The phone number is not valid.',
   'admin.contactInvalid.website': 'The website must be an address like exeltos.com.', 'admin.contactInvalid.company': 'Enter the company name.',
