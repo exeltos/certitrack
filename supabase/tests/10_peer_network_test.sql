@@ -146,6 +146,10 @@ select t_fails($$select ct_notify_org((select b from ids), 'system', 'info', 'sp
   'clients cannot send notifications directly');
 select t_fails($$select ct_generate_expiry_notifications()$$, 'clients cannot run scheduled jobs');
 select t_fails($$select ct_admin_network()$$, 'non-admin cannot read the whole network');
+select t_ok(not exists(select 1 from pg_proc where pronamespace = 'public'::regnamespace
+              and proname in ('ct_have_live_connection','ct_org_can_view_certificate','ct_is_org_member','ct_has_org_role',
+                              'ct_current_org_ids','ct_can_view_certificate','ct_recently_opened')),
+            'RLS helpers are not part of the public API (cannot probe who is connected to whom)');
 select t_fails($$select * from email_outbox$$, 'clients cannot read the email outbox');
 
 -- ---------------------------------------------------------------------------

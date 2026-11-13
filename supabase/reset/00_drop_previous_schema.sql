@@ -22,12 +22,14 @@ drop trigger if exists on_auth_user_created_certitrack_org on auth.users;
 do $$
 declare r record;
 begin
-  -- Every policy on storage.objects. The baseline recreates the ones it needs;
-  -- older dashboard-made policies (e.g. "Enable insert for authenticated users
-  -- only", which let anyone upload anything) must not survive.
-  for r in select policyname from pg_policies where schemaname = 'storage' and tablename = 'objects'
+  -- Every policy on storage.objects and storage.buckets. The baseline recreates
+  -- the ones it needs; older dashboard-made policies (e.g. "Enable insert for
+  -- authenticated users only" on storage.buckets, which let anyone, even
+  -- anonymous visitors, create buckets) must not survive.
+  for r in select tablename, policyname from pg_policies
+           where schemaname = 'storage' and tablename in ('objects', 'buckets')
   loop
-    execute format('drop policy if exists %I on storage.objects', r.policyname);
+    execute format('drop policy if exists %I on storage.%I', r.policyname, r.tablename);
   end loop;
 
   -- All tables and views in public (CASCADE removes their policies/triggers).

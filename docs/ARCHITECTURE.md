@@ -39,7 +39,10 @@ New changes go in new, timestamped migration files; never edit an applied one.
   fields they may edit directly (organization profile, certificate metadata,
   notification preferences).
 - Internal helpers (`ct_notify_org`, `ct_write_audit`, …) and scheduled jobs are
-  not executable by clients.
+  not executable by clients. The helpers RLS policies call (`ct_is_org_member`,
+  `ct_org_can_view_certificate`, …) live in the `private` schema, which the REST
+  API does not expose, so nobody can probe e.g. whether two other
+  organizations are connected.
 - Audit triggers record every change to core tables in `audit_log`.
 
 Tests: `npm run test:db` applies the migrations to a throwaway local Postgres

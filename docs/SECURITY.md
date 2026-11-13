@@ -26,6 +26,8 @@ All of these are covered by `supabase/tests/10_peer_network_test.sql` (`npm run 
 
 ## Fixed in the 2026-11 rebuild
 
+- A dashboard-made storage policy let anyone, including anonymous visitors, create storage buckets.
+- RLS helper functions were callable through the REST API (could reveal who is connected to whom); moved to the `private` schema.
 - Stored XSS: organization names and audit entries were rendered unescaped in the admin dashboard.
 - Reflected XSS: the password-reset page rendered `error_description` from the URL as HTML.
 - Any signed-in user could call the notification helper and spam any organization.
