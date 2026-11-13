@@ -1,30 +1,40 @@
-import { authService } from '../../services/authService.js';
-import { validatePassword, passwordPolicyMessage } from '../../auth/passwordPolicy.js';
+import { supabaseApi } from '../../api/supabase.js';
+import { html, mount } from '../../lib/html.js';
+import { t } from '../../lib/i18n.js';
+import { icon, friendlyError } from '../../ui/components.js';
+import { passwordField, bindPasswordFields, checkNewPassword } from '../../ui/password.js';
+import { publicPage, authCard, formError, busy } from '../public/layout.js';
 
-document.addEventListener('DOMContentLoaded',async()=>{
-  const form=document.getElementById('resetForm');
-  const {data}=await authService.getSession();
-  if(!data?.session){
-    await new Promise(r=>setTimeout(r,350));
-  }
-  const after=await authService.getSession();
-  if(!after.data?.session){
-    await Swal.fire('Μη έγκυρος σύνδεσμος','Ο σύνδεσμος επαναφοράς έχει λήξει ή δεν είναι έγκυρος. Ζητήστε νέο σύνδεσμο.','error');
-    location.href='./forgot.html'; return;
-  }
+const root = publicPage({ titleKey: 'auth.resetTitle', body: authCard(html`<div class="loading"><span class="spinner"></span></div>`) });
+const card = root.querySelector('.auth-card');
+const hash = new URLSearchParams(location.hash.slice(1));
 
-  form?.addEventListener('submit',async e=>{
+const invalid = message => mount(card, html`<div class="empty"><span class="empty__icon">${icon('circle-alert', { size: 22 })}</span>
+  <strong>${t('auth.linkInvalid')}</strong><p>${message}</p><a class="btn btn--primary" href="/pages/auth/forgot.html">${t('auth.requestNewLink')}</a></div>`);
+
+(async () => {
+  // Rendered as text only: the URL can be crafted by anyone.
+  if (hash.get('error_code') || hash.get('error_description')) { invalid(t('auth.linkExpired')); return; }
+  let session = await supabaseApi.session().catch(() => null);
+  if (!session) { await new Promise(r => setTimeout(r, 500)); session = await supabaseApi.session().catch(() => null); }
+  if (!session) { invalid(t('auth.linkExpired')); return; }
+  mount(card, html`<h1>${t('auth.resetTitle')}</h1><p>${t('auth.resetText')}</p>
+    <form novalidate data-reset>
+      ${passwordField({ name: 'password', label: t('settings.newPassword'), rules: true, autofocus: true })}
+      ${passwordField({ name: 'confirm', label: t('auth.confirmPassword') })}
+      <button class="btn btn--primary btn--lg btn--block" type="submit">${t('auth.savePassword')}</button>
+    </form>`);
+  bindPasswordFields(card);
+  card.querySelector('[data-reset]').addEventListener('submit', e => {
     e.preventDefault();
-    const password=document.getElementById('newPassword').value;
-    const confirm=document.getElementById('confirmPassword').value;
-    if(password!==confirm) return Swal.fire('Σφάλμα','Οι κωδικοί δεν ταιριάζουν.','error');
-    if(!validatePassword(password).valid) return Swal.fire('Ο κωδικός δεν είναι αρκετά ισχυρός',passwordPolicyMessage('el'),'error');
-    const btn=form.querySelector('button[type="submit"]'); btn.disabled=true;
-    const {error}=await authService.updateUser({password});
-    btn.disabled=false;
-    if(error) return Swal.fire({title:'Σφάλμα',text:error.message||'Δεν ήταν δυνατή η αλλαγή κωδικού.',icon:'error'});
-    await authService.signOut();
-    await Swal.fire('Ο κωδικός άλλαξε','Συνδεθείτε ξανά με τον νέο κωδικό.','success');
-    location.href='./login.html';
+    const form = e.target;
+    busy(form.querySelector('[type=submit]'), async () => {
+      try {
+        await supabaseApi.updatePassword(checkNewPassword(form));
+        await supabaseApi.signOut();
+        mount(card, html`<div class="empty"><span class="empty__icon">${icon('circle-check', { size: 22 })}</span>
+          <strong>${t('auth.passwordUpdated')}</strong><p>${t('auth.passwordUpdatedText')}</p><a class="btn btn--primary" href="/pages/auth/login.html">${t('auth.signIn')}</a></div>`);
+      } catch (err) { formError(form, err.userMessage || friendlyError(err)); }
+    });
   });
-});
+})();

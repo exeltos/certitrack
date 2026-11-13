@@ -46,8 +46,8 @@ Not yet formally set. Suggested starting point for a B2B compliance tool:
 
 ## Migration safety net
 
-Separately from backups: this repo already has good discipline around
-`NEXT_ACTION.md` / preflight checks before running schema changes. Keep that
+Separately from backups: every schema change is tested with `npm run test:db`
+and on staging before it reaches production (see `docs/DEPLOYMENT.md`). Keep that
 practice — most "disasters" for a project at this stage are more likely to
 be a bad migration than an infrastructure failure, and a tested rollback
 plan (see `PHASE39_ROLLBACK_PLAN.md` as a precedent) is cheaper than relying

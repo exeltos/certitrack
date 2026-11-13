@@ -7,21 +7,37 @@
   status = 200
 
 [[headers]]
+  for = "/*"
+  [headers.values]
+    # Scripts only from this site (plus the one inline theme snippet, by hash).
+    # Supabase for data, storage (signed PDF URLs) and realtime.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-VlxjFuIHvAcTxEClPi2GcxKHeZghrhWCCu4vlomgKaY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self' blob: https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+[[headers]]
   for = "/*.html"
   [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
+    Cache-Control = "no-cache"
 
 [[headers]]
   for = "/"
   [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/assets/styles/*"
-  [headers.values]
-    Cache-Control = "no-cache, must-revalidate"
+    Cache-Control = "no-cache"
 
 [[headers]]
   for = "/src/*"
   [headers.values]
-    Cache-Control = "no-cache, must-revalidate"
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/assets/styles/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/assets/vendor/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

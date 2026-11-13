@@ -59,5 +59,5 @@ homepage, so a Supabase outage is also caught.
 Once Sentry is receiving events, set up an alert rule (Sentry → Alerts) to
 notify you by email/Slack when:
 - A new error type appears for the first time.
-- Error volume for `send_email` or the rate-limit check spikes (a spike here
+- Error volume for `process-notifications` or the rate-limit check spikes (a spike here
   usually means either abuse or a broken integration).

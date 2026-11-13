@@ -1,66 +1,52 @@
-import { authService } from '../../services/authService.js';
+import { endDemo } from '../../api/index.js';
+import { supabaseApi } from '../../api/supabase.js';
+import { html } from '../../lib/html.js';
+import { t } from '../../lib/i18n.js';
+import { friendlyError } from '../../ui/components.js';
+import { openDialog } from '../../ui/dialog.js';
+import { passwordField, bindPasswordFields } from '../../ui/password.js';
+import { publicPage, authCard, formError, busy } from '../public/layout.js';
+import { PATHS } from '../../ui/shell.js';
 
-// Renders a TOTP code prompt and resolves with the 6-digit code, or null if
-// the user cancels. Kept dependency-free (no new modal library) by reusing
-// the SweetAlert2 instance already loaded on this page.
-async function promptForMfaCode() {
-  const { value } = await Swal.fire({
-    title: 'Κωδικός επαλήθευσης',
-    text: 'Εισάγετε τον 6-ψήφιο κωδικό από την εφαρμογή επαλήθευσης.',
-    input: 'text',
-    inputAttributes: { inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: 6 },
-    showCancelButton: true,
-    confirmButtonText: 'Επιβεβαίωση',
-    cancelButtonText: 'Άκυρο',
-    inputValidator: value => (/^\d{6}$/.test(value || '') ? undefined : 'Ο κωδικός πρέπει να έχει 6 ψηφία.')
+const root = publicPage({
+  titleKey: 'auth.signInTitle',
+  body: authCard(html`<h1>${t('auth.signInTitle')}</h1><p>${t('auth.signInText')}</p>
+    <form novalidate data-login>
+      <div class="field"><label for="email">${t('auth.email')}</label><input class="input" type="email" id="email" name="email" required autocomplete="username" autofocus></div>
+      ${passwordField({ name: 'password', label: t('auth.password'), autocomplete: 'current-password' })}
+      <button class="btn btn--primary btn--lg btn--block" type="submit">${t('auth.signIn')}</button>
+    </form>
+    <div class="auth-links"><a href="/pages/auth/forgot.html">${t('auth.forgot')}</a><a href="/pages/auth/register.html">${t('auth.noAccount')}</a></div>`)
+});
+bindPasswordFields(root);
+
+async function askMfaCode(factorId) {
+  return openDialog({
+    title: t('auth.mfaTitle'), description: t('auth.mfaText'), submitLabel: t('common.confirm'),
+    body: html`<div class="field"><label for="code">${t('settings.mfaCode')}</label><input class="input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required autofocus></div>`,
+    async onSubmit(form) { await supabaseApi.mfaVerifyLogin(factorId, form.code.value.trim()); return true; }
   });
-  return value || null;
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
-  const pwdToggle=document.getElementById('togglePwd'),pwdInput=document.getElementById('password');
-  pwdToggle?.addEventListener('click',()=>{pwdInput.type=pwdInput.type==='password'?'text':'password'});
-  document.getElementById('loginForm')?.addEventListener('submit',async e=>{
-    e.preventDefault();
-    const email=document.getElementById('username').value.trim().toLowerCase(),password=pwdInput.value;
-    Swal.fire({title:'Γίνεται σύνδεση...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
-    try{
-      const {data,error}=await authService.signInWithPassword({email,password});
-      if(error) throw new Error('Το email ή ο κωδικός είναι λανθασμένος ή το email δεν έχει ακόμη επιβεβαιωθεί.');
-      if(!data?.session) throw new Error('Επιβεβαιώστε πρώτα το email σας.');
-
-      // If this account has an MFA factor enrolled, the session above is
-      // only AAL1 (password-verified). Require the second factor before
-      // handing over the dashboard.
-      const { data: aal, error: aalError } = await authService.mfaGetAuthenticatorAssuranceLevel();
-      if (!aalError && aal?.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
-        Swal.close();
-        const { data: factorsData } = await authService.mfaListFactors();
-        const totpFactor = factorsData?.totp?.[0];
-        if (!totpFactor) throw new Error('Απαιτείται δεύτερος παράγοντας ταυτοποίησης, αλλά δεν βρέθηκε καταχωρημένη συσκευή.');
-
-        const { data: challenge, error: challengeError } = await authService.mfaChallenge(totpFactor.id);
-        if (challengeError) throw new Error('Δεν ήταν δυνατή η έναρξη επαλήθευσης δύο παραγόντων.');
-
-        let verified = false;
-        while (!verified) {
-          const code = await promptForMfaCode();
-          if (!code) { await authService.signOut(); return; } // user cancelled: don't leave a half-authenticated AAL1 session hanging in the UI
-          const { error: verifyError } = await authService.mfaVerify(totpFactor.id, challenge.id, code);
-          if (verifyError) {
-            await Swal.fire({ icon: 'error', title: 'Λανθασμένος κωδικός', text: 'Δοκιμάστε ξανά.' });
-            continue;
-          }
-          verified = true;
-        }
-        Swal.fire({title:'Γίνεται σύνδεση...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
-      }
-
-      localStorage.removeItem('certitrack.demo.role');
-      Swal.close(); location.href='../organization/dashboard.html';
-    }catch(err){
-      Swal.close(); pwdInput.value='';
-      Swal.fire({icon:'error',title:'Δεν ήταν δυνατή η σύνδεση',text:err.message||'Ελέγξτε τα στοιχεία σας.'});
+root.querySelector('[data-login]').addEventListener('submit', e => {
+  e.preventDefault();
+  const form = e.target;
+  formError(form, '');
+  if (!form.reportValidity()) return;
+  busy(form.querySelector('[type=submit]'), async () => {
+    try {
+      endDemo();
+      await supabaseApi.signIn(form.email.value.trim().toLowerCase(), form.password.value);
+      const mfa = await supabaseApi.mfaStatus();
+      if (mfa.needsCode && mfa.factor && !(await askMfaCode(mfa.factor.id))) { await supabaseApi.signOut(); return; }
+      const ctx = await supabaseApi.context({ fresh: true });
+      const next = new URLSearchParams(location.search).get('next');
+      const safeNext = next && next.startsWith('/pages/') ? next : null;
+      location.href = safeNext || (ctx?.organization ? PATHS.orgHome : ctx?.isAdmin ? PATHS.adminHome : PATHS.orgHome);
+    } catch (err) {
+      console.error(err);
+      form.password.value = '';
+      formError(form, friendlyError(err));
     }
   });
 });

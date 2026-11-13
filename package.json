@@ -8,11 +8,11 @@
     "dev": "node scripts/dev-server.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:db": "bash scripts/test-db.sh"
+    "test:db": "bash scripts/test-db.sh",
+    "test:e2e": "node tests/e2e/demo-flows.cjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.25.0",
-    "nodemailer": "^9.0.5"
+    "@supabase/supabase-js": "^2.25.0"
   },
   "devDependencies": {
     "vitest": "^4.1.11"
