@@ -18,7 +18,7 @@ publicPage({
         <p class="hero__lead">${t('home.lead')}</p>
         <div class="hero__cta">
           <a class="btn btn--primary btn--lg" href="/pages/auth/register.html">${t('home.ctaRegister')}</a>
-          ${DEMO_ENABLED ? html`<a class="btn btn--secondary btn--lg" href="/pages/demo/index.html">${icon('eye')}${t('home.ctaDemo')}</a>` : html`<a class="btn btn--secondary btn--lg" href="/pages/auth/login.html">${t('auth.signIn')}</a>`}
+          ${DEMO_ENABLED ? html`<a class="btn btn--secondary btn--lg" href="/pages/demo/index.html">${icon('eye')}${t('home.ctaDemo')}</a>` : ''}
         </div>
         <div class="hero__points">
           <span>${icon('check', { size: 16 })}${t('home.point1')}</span>
