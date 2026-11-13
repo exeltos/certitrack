@@ -1,20 +1,24 @@
 {
-  "name": "certitrack-netlify-functions",
-  "version": "1.0.1",
+  "name": "certitrack",
+  "version": "2.0.0",
   "description": "CertiTrack organization certificate compliance platform",
-  "main": "index.js",
   "scripts": {
-    "build": "echo \"Static CertiTrack: no build step required\"",
-    "dev": "node scripts/dev-server.js",
+    "dev": "vite",
+    "build": "node scripts/build-pages.mjs && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:db": "bash scripts/test-db.sh",
     "test:e2e": "node tests/e2e/demo-flows.cjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.25.0"
+    "@supabase/supabase-js": "2.118.0"
   },
   "devDependencies": {
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
     "vitest": "^4.1.11"
-  }
+  },
+  "private": true
 }

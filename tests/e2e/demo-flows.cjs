@@ -1,6 +1,6 @@
 const { chromium, devices } = require('playwright');
 // End-to-end smoke test of the demo (no backend needed).
-// Usage: npm run dev  (in another terminal), then:  node tests/e2e/demo-flows.cjs [screenshot-dir]
+// Usage: npm run build && npm run preview  (in another terminal), then:  node tests/e2e/demo-flows.cjs [screenshot-dir]
 // Requires Playwright with Chromium. Applies the CSP from netlify.toml to every page.
 const fs = require('fs');
 const path = require('path');
@@ -10,7 +10,7 @@ const CSP = /Content-Security-Policy = "([^"]+)"/.exec(fs.readFileSync(path.join
 const errors = [];
 const step = async (name, fn) => { try { await fn(); console.log('ok -', name); } catch (e) { console.log('FAIL -', name, e.message.split('\n')[0]); errors.push(name); } };
 (async () => {
-  const b = await chromium.launch();
+  const b = await chromium.launch(process.env.HTTPS_PROXY ? { proxy: { server: process.env.HTTPS_PROXY, bypass: '127.0.0.1,localhost' } } : {});
   const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
   await ctx.route(B + '/**', async route => {
     const res = await route.fetch();
@@ -29,7 +29,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
     await p.fill('#f-title', 'ISO 22000:2018');
     await p.selectOption('#f-type', 't-iso22000');
     await p.fill('#f-expiry', '2028-03-01');
-    await p.setInputFiles('input[name=file]', path.join(__dirname, '../../assets/demo-certificates/sample-certificate.pdf'));
+    await p.setInputFiles('input[name=file]', path.join(__dirname, '../../public/demo/sample-certificate.pdf'));
     await p.check('input[name=sharing][value=selected]', { force: true });
     await p.check('input[name=share][value=o-med]');
     await p.screenshot({ path: `${out}/dlg-new-cert.png` });

@@ -2,23 +2,13 @@
 // database (RLS + ct_* functions); this module only shapes data for the UI.
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config/appConfig.js';
 
-const SUPABASE_SCRIPT = new URL('../../assets/vendor/supabase-2.117.2.js', import.meta.url).href;
 const BUCKET = 'organizationcertificates';
 let clientPromise;
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = src; s.onload = resolve; s.onerror = () => reject(new Error('Network error'));
-    document.head.appendChild(s);
-  });
-}
-
+// supabase-js is loaded on demand, so public pages and the demo never download it.
 export function client() {
-  clientPromise ??= (async () => {
-    if (!window.supabase?.createClient) await loadScript(SUPABASE_SCRIPT);
-    return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  })();
+  clientPromise ??= import('@supabase/supabase-js')
+    .then(({ createClient }) => createClient(SUPABASE_URL, SUPABASE_ANON_KEY));
   return clientPromise;
 }
 
