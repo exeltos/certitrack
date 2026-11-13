@@ -595,3 +595,40 @@ a.kpi:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(16, 24, 40
   .auth-aside li .icon { color: var(--brand-3); }
 }
 .auth-card { box-shadow: var(--shadow-card); }
+
+/* Public pages: the top bar (with "Sign in") always stays visible, and on
+   desktop the page fits the screen without scrolling. */
+.public-bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px); box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--bg) 88%, transparent); clip-path: inset(0 -100vmax); }
+.public--brand .public-bar { background: color-mix(in srgb, var(--shell) 85%, transparent); box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--shell) 85%, transparent); }
+
+@media (min-width: 980px) {
+  .public { height: 100vh; }
+  .public > main { flex: 1; min-height: 0; }
+  .public--brand > main { display: flex; flex-direction: column; justify-content: center; }
+  .public--brand { background:
+    radial-gradient(600px 320px at 85% 8%, rgba(124, 58, 237, .35), transparent 70%),
+    radial-gradient(520px 300px at 10% 0%, rgba(34, 211, 238, .18), transparent 70%),
+    linear-gradient(180deg, var(--shell) 0, var(--shell-2) 64%, var(--bg) 64%); }
+  .hero { padding: clamp(8px, 3vh, 48px) var(--gutter) clamp(16px, 3.5vh, 48px); gap: 32px; }
+  .hero h1 { font-size: clamp(30px, min(4.4vw, 5.6vh), 52px); margin: clamp(8px, 1.6vh, 16px) 0; }
+  .hero__lead { font-size: clamp(15px, 2vh, 17px); }
+  .hero__cta { margin-top: clamp(14px, 2.6vh, 28px); }
+  .hero__points { margin-top: clamp(10px, 2vh, 22px); }
+  .preview { padding: clamp(12px, 1.8vh, 18px); gap: 6px; }
+  .preview .row { padding: clamp(6px, 1.2vh, 12px) 4px; }
+  .features { padding-bottom: clamp(12px, 2.4vh, 40px); }
+  .feature { padding: clamp(14px, 2.2vh, 20px); }
+  .feature .row__icon { margin-bottom: clamp(6px, 1.2vh, 12px); }
+  .site-foot { padding: 12px var(--gutter); }
+  .auth--split { min-height: 0; }
+}
+@media (min-width: 980px) and (max-height: 820px) {
+  .features .feature p { font-size: 13px; }
+  .auth-card { padding: 20px 24px; }
+  .auth-card > p { margin-bottom: 14px; }
+  .auth-card form { gap: 12px; }
+  .auth-card .form-grid { gap: 12px; }
+  .auth-links { margin-top: 12px; padding-top: 12px; }
+  .pw-rules { gap: 1px; }
+}
