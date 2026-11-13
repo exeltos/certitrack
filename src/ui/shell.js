@@ -202,7 +202,8 @@ export function setNavCount(key, count) {
 const SNAPSHOT_KEY = 'certitrack.shell';
 const snapshotOf = ctx => ({ email: ctx.user.email, org: ctx.organization?.name || null, isAdmin: !!ctx.isAdmin, status: ctx.organization?.status || null });
 function readSnapshot() { try { return JSON.parse(sessionStorage.getItem(SNAPSHOT_KEY) || 'null'); } catch { return null; } }
-function writeSnapshot(snap) { if (!snap) clearViews(); try { snap ? sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap)) : sessionStorage.removeItem(SNAPSHOT_KEY); } catch { /* ignore */ } }
+// Clearing the snapshot (logout, lost session) also stops saving views of this page.
+function writeSnapshot(snap) { if (!snap) { viewOwner = null; clearViews(); } try { snap ? sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap)) : sessionStorage.removeItem(SNAPSHOT_KEY); } catch { /* ignore */ } }
 const sameSnapshot = (a, b) => !!a && !!b && a.email === b.email && a.org === b.org && a.isAdmin === b.isAdmin && a.status === b.status;
 const snapshotFits = (snap, area) => !!snap && (area === 'admin' ? snap.isAdmin : !!snap.org);
 
@@ -211,7 +212,11 @@ const snapshotFits = (snap, area) => !!snap && (area === 'admin' ? snap.isAdmin 
 // and replaced by the fresh content as soon as the page has loaded it. Without
 // this every menu click showed a spinner in place of the content for a moment.
 const VIEW_PREFIX = 'certitrack.view:';
-const viewKey = () => VIEW_PREFIX + location.pathname + location.search;
+// The language is part of the key, so a view never comes back in the other language.
+// Fixed when the page loads: switching language changes the setting before the
+// page is left, and the view on screen is still in the language it was drawn in.
+const VIEW_KEY = `${VIEW_PREFIX}${getLanguage()}:${location.pathname}${location.search}`;
+const viewKey = () => VIEW_KEY;
 let viewOwner = null;   // email of the account the visible shell belongs to
 
 function clearViews() {
