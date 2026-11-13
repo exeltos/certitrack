@@ -1,152 +1,133 @@
-import { getOrganizationContext, bindOrganizationLogout } from './guard.js';
-import { organizationService } from '../../services/organizationService.js';
-import { escapeHtml, emptyState, statusBadge } from '../../components/uiPrimitives.js';
-import { appUrl } from '../../shared/paths.js';
+import { api } from '../../api/index.js';
+import { html, mount } from '../../lib/html.js';
+import { t } from '../../lib/i18n.js';
+import { relativeTime, formatDate } from '../../lib/format.js';
+import { startPage, setNavCount } from '../../ui/shell.js';
+import { icon, avatar, emptyState, errorState, friendlyError } from '../../ui/components.js';
+import { openDialog, confirmDialog, toast, toastError } from '../../ui/dialog.js';
+import { splitConnections, visibleTo } from './model.js';
 
-const safe=escapeHtml; let rows=[]; let ctx;
-function friendlyPartnerError(error){
-  const raw=String(error?.message||error||'').trim();
-  const msg=raw.toLowerCase();
-  if(msg.includes('already')||msg.includes('duplicate')||msg.includes('εκκρεμ')||msg.includes('υπάρχει ήδη')){
-    return {title:'Υπάρχει ήδη αίτημα συνεργασίας',text:'Έχει ήδη σταλεί αίτημα ή υπάρχει ενεργή σχέση με αυτόν τον οργανισμό. Δείτε τη λίστα συνεργατών για την τρέχουσα κατάσταση.'};
-  }
-  if(msg.includes('not found')||msg.includes('δεν βρέθηκε')){
-    return {title:'Δεν βρέθηκε οργανισμός',text:'Ελέγξτε το ΑΦΜ ή το email και δοκιμάστε ξανά.'};
-  }
-  return {title:'Δεν ολοκληρώθηκε',text:'Δεν ήταν δυνατή η δημιουργία του αιτήματος συνεργασίας. Δοκιμάστε ξανά σε λίγο.'};
-}
-function incomingRequestCard(r){
-  const p=r.partner||{};
-  return `<button type="button" class="ct-incoming-request" data-incoming-relation="${safe(r.id)}">
-    <span class="ct-incoming-request__icon"><i data-lucide="user-plus"></i></span>
-    <span class="ct-incoming-request__copy"><strong>${safe(p.name||'Ένας οργανισμός')} σας προσκαλεί σε συνεργασία</strong><span>Δείτε το αίτημα και επιλέξτε Αποδοχή ή Απόρριψη.</span></span>
-    <span class="ct-incoming-request__action">Προβολή <i data-lucide="chevron-right"></i></span>
-  </button>`;
-}
-function renderIncomingRequests(){
-  const host=document.getElementById('incomingRequests'); if(!host)return;
-  const incoming=rows.filter(r=>r.status==='pending'&&r.direction==='incoming');
-  host.innerHTML=incoming.length?`<div class="ct-incoming-requests__label">ΝΕΑ ΑΙΤΗΜΑΤΑ ΣΥΝΕΡΓΑΣΙΑΣ</div>${incoming.map(incomingRequestCard).join('')}`:'';
-  host.classList.toggle('is-empty',incoming.length===0);
-  host.querySelectorAll('[data-incoming-relation]').forEach(el=>el.addEventListener('click',()=>openRelation(el.dataset.incomingRelation)));
-}
-function label(r){if(r.status==='pending')return r.direction==='incoming'?'Αίτημα προς εσάς':'Αναμονή αποδοχής';if(r.status==='blocked')return'Αποκλεισμένη';if(r.status==='declined')return'Απορρίφθηκε';if(r.status==='ended')return'Ανενεργή';return'Ενεργή';}
-function partnerRow(r){
-  const p=r.partner||{}; const initials=String(p.name||'').trim().split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase()||'—';
-  const state=statusBadge(r.status==='blocked'||r.status==='declined'?'danger':r.status==='pending'?'warning':r.status==='active'?'success':'neutral',label(r));
-  return `<article class="ct-company-row ct-company-row--clickable" data-relation-id="${safe(r.id)}" tabindex="0" role="link" aria-label="Προβολή ${safe(p.name||'συνεργάτη')}"><div class="ct-company-avatar">${safe(initials)}</div><div class="ct-company-row__main"><strong>${safe(p.name||'Χωρίς επωνυμία')}</strong><span>ΑΦΜ ${safe(p.afm||'—')}${p.email?` · ${safe(p.email)}`:''}</span></div><div>${state}</div><i class="ct-company-row__chevron" data-lucide="chevron-right"></i></article>`;
-}
-function openRelation(id){location.href=appUrl(`pages/organization/partner.html?relation=${encodeURIComponent(id)}`);}
-function render(){
-  const q=(document.getElementById('partnerSearch')?.value||'').toLowerCase();
-  const visible=rows.filter(r=>r.status==='pending'||r.status==='active');
-  const f=visible.filter(r=>`${r.partner?.name||''} ${r.partner?.afm||''} ${r.partner?.email||''}`.toLowerCase().includes(q));
-  renderIncomingRequests();
-  document.getElementById('partnerCount').textContent=`${f.length} συνεργάτες`;
-  document.getElementById('partnersList').innerHTML=f.length?f.map(partnerRow).join(''):emptyState({icon:'users',title:'Δεν βρέθηκαν συνεργάτες',text:'Συνδέστε έναν οργανισμό για να ανταλλάσσετε κοινόχρηστα πιστοποιητικά.'});
-  document.querySelectorAll('[data-relation-id]').forEach(row=>{
-    row.onclick=()=>openRelation(row.dataset.relationId);
-    row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openRelation(row.dataset.relationId);}};
-  });
-  window.lucide?.createIcons();
-}
-async function refresh(){rows=await organizationService.listPartners(ctx.organization);render();}
-async function askRegistrationInviteEmail(initial=''){
-  const info=await Swal.fire({
-    title:'Ο οργανισμός δεν είναι ακόμη στο CertiTrack',
-    html:`<p class="ct-swal-copy">Δεν βρέθηκε εγγεγραμμένος οργανισμός με τα στοιχεία που δώσατε.</p>
-          <p>Μπορείτε να του στείλετε <strong>πρόσκληση εγγραφής και συνεργασίας</strong>. Μετά την εγγραφή του, θα μπορέσετε να ολοκληρώσετε τη συνεργασία μέσα από το CertiTrack.</p>`,
-    icon:'info',
-    showCancelButton:true,
-    confirmButtonText:'Πρόσκληση εγγραφής',
-    cancelButtonText:'Ακύρωση'
-  });
-  if(!info.isConfirmed)return null;
+const { ctx, content, actions } = await startPage({ area: 'organization', page: 'connections', title: 'conn.title', subtitle: 'conn.subtitle' });
+const canManage = ['owner', 'admin'].includes(ctx.role);
+const canRequest = ['owner', 'admin', 'member'].includes(ctx.role);
+let q = '';
+let data;
 
-  const mail=await Swal.fire({
-    title:'Email πρόσκλησης',
-    input:'email',
-    inputLabel:'Email οργανισμού',
-    inputValue:String(initial||'').includes('@')?String(initial||''):'',
-    inputPlaceholder:'π.χ. quality@company.gr',
-    showCancelButton:true,
-    confirmButtonText:'Συνέχεια',
-    cancelButtonText:'Ακύρωση',
-    inputValidator:v=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim())?'Συμπληρώστε έγκυρο email.':undefined
-  });
-  return mail.isConfirmed?String(mail.value||'').trim():null;
+if (canRequest) {
+  mount(actions, html`<button class="btn btn--primary" data-new>${icon('user-plus')}${t('conn.new')}</button>`);
+  actions.querySelector('[data-new]').addEventListener('click', connectDialog);
 }
 
-async function addPartner(){
-  const res=await Swal.fire({
-    title:'Νέα συνεργασία',
-    input:'text',
-    inputLabel:'ΑΦΜ ή email οργανισμού',
-    inputPlaceholder:'π.χ. 099999999 ή quality@company.gr',
-    showCancelButton:true,
-    confirmButtonText:'Αναζήτηση',
-    cancelButtonText:'Ακύρωση',
-    inputValidator:v=>!String(v||'').trim()?'Συμπληρώστε ΑΦΜ ή email.':undefined
-  });
-  if(!res.isConfirmed)return;
-
-  let lookup=String(res.value||'').trim();
-
-  try{
-    const candidate=await organizationService.findPartnerCandidate(lookup);
-
-    if(!candidate){
-      const inviteEmail=await askRegistrationInviteEmail(lookup);
-      if(!inviteEmail)return;
-      lookup=inviteEmail;
-
-      const ask=await Swal.fire({
-        title:'Αποστολή πρόσκλησης εγγραφής;',
-        html:`<p class="ct-swal-copy"><strong>${safe(inviteEmail)}</strong></p>
-              <p>Θα σταλεί email για εγγραφή στο CertiTrack και πρόσκληση συνεργασίας.</p>
-              <p class="ct-swal-muted">Η συνεργασία θα παραμείνει σε αναμονή μέχρι ο οργανισμός να δημιουργήσει λογαριασμό και να συνδεθεί.</p>`,
-        icon:'question',
-        showCancelButton:true,
-        confirmButtonText:'Αποστολή πρόσκλησης',
-        cancelButtonText:'Ακύρωση'
+async function connectDialog() {
+  let found = null;
+  const result = await openDialog({
+    title: t('conn.newTitle'), description: t('conn.newText'), submitLabel: t('conn.send'),
+    body: html`<div class="field"><label for="lookup">${t('conn.lookupLabel')}</label>
+      <input class="input" id="lookup" name="lookup" required autocomplete="off" placeholder="${t('conn.lookupPlaceholder')}" autofocus>
+      <small>${t('conn.lookupHint')}</small></div>
+      <div data-preview></div>`,
+    onOpen(form) {
+      const preview = form.querySelector('[data-preview]');
+      let timer;
+      form.lookup.addEventListener('input', () => {
+        clearTimeout(timer); found = null;
+        const v = form.lookup.value.trim();
+        if (v.length < 5) { mount(preview, ''); return; }
+        timer = setTimeout(async () => {
+          try {
+            found = await api.findPartner(v);
+            mount(preview, found
+              ? html`<div class="callout callout--info">${avatar(found.name)}<div><strong>${found.name}</strong><p>${t('common.vat')} ${found.vat_number}</p></div></div>`
+              : v.includes('@') ? html`<div class="callout">${icon('mail')}<div><strong>${t('conn.notRegistered')}</strong><p>${t('conn.inviteByEmail')}</p></div></div>`
+                : html`<p class="hint">${t('conn.notFoundVat')}</p>`);
+          } catch (err) { mount(preview, html`<p class="hint">${friendlyError(err)}</p>`); }
+        }, 350);
       });
-      if(!ask.isConfirmed)return;
+    },
+    async onSubmit(form) { return api.requestConnection(form.lookup.value.trim()); }
+  });
+  if (result) { toast(result.kind === 'invitation' ? t('conn.invited') : t('conn.requested')); refresh(); }
+}
 
-      await organizationService.requestPartner(ctx.organization,lookup);
-      await Swal.fire({
-        title:'Η πρόσκληση εγγραφής στάλθηκε',
-        text:'Ο παραλήπτης θα λάβει email με σύνδεσμο εγγραφής στο CertiTrack.',
-        icon:'success',
-        confirmButtonText:'ΟΚ'
-      });
-      await refresh();
-      return;
+const row = (c, side) => html`<li class="row">${avatar(c.partner_name)}
+  <div class="row__main"><span class="row__title">${c.partner_name}</span>
+    <span class="row__meta"><span>${t('common.vat')} ${c.partner_vat}</span><span>${relativeTime(c.created_at)}</span></span></div>
+  <div class="row__side">${side}</div></li>`;
+
+function renderActive() {
+  const { active } = splitConnections(data.connections);
+  const list = active.filter(c => `${c.partner_name} ${c.partner_vat} ${c.partner_email || ''}`.toLowerCase().includes(q.toLowerCase()));
+  const host = content.querySelector('[data-active]');
+  if (!active.length) { mount(host, emptyState({ iconName: 'users', title: t('conn.emptyTitle'), text: t('conn.emptyText') })); return; }
+  if (!list.length) { mount(host, emptyState({ iconName: 'search', title: t('common.noResults') })); return; }
+  mount(host, html`<ul class="rows">${list.map(c => {
+    const theyShow = data.partnerCerts.filter(x => x.organization_id === c.partner_id).length;
+    const iShow = data.myCerts.filter(x => visibleTo(x, c.partner_id)).length;
+    return html`<li><a class="row row--link" href="/pages/organization/partner.html?id=${c.id}">
+      ${avatar(c.partner_name)}
+      <div class="row__main"><span class="row__title">${c.partner_name}</span>
+        <span class="row__meta"><span>${t('common.vat')} ${c.partner_vat}</span><span>${t('conn.since', { date: formatDate(c.responded_at || c.created_at) })}</span></span></div>
+      <div class="row__side"><span class="row__meta"><span title="${t('conn.theyShowHint')}">${icon('arrow-left', { size: 14 })} ${t('conn.theyShow', { count: theyShow })}</span>
+        <span title="${t('conn.iShowHint')}">${icon('arrow-right', { size: 14 })} ${t('conn.iShow', { count: iShow })}</span></span>${icon('chevron-right', { cls: 'chevron' })}</div>
+    </a></li>`;
+  })}</ul>`);
+}
+
+function render() {
+  const { active, incoming, outgoing } = splitConnections(data.connections);
+  setNavCount('connections', incoming.length);
+  mount(content, html`<div class="stack">
+    ${incoming.length ? html`<section class="card">
+      <div class="card__head"><div><h2>${t('conn.incomingTitle')}</h2><p>${t('conn.incomingText')}</p></div></div>
+      <ul class="rows">${incoming.map(c => row(c, canManage
+        ? html`<button class="btn btn--sm btn--secondary" data-decline="${c.id}">${t('common.decline')}</button><button class="btn btn--sm btn--primary" data-accept="${c.id}">${t('common.accept')}</button>`
+        : html`<span class="hint">${t('conn.ownersRespond')}</span>`))}</ul></section>` : ''}
+
+    <section class="card">
+      <div class="card__head"><div><h2>${t('conn.activeTitle', { count: active.length })}</h2><p>${t('conn.activeText')}</p></div>
+        <label class="search">${icon('search', { size: 16 })}<span class="sr-only">${t('common.search')}</span>
+          <input class="input" type="search" data-q placeholder="${t('conn.searchPlaceholder')}" value="${q}"></label></div>
+      <div data-active></div>
+    </section>
+
+    ${outgoing.length || data.invitations.length ? html`<section class="card">
+      <div class="card__head"><div><h2>${t('conn.outgoingTitle')}</h2><p>${t('conn.outgoingText')}</p></div></div>
+      <ul class="rows">
+        ${outgoing.map(c => row(c, html`<span class="badge badge--warning">${t('conn.awaiting')}</span>${canManage ? html`<button class="btn btn--sm btn--ghost" data-cancel="${c.id}">${t('common.cancel')}</button>` : ''}`))}
+        ${data.invitations.map(i => html`<li class="row"><span class="row__icon">${icon('mail')}</span>
+          <div class="row__main"><span class="row__title">${i.email}</span><span class="row__meta"><span>${t('conn.invitationSent')}</span><span>${relativeTime(i.created_at)}</span></span></div>
+          <div class="row__side"><span class="badge badge--neutral">${t('conn.invitation')}</span><button class="btn btn--sm btn--ghost" data-cancel-invite="${i.id}">${t('common.cancel')}</button></div></li>`)}
+      </ul></section>` : ''}
+
+    <div class="callout callout--info">${icon('shield-check')}<div><strong>${t('conn.privacyTitle')}</strong><p>${t('conn.privacyText')}</p></div></div>
+  </div>`);
+  content.querySelector('[data-q]').addEventListener('input', e => { q = e.target.value; renderActive(); });
+  renderActive();
+}
+
+content.addEventListener('click', async e => {
+  const b = e.target.closest('[data-accept],[data-decline],[data-cancel],[data-cancel-invite]');
+  if (!b) return;
+  try {
+    if (b.dataset.accept || b.dataset.decline) {
+      b.disabled = true;
+      await api.respondConnection(b.dataset.accept || b.dataset.decline, !!b.dataset.accept);
+      toast(b.dataset.accept ? t('conn.accepted') : t('conn.declined'));
+    } else if (b.dataset.cancel) {
+      if (!await confirmDialog({ title: t('conn.cancelTitle'), confirmLabel: t('conn.cancelRequest'), danger: true })) return;
+      await api.endConnection(b.dataset.cancel); toast(t('conn.cancelled'));
+    } else {
+      await api.cancelInvitation(b.dataset.cancelInvite); toast(t('conn.invitationCancelled'));
     }
+    refresh();
+  } catch (err) { b.disabled = false; toastError(err); }
+});
 
-    const ask=await Swal.fire({
-      title:'Αποστολή αιτήματος συνεργασίας;',
-      html:`<p class="ct-swal-copy"><strong>${safe(candidate.name||'Οργανισμός')}</strong><br>
-            ΑΦΜ ${safe(candidate.afm||'—')}<br>${safe(candidate.email||'')}</p>
-            <p>Ο οργανισμός είναι ήδη εγγεγραμμένος στο CertiTrack. Θα λάβει νέο αίτημα συνεργασίας για Αποδοχή ή Απόρριψη.</p>`,
-      icon:'question',
-      showCancelButton:true,
-      confirmButtonText:'Αποστολή αιτήματος',
-      cancelButtonText:'Ακύρωση'
-    });
-    if(!ask.isConfirmed)return;
-
-    await organizationService.requestPartner(ctx.organization,lookup);
-    await Swal.fire({
-      title:'Το αίτημα συνεργασίας στάλθηκε',
-      text:`Το αίτημα προς ${candidate.name||'τον οργανισμό'} καταχωρήθηκε και αναμένει αποδοχή.`,
-      icon:'success',
-      confirmButtonText:'ΟΚ'
-    });
-    await refresh();
-  }catch(e){
-    const friendly=friendlyPartnerError(e);
-    Swal.fire({title:friendly.title,text:friendly.text,icon:'info',confirmButtonText:'ΟΚ'});
-  }
+async function refresh() {
+  try {
+    const [connections, invitations, partnerCerts, myCerts] = await Promise.all([api.connections(), api.invitations(), api.visiblePartnerCertificates(), api.myCertificates()]);
+    data = { connections, invitations, partnerCerts, myCerts };
+    render();
+  } catch (err) { console.error(err); mount(content, errorState(err)); }
 }
-async function init(){ctx=await getOrganizationContext();if(!ctx)return;bindOrganizationLogout();await refresh();document.getElementById('partnerSearch')?.addEventListener('input',render);document.getElementById('addPartnerBtn')?.addEventListener('click',addPartner);}
-init().catch(e=>{console.error(e);Swal.fire('Σφάλμα',e.message||'Αποτυχία φόρτωσης','error')});
+refresh();

@@ -1,36 +1,38 @@
-import { adminService } from '../../services/adminService.js';
-import { requirePlatformAdmin, safeDate } from './adminCommon.js';
-let rows=[];
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const demoRows=[
- {created_at:new Date().toISOString(),action:'update',entity_type:'certificates',organization:'MedSupply A.E.',details:'ISO 13485 renewed'},
- {created_at:new Date(Date.now()-3600000).toISOString(),action:'insert',entity_type:'organization_relationships',organization:'DEMO COMPANY S.A.',details:'Partner relationship created'},
- {created_at:new Date(Date.now()-7200000).toISOString(),action:'closure_requested',entity_type:'organization',organization:'CleanCare Services',details:'Organization closure requested'}
-];
-function details(x){
-  if(typeof x.details==='string')return x.details;
-  const meta=x.metadata||{},oldData=x.old_data||{},newData=x.new_data||{};
-  const changed=Object.keys({...oldData,...newData}).filter(k=>JSON.stringify(oldData[k])!==JSON.stringify(newData[k])).filter(k=>!['updated_at'].includes(k));
-  return changed.length?`Αλλαγές: ${changed.slice(0,8).join(', ')}`:(meta.reason?`Αιτιολογία: ${meta.reason}`:'—');
+import { api } from '../../api/index.js';
+import { html, mount, raw } from '../../lib/html.js';
+import { t } from '../../lib/i18n.js';
+import { formatDateTime } from '../../lib/format.js';
+import { startPage } from '../../ui/shell.js';
+import { icon, badge, emptyState, errorState } from '../../ui/components.js';
+
+const { content } = await startPage({ area: 'admin', page: 'audit', title: 'admin.auditTitle', subtitle: 'admin.auditSubtitle' });
+let rows = [], orgName = new Map(), q = '', entity = 'all';
+const ACTION_KIND = { insert: 'success', update: 'info', delete: 'danger' };
+
+function changed(r) {
+  if (!r.old_data || !r.new_data) return '';
+  return Object.keys(r.new_data).filter(k => !['updated_at', 'updated_by'].includes(k) && JSON.stringify(r.old_data[k]) !== JSON.stringify(r.new_data[k])).slice(0, 6).join(', ');
 }
-function render(){
-  const q=(document.getElementById('auditSearch').value||'').toLowerCase(),type=document.getElementById('auditType').value;
-  const out=rows.filter(x=>(type==='all'||String(x.entity_type||'').includes(type))&&[x.action,x.entity_type,x.organization,details(x)].some(v=>String(v||'').toLowerCase().includes(q)));
-  document.getElementById('auditBody').innerHTML=out.map(x=>`<tr><td>${safeDate(x.created_at)}</td><td><strong>${esc(x.action||'—')}</strong></td><td>${esc(x.entity_type||'—')}</td><td>${esc(x.organization||'Platform')}</td><td><div class="ct-admin-audit-details">${esc(details(x))}</div></td></tr>`).join('')||'<tr><td colspan="5" class="ct-admin-empty">Δεν υπάρχουν audit records.</td></tr>';
+
+function renderTable() {
+  const list = rows.filter(r => (entity === 'all' || r.entity_type === entity) &&
+    `${r.action} ${r.entity_type} ${orgName.get(r.organization_id) || ''} ${changed(r)}`.toLowerCase().includes(q.toLowerCase()));
+  mount(content.querySelector('[data-table]'), list.length ? html`<div class="table-wrap"><table class="table">
+    <thead><tr><th>${t('admin.colWhen')}</th><th>${t('admin.colOrg')}</th><th>${t('admin.colAction')}</th><th>${t('admin.colEntity')}</th><th>${t('admin.colChanges')}</th></tr></thead>
+    <tbody>${list.map(r => html`<tr><td style="white-space:nowrap">${formatDateTime(r.created_at)}</td><td>${orgName.get(r.organization_id) || '—'}</td>
+      <td>${badge(ACTION_KIND[r.action] || 'neutral', r.action)}</td><td>${t(`entity.${r.entity_type}`)}</td><td class="muted">${changed(r) || r.metadata?.reason || '—'}</td></tr>`)}</tbody></table></div>`
+    : emptyState({ iconName: 'list-checks', title: t('common.noResults') }));
 }
-async function init(){
-  const guard=await requirePlatformAdmin();if(guard.denied)return;
-  try{
-    if(guard.demo)rows=demoRows;
-    else{
-      const [a,o]=await Promise.all([adminService.audit().select('*').order('created_at',{ascending:false}).limit(500),adminService.listOrganizations()]);
-      if(a.error)throw a.error;
-      const names=new Map((o.data||[]).map(x=>[x.id,x.display_name||x.legal_name||x.name||'Οργανισμός']));
-      rows=(a.data||[]).map(x=>({...x,organization:x.organization_id?(names.get(x.organization_id)||'Οργανισμός'):'Platform'}));
-    }
-    render();
-  }catch(err){console.error(err);document.getElementById('auditBody').innerHTML='<tr><td colspan="5" class="ct-admin-empty">Δεν ήταν δυνατή η φόρτωση του audit trail.</td></tr>';}
-  document.getElementById('auditSearch')?.addEventListener('input',render);
-  document.getElementById('auditType')?.addEventListener('change',render);
-}
-init();
+
+try {
+  const [audit, orgs] = await Promise.all([api.adminAudit(), api.adminOrganizations()]);
+  rows = audit; orgName = new Map(orgs.map(o => [o.id, o.name]));
+  const entities = [...new Set(rows.map(r => r.entity_type))].sort();
+  mount(content, html`<section class="card"><div class="toolbar">
+    <label class="search">${icon('search', { size: 16 })}<span class="sr-only">${t('common.search')}</span><input class="input" type="search" data-q placeholder="${t('admin.searchAudit')}"></label>
+    <select class="select" data-entity aria-label="${t('admin.colEntity')}"><option value="all">${t('admin.allEntities')}</option>${entities.map(e => html`<option value="${e}" ${e === entity ? raw('selected') : ''}>${t(`entity.${e}`)}</option>`)}</select>
+  </div><div data-table></div></section>`);
+  content.querySelector('[data-q]').addEventListener('input', e => { q = e.target.value; renderTable(); });
+  content.querySelector('[data-entity]').addEventListener('change', e => { entity = e.target.value; renderTable(); });
+  renderTable();
+} catch (err) { console.error(err); mount(content, errorState(err)); }

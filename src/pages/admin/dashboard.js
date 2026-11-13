@@ -1,10 +1,38 @@
-import { demoData } from '../../demo/demoData.js';
-import { adminService } from '../../services/adminService.js';
-import { requirePlatformAdmin, statusKey, statusLabel, initials } from './adminCommon.js';
-import { adminStatus, emptyState, kpiCard } from '../../components/uiPrimitives.js';
-function renderStats(stats){const items=[['Οργανισμοί',stats.organizations||0,'building-2'],['Ενεργές συνεργασίες',stats.activeRelationships||0,'link-2'],['Εκκρεμή αιτήματα',stats.pendingRelationships||0,'clock-3'],['Πιστοποιητικά',stats.certificates||0,'badge-check']];document.getElementById('adminStats').innerHTML=items.map(([label,value,icon])=>kpiCard({label,value,icon,meta:'Στην πλατφόρμα'})).join('');}
-function renderOrganizations(rows){const mount=document.getElementById('recentOrganizations');mount.innerHTML=rows.slice(0,7).map(o=>{const key=statusKey(o);return `<div class="ct-admin-list__row"><div class="ct-admin-org"><div class="ct-admin-avatar">${initials(o.name)}</div><div><strong>${o.name||'—'}</strong><small>Οργανισμός · ${o.afm||'—'}</small></div></div>${adminStatus(key==='active'?'success':key==='pending'?'warning':key==='blocked'?'danger':'neutral',statusLabel(key))}</div>`}).join('')||emptyState({title:'Δεν υπάρχουν οργανισμοί.'});}
-function renderAudit(rows){const mount=document.getElementById('recentAudit');mount.innerHTML=rows.slice(0,6).map(x=>`<div class="ct-admin-activity__item"><strong>${x.action}</strong><p>${x.organization||x.entity||'Platform'} · ${x.when||'—'}</p></div>`).join('')||emptyState({title:'Δεν υπάρχει πρόσφατη δραστηριότητα.'});}
-async function loadReal(){const [o,r,c,a]=await Promise.all([adminService.listOrganizations(),adminService.listRelationships(),adminService.listCertificates(),adminService.audit().select('*').order('created_at',{ascending:false}).limit(8)]);const firstError=[o,r,c,a].find(x=>x.error)?.error;if(firstError)throw firstError;const organizations=[...(o.data||[])].sort((a,b)=>new Date(b.created_at||b.timestamp||0)-new Date(a.created_at||a.timestamp||0));const relationships=r.data||[];const audit=(a.data||[]).map(x=>({action:x.action||'Activity',entity:x.entity_type,organization:'Οργανισμός',when:new Date(x.created_at).toLocaleString()}));return {stats:{organizations:organizations.length,activeRelationships:relationships.filter(x=>(x.status||x.access)==='active'||x.access==='granted').length,pendingRelationships:relationships.filter(x=>x.status==='pending').length,certificates:c.data?.length||0},organizations,audit};}
-async function init(){const guard=await requirePlatformAdmin();if(guard.denied)return;try{if(guard.demo){const d=demoData.admin;renderStats({organizations:d.organizations.length,activeRelationships:18,pendingRelationships:3,certificates:438});renderOrganizations(d.organizations.map((x,i)=>({...x,afm:`09990${String(i+1).padStart(4,'0')}`})));renderAudit([{action:'Ανανέωση πιστοποιητικού',organization:'MedSupply A.E.',when:'Πριν 18 λεπτά'},{action:'Νέα σχέση συνεργασίας',organization:'CleanCare Services',when:'Σήμερα'},{action:'Αλλαγή ορατότητας εγγράφου',organization:'BioLab Solutions',when:'Σήμερα'}]);}else{const data=await loadReal();renderStats(data.stats);renderOrganizations(data.organizations);renderAudit(data.audit);}}catch(err){console.error(err);document.getElementById('recentOrganizations').innerHTML=emptyState({title:'Η admin πρόσβαση στα tenant δεδομένα δεν είναι ακόμη ενεργοποιημένη από RLS.'});renderStats({});renderAudit([]);}window.lucide?.createIcons();}
-init();
+import { api } from '../../api/index.js';
+import { html, mount } from '../../lib/html.js';
+import { t } from '../../lib/i18n.js';
+import { relativeTime } from '../../lib/format.js';
+import { startPage } from '../../ui/shell.js';
+import { icon, avatar, emptyState, errorState } from '../../ui/components.js';
+import { orgStatusBadge, connStatusBadge } from './data.js';
+
+const { content } = await startPage({ area: 'admin', page: 'adminDashboard', title: 'admin.title', subtitle: 'admin.subtitle' });
+
+try {
+  const [orgs, network, certs] = await Promise.all([api.adminOrganizations(), api.adminNetwork(), api.adminCertificates()]);
+  const active = network.filter(c => c.status === 'active');
+  const pending = network.filter(c => c.status === 'pending');
+  const openReqs = network.reduce((n, c) => n + Number(c.open_requests || 0), 0);
+  const waiting = orgs.filter(o => o.status === 'pending_verification' || o.status === 'closure_requested');
+  mount(content, html`
+    <section class="kpis">
+      <a class="kpi" href="/pages/admin/organizations.html"><span class="kpi__label">${icon('building', { size: 16 })}${t('nav.organizations')}</span><span class="kpi__value">${orgs.length}</span>
+        <span class="kpi__meta">${t('admin.activeOrgs', { count: orgs.filter(o => o.status === 'active').length })}</span></a>
+      <a class="kpi" href="/pages/admin/network.html"><span class="kpi__label">${icon('link-2', { size: 16 })}${t('admin.connections')}</span><span class="kpi__value">${active.length}</span>
+        <span class="kpi__meta">${t('admin.pendingConnections', { count: pending.length })}</span></a>
+      <div class="kpi"><span class="kpi__label">${icon('badge-check', { size: 16 })}${t('nav.certificates')}</span><span class="kpi__value">${certs.length}</span>
+        <span class="kpi__meta">${t('admin.sharedCount', { count: certs.filter(c => c.sharing !== 'private').length })}</span></div>
+      <div class="kpi"><span class="kpi__label">${icon('inbox', { size: 16 })}${t('admin.openRequests')}</span><span class="kpi__value">${openReqs}</span>
+        <span class="kpi__meta">${t('admin.acrossNetwork')}</span></div>
+    </section>
+    <div class="grid-2">
+      <section class="card"><div class="card__head"><div><h2>${t('admin.needsAttention')}</h2><p>${t('admin.needsAttentionText')}</p></div></div>
+        ${waiting.length ? html`<ul class="rows">${waiting.map(o => html`<li><a class="row row--link" href="/pages/admin/organizations.html?id=${o.id}">${avatar(o.name)}
+          <div class="row__main"><span class="row__title">${o.name}</span><span class="row__meta"><span>${t('common.vat')} ${o.vat_number}</span><span>${relativeTime(o.created_at)}</span></span></div>
+          <div class="row__side">${orgStatusBadge(o.status)}</div></a></li>`)}</ul>` : emptyState({ iconName: 'circle-check', title: t('admin.nothingWaiting') })}</section>
+      <section class="card"><div class="card__head"><div><h2>${t('admin.latestConnections')}</h2></div><a class="btn btn--sm btn--ghost" href="/pages/admin/network.html">${t('common.viewAll')}</a></div>
+        ${network.length ? html`<ul class="rows">${network.slice(0, 6).map(c => html`<li class="row"><span class="row__icon">${icon('link-2')}</span>
+          <div class="row__main"><span class="row__title">${c.requester_name} ↔ ${c.addressee_name}</span><span class="row__meta"><span>${relativeTime(c.created_at)}</span></span></div>
+          <div class="row__side">${connStatusBadge(c.status)}</div></li>`)}</ul>` : emptyState({ iconName: 'network', title: t('admin.noConnections') })}</section>
+    </div>`);
+} catch (err) { console.error(err); mount(content, errorState(err)); }

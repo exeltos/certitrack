@@ -1,44 +1,78 @@
-import { demoData } from '../../demo/demoData.js';
-import { adminService } from '../../services/adminService.js';
-import { requirePlatformAdmin, safeDate, initials } from './adminCommon.js';
+import { api } from '../../api/index.js';
+import { html, mount, raw } from '../../lib/html.js';
+import { t } from '../../lib/i18n.js';
+import { formatDate } from '../../lib/format.js';
+import { startPage } from '../../ui/shell.js';
+import { icon, avatar, emptyState, errorState } from '../../ui/components.js';
+import { openDialog, toast } from '../../ui/dialog.js';
+import { orgStatusBadge, connStatusBadge } from './data.js';
 
-let rows=[],guard;
-const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const { content } = await startPage({ area: 'admin', page: 'organizations', title: 'admin.orgsTitle', subtitle: 'admin.orgsSubtitle' });
+let orgs = [], network = [], certs = [], q = '', status = 'all';
 
-function key(o){
-  if(o.status==='closed')return'closed';
-  if(o.status==='closure_requested')return'closure_requested';
-  if(o.status==='suspended'||o.blocked)return'blocked';
-  if(o.status==='pending_verification'||o.status==='pending')return'pending';
-  return'active';
+function renderTable() {
+  const list = orgs.filter(o => (status === 'all' || o.status === status) && `${o.name} ${o.vat_number} ${o.contact_email || ''}`.toLowerCase().includes(q.toLowerCase()));
+  mount(content.querySelector('[data-table]'), list.length ? html`<div class="table-wrap"><table class="table">
+    <thead><tr><th>${t('admin.colOrg')}</th><th>${t('common.vat')}</th><th>${t('admin.colStatus')}</th><th class="num">${t('admin.connections')}</th><th class="num">${t('nav.certificates')}</th><th>${t('admin.colCreated')}</th><th></th></tr></thead>
+    <tbody>${list.map(o => html`<tr>
+      <td><span class="cell-org">${avatar(o.name, { size: 'sm' })}<span><strong>${o.name}</strong><small>${o.contact_email || ''}</small></span></span></td>
+      <td>${o.vat_number}</td><td>${orgStatusBadge(o.status)}</td>
+      <td class="num">${network.filter(c => c.status === 'active' && (c.requester_id === o.id || c.addressee_id === o.id)).length}</td>
+      <td class="num">${certs.filter(c => c.organization_id === o.id).length}</td>
+      <td>${formatDate(o.created_at)}</td>
+      <td><button class="btn btn--sm btn--ghost" data-open="${o.id}">${t('common.details')}</button></td></tr>`)}</tbody></table></div>`
+    : emptyState({ iconName: 'building', title: t('common.noResults') }));
 }
-function label(k){return({active:'Ενεργός',pending:'Εκκρεμής',blocked:'Σε αναστολή',closure_requested:'Αίτημα αποχώρησης',closed:'Κλειστός'})[k]||k;}
-function canonical(o){return {id:o.id,name:o.display_name||o.legal_name||o.name||'—',afm:o.vat_number||o.afm||'—',email:o.contact_email||o.email||'—',status:o.status,blocked:o.blocked,created_at:o.created_at,closure_reason:o.closure_reason||''};}
 
-function rowHtml(raw){
-  const o=canonical(raw),k=key(o);
-  const availability=guard?.demo
-    ? '<span class="ct-admin-readonly">Demo προβολή</span>'
-    : '<span class="ct-admin-readonly" title="Οι αλλαγές κατάστασης θα ενεργοποιηθούν όταν ολοκληρωθεί το server-controlled Platform Admin backend.">Μόνο προβολή</span>';
-  return `<tr><td><div class="ct-admin-org"><div class="ct-admin-avatar">${initials(o.name)}</div><div><strong>${safe(o.name)}</strong><small>${safe(o.email)}</small></div></div></td><td>${safe(o.afm)}</td><td>${safe(o.email)}</td><td><span class="ct-admin-status ct-admin-status--${k}">${label(k)}</span></td><td>${safeDate(o.created_at)}</td><td><div class="ct-admin-actions"><button class="ct-icon-btn" type="button" data-view="${safe(o.id)}" title="Προβολή"><i data-lucide="eye"></i></button>${availability}</div></td></tr>`;
-}
-function render(){
-  const q=(document.getElementById('orgSearch').value||'').toLowerCase(),status=document.getElementById('orgStatus').value;
-  const out=rows.filter(raw=>{const o=canonical(raw);return(status==='all'||key(o)===status)&&[o.name,o.afm,o.email].some(v=>String(v||'').toLowerCase().includes(q));});
-  document.getElementById('organizationsBody').innerHTML=out.map(rowHtml).join('')||'<tr><td colspan="6" class="ct-admin-empty">Δεν βρέθηκαν οργανισμοί.</td></tr>';
-  window.lucide?.createIcons();
-}
-async function load(){const res=await adminService.listOrganizations();if(res.error)throw res.error;rows=res.data||[];render();}
-async function init(){
-  guard=await requirePlatformAdmin();if(guard.denied)return;
-  try{
-    if(guard.demo)rows=demoData.admin.organizations.map((x,i)=>({id:`demo-${i}`,name:x.name,afm:`09990${String(i+1).padStart(4,'0')}`,email:`demo${i+1}@certitrack.gr`,status:x.status,blocked:x.status==='blocked',created_at:new Date(Date.now()-i*86400000*9).toISOString()}));
-    else await load();
-    render();
-  }catch(err){console.error(err);document.getElementById('organizationsBody').innerHTML='<tr><td colspan="6" class="ct-admin-empty">Δεν ήταν δυνατή η φόρτωση οργανισμών.</td></tr>';}
-  ['orgSearch','orgStatus'].forEach(id=>document.getElementById(id)?.addEventListener(id==='orgSearch'?'input':'change',render));
-  document.addEventListener('click',e=>{
-    const view=e.target.closest('[data-view]');if(view){const o=canonical(rows.find(x=>String(x.id)===String(view.dataset.view))||{});Swal.fire({title:o.name,html:`<div class="ct-swal-copy"><p><strong>ΑΦΜ:</strong> ${safe(o.afm)}</p><p><strong>Email:</strong> ${safe(o.email)}</p><p><strong>Κατάσταση:</strong> ${safe(label(key(o)))}</p>${o.closure_reason?`<p><strong>Λόγος αποχώρησης:</strong> ${safe(o.closure_reason)}</p>`:''}<p><strong>Platform Admin:</strong> Μόνο προβολή μέχρι να ενεργοποιηθεί το server-controlled backend.</p></div>`,confirmButtonText:'Κλείσιμο'});}
+async function details(o) {
+  const conns = network.filter(c => c.requester_id === o.id || c.addressee_id === o.id);
+  const theirCerts = certs.filter(c => c.organization_id === o.id);
+  const result = await openDialog({
+    title: o.name, description: `${t('common.vat')} ${o.vat_number}`, wide: true, submitLabel: t('admin.applyState'),
+    body: html`
+      <dl class="facts facts--4">
+        <div><dt>${t('admin.colStatus')}</dt><dd>${orgStatusBadge(o.status)}</dd></div>
+        <div><dt>${t('org.contact_email')}</dt><dd>${o.contact_email || '—'}</dd></div>
+        <div><dt>${t('org.city')}</dt><dd>${o.city || '—'}</dd></div>
+        <div><dt>${t('admin.colCreated')}</dt><dd>${formatDate(o.created_at)}</dd></div>
+      </dl>
+      ${o.closure_reason ? html`<div class="callout callout--warning">${icon('triangle-alert')}<div><strong>${t('admin.closureReason')}</strong><p>${o.closure_reason}</p></div></div>` : ''}
+      <div class="card"><div class="card__head"><h3>${t('admin.connectionsOf', { count: conns.length })}</h3></div>
+        ${conns.length ? html`<ul class="rows">${conns.map(c => { const other = c.requester_id === o.id ? c.addressee_name : c.requester_name;
+          return html`<li class="row" style="padding:10px 18px">${avatar(other, { size: 'sm' })}<div class="row__main"><span class="row__title">${other}</span></div><div class="row__side">${connStatusBadge(c.status)}</div></li>`; })}</ul>`
+          : html`<p class="hint" style="padding:14px 18px">${t('admin.noConnections')}</p>`}</div>
+      <div class="card"><div class="card__head"><h3>${t('admin.certificatesOf', { count: theirCerts.length })}</h3></div>
+        ${theirCerts.length ? html`<ul class="rows">${theirCerts.map(c => html`<li class="row" style="padding:10px 18px"><span class="row__icon">${icon('file-text', { size: 16 })}</span><div class="row__main"><span class="row__title">${c.title}</span><span class="row__meta"><span>${formatDate(c.expiry_date)}</span><span>${t(`sharing.${c.sharing}`)}</span></span></div></li>`)}</ul>`
+          : html`<p class="hint" style="padding:14px 18px">${t('admin.noCertificates')}</p>`}</div>
+      <div class="form-grid form-grid--2">
+        <div class="field"><label for="st">${t('admin.changeState')}</label><select class="select" id="st" name="state">
+          ${['active', 'suspended', 'closed'].map(s => html`<option value="${s}" ${o.status === s ? raw('selected') : ''}>${t(`orgStatusShort.${s}`)}</option>`)}</select></div>
+        <div class="field"><label for="rs">${t('admin.reason')}</label><input class="input" id="rs" name="reason" maxlength="500"></div>
+      </div>`,
+    async onSubmit(form) {
+      if (form.state.value === o.status) return true;
+      await api.adminSetOrganizationState(o.id, form.state.value, form.reason.value.trim());
+      return 'changed';
+    }
   });
+  if (result === 'changed') { toast(t('common.saved')); load(); }
 }
-init();
+
+async function load() {
+  try {
+    [orgs, network, certs] = await Promise.all([api.adminOrganizations(), api.adminNetwork(), api.adminCertificates()]);
+    const count = s => orgs.filter(o => o.status === s).length;
+    mount(content, html`<section class="card">
+      <div class="toolbar">
+        <label class="search">${icon('search', { size: 16 })}<span class="sr-only">${t('common.search')}</span><input class="input" type="search" data-q placeholder="${t('admin.searchOrgFull')}" value="${q}"></label>
+        <select class="select" data-status aria-label="${t('admin.colStatus')}">${['all', 'active', 'pending_verification', 'closure_requested', 'suspended', 'closed'].map(s => html`<option value="${s}" ${s === status ? raw('selected') : ''}>${s === 'all' ? t('admin.allStatuses', { count: orgs.length }) : `${t(`orgStatusShort.${s}`)} (${count(s)})`}</option>`)}</select>
+      </div><div data-table></div></section>`);
+    content.querySelector('[data-q]').addEventListener('input', e => { q = e.target.value; renderTable(); });
+    content.querySelector('[data-status]').addEventListener('change', e => { status = e.target.value; renderTable(); });
+    renderTable();
+    const focus = new URLSearchParams(location.search).get('id');
+    if (focus && orgs.find(o => o.id === focus)) { history.replaceState(null, '', location.pathname); details(orgs.find(o => o.id === focus)); }
+  } catch (err) { console.error(err); mount(content, errorState(err)); }
+}
+content.addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) details(orgs.find(o => o.id === b.dataset.open)); });
+load();

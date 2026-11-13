@@ -9,12 +9,9 @@ data.
 
 1. In the Supabase dashboard, create a new project, e.g. `certitrack-staging`.
 2. Note its URL and anon key (Project Settings → API).
-3. Apply the canonical schema to it the same way you plan to apply it to
-   production: `supabase/production/00_preflight_assertions.sql`, then
-   `01_certitrack_production_schema.sql`, following `NEXT_ACTION.md`.
-4. Load `demoData.js`-style seed data (or a scrubbed export of production —
-   never copy real customer PII into staging) so the app has something to
-   show.
+3. Apply `supabase/migrations/*.sql` in order (see `docs/DEPLOYMENT.md`).
+4. Create a few test organizations through the app (never copy real customer
+   PII into staging).
 
 ## 2. Create a second Netlify site (or a branch deploy)
 
@@ -52,10 +49,8 @@ no-build site, you'll need either:
 ## 4. Workflow
 
 1. Write and test a migration against staging first.
-2. Run staging's own preflight/validation scripts
-   (`supabase/production/03_validate_schema.sql`) against staging.
-3. Only once staging is green, follow the same steps against production per
-   `NEXT_ACTION.md`.
+2. Run `npm run test:db` locally, then apply to staging and click through the app.
+3. Only once staging is green, apply the same migration to production.
 4. Point CI (`.github/workflows/ci.yml`) at staging for any future
    integration tests that need a real database, never at production.
 

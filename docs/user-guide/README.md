@@ -1,17 +1,35 @@
-# CertiTrack — User Guide
+# Οδηγός χρήσης CertiTrack
 
-This is documentation for people *using* CertiTrack (organization admins,
-members, partner contacts) — not for developers. Development history and
-technical docs live in the parent `docs/` folder.
+## Η ιδέα
+Κάθε οργανισμός ανεβάζει τα πιστοποιητικά του και συνδέεται ισότιμα με τους
+συνεργάτες του. Ο καθένας αποφασίζει **τι βλέπει ο άλλος**. Οι συνεργάτες σας δεν
+βλέπουν ποτέ ποιους άλλους συνεργάτες έχετε ούτε τα δικά τους έγγραφα.
 
-## Guides
+## Πρώτα βήματα
+1. **Εγγραφή**: επωνυμία, ΑΦΜ, email, κωδικός. Επιβεβαιώστε το email.
+2. **Πιστοποιητικά → Νέο πιστοποιητικό**: στοιχεία, PDF και «Ποιος το βλέπει».
+3. **Συνδέσεις → Νέα σύνδεση**: ΑΦΜ ή email του συνεργάτη. Αν δεν είναι ακόμη στο
+   CertiTrack, του στέλνεται πρόσκληση και η σύνδεση εμφανίζεται μόλις εγγραφεί.
 
-- [Getting started](./getting-started.md) — creating your organization, first login
-- [Managing certificates](./certificates.md) — adding, tracking, and sharing certificates
-- [Partner relationships](./partners.md) — connecting with supplier/customer organizations
-- [Account security](./account-security.md) — password requirements, two-factor authentication
-- [Notifications](./notifications.md) — expiry reminders and how to configure them
+## Ποιος βλέπει τι
+- **Ιδιωτικό**: μόνο ο οργανισμός σας.
+- **Όλες οι συνδέσεις**: κάθε συνδεδεμένος οργανισμός.
+- **Επιλεγμένοι**: μόνο όσοι επιλέξετε, προαιρετικά μέχρι μια ημερομηνία.
 
-## Support
+Στην καρτέλα κάθε συνεργάτη, η ενότητα **«Του δείχνετε»** έχει διακόπτη ανά
+πιστοποιητικό, ώστε να το δείχνετε ή να το κρύβετε μόνο για αυτόν τον συνεργάτη.
+Το **Ιστορικό προβολών** (εικονίδιο δραστηριότητας) δείχνει ποιος άνοιξε κάθε έγγραφο.
 
-[Fill in: support email, expected response time — see `docs/operations/SLA.md`]
+## Αιτήματα εγγράφων
+- **Ζητήστε έγγραφο** από τη σελίδα Αιτήματα ή από την καρτέλα του συνεργάτη.
+- Όταν σας ζητούν κάτι, πατήστε **Απάντηση**. Μπορείτε να κοινοποιήσετε ένα υπάρχον
+  πιστοποιητικό, να ανεβάσετε νέο ή να απορρίψετε το αίτημα με αιτιολογία.
+- Για όσα ζητήσατε θα ειδοποιηθείτε πριν λήξουν και όταν ανανεωθούν.
+
+## Τερματισμός σύνδεσης
+Από την καρτέλα του συνεργάτη. Η πρόσβαση σταματά αμέσως και για τους δύο, και
+μπορείτε να συνδεθείτε ξανά αργότερα.
+
+## Ασφάλεια
+Από τις **Ρυθμίσεις** αλλάζετε τον κωδικό σας και ενεργοποιείτε την ταυτοποίηση
+δύο παραγόντων. Συνιστάται.

@@ -1,0 +1,4 @@
+# Keep GitHub's language statistics about the code we actually maintain.
+supabase/legacy/** linguist-documentation
+assets/vendor/** linguist-vendored
+src/ui/icons.js linguist-generated

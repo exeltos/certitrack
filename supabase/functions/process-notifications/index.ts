@@ -53,114 +53,49 @@ function emailShell({eyebrow,title,body,buttonLabel,buttonHref}:{
 </html>`;
 }
 
+// Where each email's button leads, and its small heading. Title and body come
+// from the database (ct_notify_org stores them in the payload), so emails and
+// in-app notifications always say the same thing.
+const ROUTES:Record<string,{path:string;eyebrow:string;button:string}>={
+  connection_request:{path:'/pages/organization/partners.html',eyebrow:'Συνδέσεις',button:'Προβολή αιτήματος'},
+  connection_accepted:{path:'/pages/organization/partners.html',eyebrow:'Συνδέσεις',button:'Προβολή συνδέσεων'},
+  document_request:{path:'/pages/organization/requests.html?tab=incoming',eyebrow:'Αίτημα εγγράφου',button:'Απάντηση στο αίτημα'},
+  document_request_fulfilled:{path:'/pages/organization/requests.html?tab=outgoing',eyebrow:'Αίτημα εγγράφου',button:'Προβολή'},
+  partner_certificate_expiring:{path:'/pages/organization/requests.html?tab=outgoing',eyebrow:'Έγγραφα συνεργατών',button:'Προβολή'},
+  partner_certificate_expired:{path:'/pages/organization/requests.html?tab=outgoing',eyebrow:'Έγγραφα συνεργατών',button:'Προβολή'},
+  partner_certificate_renewed:{path:'/pages/organization/requests.html?tab=outgoing',eyebrow:'Έγγραφα συνεργατών',button:'Προβολή'},
+  certificate_expiry:{path:'/pages/organization/certificates.html',eyebrow:'Τα πιστοποιητικά σας',button:'Προβολή πιστοποιητικών'},
+  certificate_expired:{path:'/pages/organization/certificates.html',eyebrow:'Τα πιστοποιητικά σας',button:'Προβολή πιστοποιητικών'}
+};
+
 function template(row:any){
   const p=row.payload||{};
-  const title=String(p.certificate_title||'Πιστοποιητικό');
-  const expiry=p.expiry_date?new Date(`${p.expiry_date}T00:00:00`).toLocaleDateString('el-GR'):'';
 
-  if(row.template_key==='relationship_invite'){
-    const requester=String(p.requester_name||'Ένας οργανισμός');
-    const isRegistrationInvite=!p.relationship_id;
-    const href=isRegistrationInvite
-      ? `${APP_URL}/pages/auth/register.html?invite=${encodeURIComponent(String(p.invitation_id||''))}`
-      : `${APP_URL}/pages/organization/partners.html`;
-
-    return {
-      subject:isRegistrationInvite
-        ? 'CertiTrack — Πρόσκληση εγγραφής και συνεργασίας'
-        : 'CertiTrack — Νέο αίτημα συνεργασίας',
-      text:isRegistrationInvite
-        ? `${requester} σας προσκαλεί να εγγραφείτε στο CertiTrack και να συνδεθείτε ως συνεργάτες.\n\nΕγγραφή: ${href}`
-        : `${requester} σας προσκαλεί σε συνεργασία στο CertiTrack.\n\nΠροβολή αιτήματος: ${href}`,
-      html:emailShell({
-        eyebrow:isRegistrationInvite?'Πρόσκληση εγγραφής':'Νέο αίτημα συνεργασίας',
-        title:isRegistrationInvite
-          ? `${requester} σας προσκαλεί στο CertiTrack`
-          : `${requester} σας προσκαλεί σε συνεργασία`,
-        body:isRegistrationInvite
-          ? `Ο οργανισμός <strong style="color:#12213a;">${esc(requester)}</strong> θέλει να συνεργαστεί μαζί σας μέσω του CertiTrack. Δημιουργήστε λογαριασμό οργανισμού για να συνεχίσετε.`
-          : `Ο οργανισμός <strong style="color:#12213a;">${esc(requester)}</strong> θέλει να συνδεθεί μαζί σας στο CertiTrack. Ανοίξτε το αίτημα για να το αποδεχθείτε ή να το απορρίψετε.`,
-        buttonLabel:isRegistrationInvite?'Εγγραφή στο CertiTrack':'Προβολή αιτήματος',
-        buttonHref:href
-      })
-    };
-  }
-
-  if(row.template_key==='relationship_accepted'){
-    const partner=String(p.partner_name||'Ο συνεργαζόμενος οργανισμός');
-    const href=`${APP_URL}/pages/organization/partners.html`;
-    return {
-      subject:'CertiTrack — Η συνεργασία έγινε αποδεκτή',
-      text:`${partner} αποδέχθηκε το αίτημα συνεργασίας σας.\n\nΠροβολή συνεργατών: ${href}`,
-      html:emailShell({
-        eyebrow:'Ενημέρωση συνεργασίας',
-        title:'Η συνεργασία ενεργοποιήθηκε',
-        body:`Ο οργανισμός <strong style="color:#12213a;">${esc(partner)}</strong> αποδέχθηκε το αίτημα συνεργασίας σας.`,
-        buttonLabel:'Προβολή συνεργατών',
-        buttonHref:href
-      })
-    };
-  }
-
-  if(row.template_key==='relationship_declined'){
-    const partner=String(p.partner_name||'Ο οργανισμός');
-    const href=`${APP_URL}/pages/organization/partners.html`;
-    return {
-      subject:'CertiTrack — Το αίτημα συνεργασίας απορρίφθηκε',
-      text:`${partner} απέρριψε το αίτημα συνεργασίας σας.\n\nΠροβολή συνεργατών: ${href}`,
-      html:emailShell({
-        eyebrow:'Ενημέρωση συνεργασίας',
-        title:'Το αίτημα συνεργασίας απορρίφθηκε',
-        body:`Ο οργανισμός <strong style="color:#12213a;">${esc(partner)}</strong> απέρριψε το αίτημα συνεργασίας σας.`,
-        buttonLabel:'Προβολή συνεργατών',
-        buttonHref:href
-      })
-    };
-  }
-
-  if(row.template_key==='certificate_expired'){
-    const href=`${APP_URL}/pages/organization/certificates.html`;
+  // Invitation to an organization that is not registered yet.
+  if(row.template_key==='connection_invitation'){
+    const inviter=String(p.partner_name||'Ένας οργανισμός');
+    const href=`${APP_URL}/pages/auth/register.html`;
     return {
       subject:row.subject,
-      text:`Το πιστοποιητικό ${title} έχει λήξει${expiry?` στις ${expiry}`:''}.\n\nΆνοιγμα CertiTrack: ${href}`,
+      text:`${inviter} σας προσκαλεί να συνδεθείτε στο CertiTrack για να ανταλλάσσετε πιστοποιητικά.\n\nΕγγραφή: ${href}\n\nΚάντε εγγραφή με αυτό το email και θα δείτε αμέσως το αίτημα σύνδεσης.`,
       html:emailShell({
-        eyebrow:'Ειδοποίηση πιστοποιητικού',
-        title:'Ληγμένο πιστοποιητικό',
-        body:`Το πιστοποιητικό <strong style="color:#12213a;">${esc(title)}</strong> έχει λήξει${expiry?` στις ${esc(expiry)}`:''}.`,
-        buttonLabel:'Προβολή πιστοποιητικών',
+        eyebrow:'Πρόσκληση',
+        title:`${inviter} σας προσκαλεί στο CertiTrack`,
+        body:`Ο οργανισμός <strong style="color:#12213a;">${esc(inviter)}</strong> θέλει να συνδεθεί μαζί σας για να ανταλλάσσετε πιστοποιητικά. Ο καθένας βλέπει μόνο ό,τι επιλέγει να δείξει ο άλλος.<br><br>Κάντε εγγραφή με <strong>αυτό το email</strong> και θα δείτε αμέσως το αίτημα.`,
+        buttonLabel:'Εγγραφή στο CertiTrack',
         buttonHref:href
       })
     };
   }
 
-  if(row.template_key==='certificate_expiry'){
-    const days=Number(p.warning_days);
-    const phrase=days===0?'λήγει σήμερα':`λήγει σε ${days} ημέρες`;
-    const href=`${APP_URL}/pages/organization/certificates.html`;
-    return {
-      subject:row.subject,
-      text:`Το πιστοποιητικό ${title} ${phrase}${expiry?` (${expiry})`:''}.\n\nΆνοιγμα CertiTrack: ${href}`,
-      html:emailShell({
-        eyebrow:'Ειδοποίηση πιστοποιητικού',
-        title:'Πιστοποιητικό προς λήξη',
-        body:`Το πιστοποιητικό <strong style="color:#12213a;">${esc(title)}</strong> ${esc(phrase)}${expiry?` (${esc(expiry)})`:''}.`,
-        buttonLabel:'Προβολή πιστοποιητικών',
-        buttonHref:href
-      })
-    };
-  }
-
-  const href=APP_URL;
+  const route=ROUTES[row.template_key]||{path:'/pages/organization/dashboard.html',eyebrow:'CertiTrack',button:'Άνοιγμα CertiTrack'};
+  const href=`${APP_URL}${route.path}`;
+  const title=String(p.title||row.subject||'Ενημέρωση');
+  const body=String(p.body||'Υπάρχει νέα ενημέρωση στον λογαριασμό σας.');
   return {
     subject:row.subject,
-    text:`${row.subject}\n\n${href}`,
-    html:emailShell({
-      eyebrow:'CertiTrack',
-      title:String(row.subject||'Ενημέρωση'),
-      body:'Υπάρχει νέα ενημέρωση στον λογαριασμό σας.',
-      buttonLabel:'Άνοιγμα CertiTrack',
-      buttonHref:href
-    })
+    text:`${title}\n\n${body}\n\n${href}`,
+    html:emailShell({eyebrow:route.eyebrow,title,body:esc(body),buttonLabel:route.button,buttonHref:href})
   };
 }
 

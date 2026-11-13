@@ -37,17 +37,17 @@ jobs:
         with:
           extra_args: --only-verified
 
-  sql-lint:
-    name: SQL sanity check
+  database:
+    name: Database schema & privacy tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fail if a migration file is empty or was edited after being applied
+      - name: Install PostgreSQL
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql >/dev/null
+
+      - name: Apply migrations and run privacy tests
         run: |
-          for f in supabase/migrations/*.sql; do
-            if [ ! -s "$f" ]; then
-              echo "::error file=$f::Migration file is empty"
-              exit 1
-            fi
-          done
+          set -o pipefail
+          sudo bash scripts/test-db.sh | tee db-test.log
+          grep -q 'ALL TESTS PASSED' db-test.log

@@ -1,111 +1,128 @@
-import { getOrganizationContext, bindOrganizationLogout } from './guard.js';
-import { organizationService } from '../../services/organizationService.js';
-import { authService } from '../../services/authService.js';
-import { notificationService } from '../../services/notificationService.js';
-import { validatePassword, passwordPolicyMessage } from '../../auth/passwordPolicy.js';
-import { mountMfaSettings } from '../../components/mfaSettings.js';
+import { api } from '../../api/index.js';
+import { html, mount, raw } from '../../lib/html.js';
+import { t } from '../../lib/i18n.js';
+import { startPage } from '../../ui/shell.js';
+import { icon, badge, errorState, friendlyError } from '../../ui/components.js';
+import { openDialog, confirmDialog, toast, toastError } from '../../ui/dialog.js';
+import { passwordField, bindPasswordFields, checkNewPassword } from '../../ui/password.js';
 
-let ctx;
+const { ctx, content } = await startPage({ area: 'organization', page: 'settings', title: 'settings.title', subtitle: 'settings.subtitle' });
+const canEditOrg = ['owner', 'admin'].includes(ctx.role);
+const isOwner = ctx.role === 'owner';
+const PREFS = ['in_app_enabled', 'email_enabled', 'expiry_in_app_enabled', 'expiry_email_enabled', 'relationship_notifications', 'partner_certificate_notifications'];
 
-function setChecked(id,value){const el=document.getElementById(id);if(el)el.checked=value!==false;}
-function warningDays(){return [...document.querySelectorAll('#warningDays input:checked')].map(x=>Number(x.value)).sort((a,b)=>b-a);}
+function render(org, prefs) {
+  const field = (name, type = 'text', span = false) => html`<div class="field ${span ? 'span-2' : ''}"><label for="o-${name}">${t(`org.${name}`)}</label>
+    <input class="input" id="o-${name}" name="${name}" type="${type}" value="${org[name] || ''}" ${canEditOrg ? '' : raw('readonly')}></div>`;
+  mount(content, html`<div class="stack" style="max-width:860px">
+    <section class="card">
+      <div class="card__head"><div><h2>${t('settings.orgTitle')}</h2><p>${t('settings.orgText')}</p></div></div>
+      <form class="card__body" data-org-form>
+        <div class="form-grid form-grid--2">
+          ${field('legal_name')}${field('display_name')}
+          <div class="field"><label for="o-vat">${t('common.vat')}</label><input class="input" id="o-vat" value="${org.vat_number}" readonly><small>${t('settings.vatLocked')}</small></div>
+          ${field('contact_email', 'email')}${field('phone', 'tel')}${field('website', 'url')}
+          ${field('address_line1')}${field('city')}${field('postal_code')}
+        </div>
+        ${canEditOrg ? html`<div style="margin-top:18px"><button class="btn btn--primary" type="submit">${t('common.save')}</button></div>` : ''}
+      </form>
+    </section>
 
-async function loadPreferences(){
-  const p=await notificationService.preferences(ctx.organization.id).catch(()=>null);
-  if(!p)return;
-  setChecked('prefInApp',p.in_app_enabled);
-  setChecked('prefEmail',p.email_enabled);
-  // The schema has one global expiry_warning_days array, not a separate
-  // per-channel toggle for "expiry" notifications specifically -- both
-  // checkboxes reflect whether that array is non-empty. Fixed 2026-08-24
-  // (was reading a non-existent "expiry_notifications" column, always
-  // undefined -> checkboxes silently reset to unchecked on every load).
-  const hasExpiryReminders=Array.isArray(p.expiry_warning_days)&&p.expiry_warning_days.length>0;
-  setChecked('prefExpiryInApp',hasExpiryReminders);
-  setChecked('prefExpiryEmail',hasExpiryReminders);
-  setChecked('prefRelationships',p.relationship_notifications);
-  setChecked('prefCertificateChanges',p.certificate_change_notifications);
-  const selected=new Set((p.expiry_warning_days||[60,30,15,7,1]).map(Number));
-  document.querySelectorAll('#warningDays input').forEach(x=>x.checked=selected.has(Number(x.value)));
+    <section class="card">
+      <div class="card__head"><div><h2>${t('settings.notifTitle')}</h2><p>${t('settings.notifText')}</p></div></div>
+      <div class="card__body" style="padding-top:4px;padding-bottom:4px" data-prefs>
+        ${PREFS.map(k => html`<label class="switch-row"><span><strong>${t(`prefs.${k}`)}</strong><small>${t(`prefs.${k}.help`)}</small></span>
+          <span class="switch"><input type="checkbox" data-pref="${k}" ${prefs?.[k] ? raw('checked') : ''}><i></i></span></label>`)}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__head"><div><h2>${t('settings.securityTitle')}</h2><p>${ctx.user.email}</p></div></div>
+      <div class="card__body" style="padding-top:4px;padding-bottom:4px">
+        <div class="switch-row"><span><strong>${t('settings.password')}</strong><small>${t('settings.passwordHelp')}</small></span>
+          <button class="btn btn--secondary btn--sm" data-password>${icon('key-round', { size: 16 })}${t('settings.changePassword')}</button></div>
+        <div class="switch-row"><span><strong>${t('settings.mfa')} ${ctx.mfaFactor ? badge('success', t('settings.mfaOn')) : ''}</strong><small>${t('settings.mfaHelp')}</small></span>
+          ${ctx.mfaFactor ? html`<button class="btn btn--danger-ghost btn--sm" data-mfa-off>${t('settings.mfaDisable')}</button>`
+            : html`<button class="btn btn--secondary btn--sm" data-mfa-on>${icon('shield-check', { size: 16 })}${t('settings.mfaEnable')}</button>`}</div>
+      </div>
+    </section>
+
+    ${isOwner ? html`<section class="card">
+      <div class="card__head"><div><h2>${t('settings.closureTitle')}</h2><p>${t('settings.closureText')}</p></div></div>
+      <div class="card__body">${org.status === 'closure_requested'
+        ? html`<div class="pair"><span class="badge badge--warning">${t('settings.closurePending')}</span><button class="btn btn--secondary btn--sm" data-closure-cancel>${t('settings.closureCancel')}</button></div>`
+        : html`<button class="btn btn--danger-ghost" data-closure>${t('settings.closureRequest')}</button>`}</div>
+    </section>` : ''}
+  </div>`);
 }
 
-async function init(){
-  ctx=await getOrganizationContext();if(!ctx)return;
-  bindOrganizationLogout();
-  const {organization}=ctx;
-  document.getElementById('profileName').value=organization.display_name||organization.legal_name||organization.name||'';
-  document.getElementById('profileEmail').value=organization.contact_email||organization.email||ctx.user.email||'';
-  document.getElementById('profileAfm').value=organization.vat_number||organization.afm||'';
-  document.getElementById('profileForm').addEventListener('submit',save);
-  document.getElementById('togglePasswordFields')?.addEventListener('click',()=>document.getElementById('passwordFields')?.classList.toggle('hidden'));
-  document.querySelectorAll('.password-toggle').forEach(b=>b.onclick=()=>{const i=document.getElementById(b.dataset.target);if(i)i.type=i.type==='password'?'text':'password'});
-  await loadPreferences();
-  const closureBtn=document.getElementById('requestClosureBtn');
-  const closureStatus=document.getElementById('closureStatus');
-  if(organization.status==='closure_requested'){
-    if(closureStatus)closureStatus.textContent='Υπάρχει ενεργό αίτημα αποχώρησης. Ο λογαριασμός παραμένει διαθέσιμος μέχρι την ολοκλήρωση.';
-    if(closureBtn){closureBtn.innerHTML='<i data-lucide="rotate-ccw"></i> Ακύρωση αιτήματος';closureBtn.dataset.mode='cancel';}
-  }
-  closureBtn?.addEventListener('click',handleClosure);
-  mountMfaSettings('mfaSettingsMount');
-  window.lucide?.createIcons();
+async function load() {
+  try {
+    const [prefs] = await Promise.all([api.notificationPreferences()]);
+    const fresh = await api.context({ fresh: true });
+    render(fresh.organization, prefs);
+  } catch (err) { console.error(err); mount(content, errorState(err)); }
 }
 
-async function handleClosure(){
-  const btn=document.getElementById('requestClosureBtn');
-  if(btn?.dataset.mode==='cancel'){
-    const ask=await Swal.fire({title:'Ακύρωση αιτήματος αποχώρησης;',text:'Ο οργανισμός θα παραμείνει ενεργός στο CertiTrack.',icon:'question',showCancelButton:true,confirmButtonText:'Ναι, ακύρωση',cancelButtonText:'Πίσω'});
-    if(!ask.isConfirmed)return;
-    try{await organizationService.cancelClosure(ctx.organization);await Swal.fire('Ακυρώθηκε','Το αίτημα αποχώρησης ακυρώθηκε.','success');location.reload();}catch(err){Swal.fire('Σφάλμα',err.message||'Η ενέργεια απέτυχε.','error');}
-    return;
-  }
-  const ask=await Swal.fire({
-    title:'Αίτημα αποχώρησης από το CertiTrack',
-    html:'<p>Δεν θα γίνει άμεση διαγραφή δεδομένων. Οι συνεργασίες, τα πιστοποιητικά και το audit history θα διατηρηθούν μέχρι την ασφαλή ολοκλήρωση του κλεισίματος.</p>',
-    input:'textarea',inputLabel:'Λόγος αποχώρησης (προαιρετικά)',inputPlaceholder:'Προαιρετική σημείωση...',
-    icon:'warning',showCancelButton:true,confirmButtonText:'Υποβολή αιτήματος',cancelButtonText:'Ακύρωση',confirmButtonColor:'#b42318'
-  });
-  if(!ask.isConfirmed)return;
-  try{await organizationService.requestClosure(ctx.organization,String(ask.value||'').trim());await Swal.fire('Το αίτημα καταχωρήθηκε','Ο οργανισμός δεν διαγράφεται άμεσα. Το αίτημα θα ολοκληρωθεί με ελεγχόμενη διαδικασία.','success');location.reload();}catch(err){Swal.fire('Σφάλμα',err.message||'Η ενέργεια απέτυχε.','error');}
-}
-
-async function save(e){
+content.addEventListener('submit', async e => {
+  if (!e.target.matches('[data-org-form]')) return;
   e.preventDefault();
-  const name=document.getElementById('profileName').value.trim();
-  const email=document.getElementById('profileEmail').value.trim().toLowerCase();
-  const password=document.getElementById('profilePassword').value;
-  const confirm=document.getElementById('profilePasswordConfirm').value;
-  if(password&&password!==confirm)return Swal.fire('Προσοχή','Οι κωδικοί δεν ταιριάζουν.','warning');
-  if(password&&!validatePassword(password).valid)return Swal.fire('Ο κωδικός δεν είναι αρκετά ισχυρός',passwordPolicyMessage('el'),'warning');
-  const days=warningDays();
-  if(!days.length)return Swal.fire('Προσοχή','Επιλέξτε τουλάχιστον ένα χρονικό όριο ειδοποίησης λήξης.','warning');
+  const form = e.target, btn = form.querySelector('[type=submit]');
+  btn.disabled = true;
+  try {
+    await api.updateOrganization(Object.fromEntries(['legal_name', 'display_name', 'contact_email', 'phone', 'website', 'address_line1', 'city', 'postal_code'].map(k => [k, form[k].value.trim()])));
+    toast(t('common.saved'));
+  } catch (err) { toastError(err); } finally { btn.disabled = false; }
+});
 
-  try{
-    const orgUpdates=ctx.organization.source==='organizations'
-      ? {display_name:name,contact_email:email}
-      : {name,email};
-    await organizationService.update(ctx.organization,orgUpdates);
+content.addEventListener('change', async e => {
+  const sw = e.target.closest('[data-pref]');
+  if (!sw) return;
+  const prefs = Object.fromEntries([...content.querySelectorAll('[data-pref]')].map(x => [x.dataset.pref, x.checked]));
+  try { await api.saveNotificationPreferences(prefs); toast(t('common.saved')); } catch (err) { sw.checked = !sw.checked; toastError(err); }
+});
 
-    if(email!==ctx.user.email||password){
-      const payload={};if(email!==ctx.user.email)payload.email=email;if(password)payload.password=password;
-      const r=await authService.updateUser(payload);if(r.error)throw r.error;
+content.addEventListener('click', async e => {
+  const el = e.target.closest('[data-password],[data-mfa-on],[data-mfa-off],[data-closure],[data-closure-cancel]');
+  if (!el) return;
+  try {
+    if ('password' in el.dataset) {
+      const ok = await openDialog({
+        title: t('settings.changePassword'), submitLabel: t('common.save'),
+        body: html`${passwordField({ name: 'current', label: t('settings.currentPassword'), autocomplete: 'current-password', autofocus: true })}
+          ${passwordField({ name: 'password', label: t('settings.newPassword'), rules: true })}
+          ${passwordField({ name: 'confirm', label: t('auth.confirmPassword') })}`,
+        onOpen: form => bindPasswordFields(form),
+        async onSubmit(form) { await api.changePassword(form.current.value, checkNewPassword(form)); return true; }
+      });
+      if (ok) toast(t('settings.passwordChanged'));
+    } else if ('mfaOn' in el.dataset) {
+      const enrolled = await api.mfaEnroll();
+      const ok = await openDialog({
+        title: t('settings.mfaEnable'), description: t('settings.mfaScan'), submitLabel: t('settings.mfaConfirm'),
+        body: html`<div class="pair" style="align-items:flex-start"><img class="qr" src="${enrolled.totp.qr_code}" alt="QR">
+          <div class="field" style="flex:1;min-width:200px"><span class="field-label">${t('settings.mfaManual')}</span><code class="secret">${enrolled.totp.secret}</code>
+          <label for="mfa-code" style="margin-top:12px" class="field-label">${t('settings.mfaCode')}</label>
+          <input class="input" id="mfa-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required autofocus></div></div>`,
+        async onSubmit(form) { await api.mfaConfirm(enrolled.id, form.code.value.trim()); return true; }
+      });
+      if (!ok) await api.mfaDisable(enrolled.id).catch(() => {});
+      else { toast(t('settings.mfaEnabled')); setTimeout(() => location.reload(), 600); }
+    } else if ('mfaOff' in el.dataset) {
+      if (await confirmDialog({ title: t('settings.mfaDisable'), text: t('settings.mfaDisableText'), confirmLabel: t('settings.mfaDisable'), danger: true })) {
+        await api.mfaDisable(ctx.mfaFactor.id); toast(t('settings.mfaDisabled')); setTimeout(() => location.reload(), 600);
+      }
+    } else if ('closure' in el.dataset) {
+      const ok = await openDialog({
+        title: t('settings.closureRequest'), submitLabel: t('settings.closureRequest'), danger: true,
+        body: html`<p class="muted">${t('settings.closureConfirm')}</p><div class="field"><label for="reason">${t('settings.closureReason')}</label><textarea class="textarea" id="reason" name="reason" rows="3" maxlength="1000"></textarea></div>`,
+        async onSubmit(form) { await api.requestClosure(form.reason.value.trim()); return true; }
+      });
+      if (ok) { toast(t('settings.closureRequested')); load(); }
+    } else if ('closureCancel' in el.dataset) {
+      await api.cancelClosure(); toast(t('settings.closureCancelled')); load();
     }
+  } catch (err) { toast(friendlyError(err), 'error'); }
+});
 
-    // If the person unchecked BOTH expiry-reminder checkboxes, save an
-    // empty array so no expiry notification is ever generated (the schema
-    // has no separate per-channel toggle for this -- see loadPreferences).
-    const wantsExpiryReminders=document.getElementById('prefExpiryInApp').checked || document.getElementById('prefExpiryEmail').checked;
-    await notificationService.savePreferences(ctx.organization.id,{
-      in_app_enabled:document.getElementById('prefInApp').checked,
-      email_enabled:document.getElementById('prefEmail').checked,
-      expiry_warning_days:wantsExpiryReminders?days:[],
-      relationship_notifications:document.getElementById('prefRelationships').checked,
-      certificate_change_notifications:document.getElementById('prefCertificateChanges').checked
-    });
-
-    await Swal.fire('Αποθηκεύτηκε','Οι ρυθμίσεις ενημερώθηκαν.','success');
-  }catch(err){
-    Swal.fire('Σφάλμα',err.message||'Η αποθήκευση απέτυχε.','error');
-  }
-}
-init().catch(err=>Swal.fire('Σφάλμα',err.message||'Αποτυχία φόρτωσης','error'));
+load();
