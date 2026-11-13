@@ -101,6 +101,7 @@ export type Database = {
       notification_preferences: Table<NotificationPreferencesRow>;
       notifications: Table<NotificationRow>;
       audit_log: Table<AuditLogRow>;
+      site_settings: Table<{ key: string; value: Json; updated_at: string; updated_by: string | null }>;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -134,6 +135,7 @@ export type Database = {
       ct_request_organization_closure: { Args: { p_org: string; p_reason?: string }; Returns: OrganizationRow };
       ct_cancel_organization_closure: { Args: { p_org: string }; Returns: OrganizationRow };
       ct_platform_set_organization_state: { Args: { p_org: string; p_reason?: string; p_state: string }; Returns: OrganizationRow };
+      ct_set_site_contact: { Args: { p_company: string; p_email: string | null; p_phone: string | null; p_website: string | null }; Returns: Json };
       ct_admin_network: {
         Args: never;
         Returns: {

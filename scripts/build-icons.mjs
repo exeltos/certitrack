@@ -9,7 +9,7 @@ const ICONS = [
   'circle-alert','circle-check','clock','rotate-ccw','copy','download','ellipsis','eye','file-plus','file-text','globe',
   'inbox','info','key-round','languages','layout-dashboard','link-2','list-checks','lock','log-out','mail','menu',
   'moon','network','pencil','plus','refresh-cw','search','send','settings','share-2','shield-check','sun',
-  'trash','triangle-alert','unlink','upload','user-check','user-plus','users','x'
+  'trash','triangle-alert','unlink','upload','user-check','user-plus','users','x','phone','presentation'
 ];
 
 const pkg = process.argv[2];

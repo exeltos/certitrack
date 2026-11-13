@@ -555,11 +555,15 @@ a.kpi:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(16, 24, 40
 .dialog { border: 0; }
 .dialog__head { border-top: 4px solid transparent; border-image: var(--brand-gradient) 1; }
 
-/* Public pages: navy hero band */
-.public--brand { background:
-  radial-gradient(600px 320px at 85% 8%, rgba(124, 58, 237, .35), transparent 70%),
-  radial-gradient(520px 300px at 10% 0%, rgba(34, 211, 238, .18), transparent 70%),
-  linear-gradient(180deg, var(--shell) 0, var(--shell-2) 640px, var(--bg) 640px); }
+/* Public pages: navy hero band. It is drawn by the hero itself (full viewport
+   width, extending up behind the bar), so it always ends exactly where the hero does. */
+.public--brand { background: var(--bg); overflow-x: clip; }
+.public--brand .hero { position: relative; isolation: isolate; }
+.public--brand .features { padding-top: 24px; }
+.public--brand .hero::before { content: ''; position: absolute; z-index: -1; inset: -120px calc(50% - 50vw) 0; background:
+  radial-gradient(600px 320px at 85% 60px, rgba(124, 58, 237, .35), transparent 70%),
+  radial-gradient(520px 300px at 10% 0, rgba(34, 211, 238, .18), transparent 70%),
+  linear-gradient(180deg, var(--shell), var(--shell-2)); }
 .public--brand .public-bar .brand, .public--brand .public-bar .btn--ghost, .public--brand .public-bar .icon-btn { color: #fff; }
 .public--brand .public-bar .btn--ghost:hover, .public--brand .public-bar .icon-btn:hover { background: rgba(255, 255, 255, .1); }
 .public--brand .hero { color: #fff; }
@@ -605,11 +609,10 @@ a.kpi:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(16, 24, 40
 @media (min-width: 980px) {
   .public { height: 100vh; }
   .public > main { flex: 1; min-height: 0; }
-  .public--brand > main { display: flex; flex-direction: column; justify-content: center; }
-  .public--brand { background:
-    radial-gradient(600px 320px at 85% 8%, rgba(124, 58, 237, .35), transparent 70%),
-    radial-gradient(520px 300px at 10% 0%, rgba(34, 211, 238, .18), transparent 70%),
-    linear-gradient(180deg, var(--shell) 0, var(--shell-2) 64%, var(--bg) 64%); }
+  .public--brand > main { display: flex; flex-direction: column; }
+  /* The hero takes the free height, so the band reaches down to the feature cards. */
+  .public--brand .hero { flex: 1; width: 100%; align-content: center; }
+  .public--brand .features { width: 100%; padding-top: clamp(16px, 3vh, 32px); }
   .hero { padding: clamp(8px, 3vh, 48px) var(--gutter) clamp(16px, 3.5vh, 48px); gap: 32px; }
   .hero h1 { font-size: clamp(30px, min(4.4vw, 5.6vh), 52px); margin: clamp(8px, 1.6vh, 16px) 0; }
   .hero__lead { font-size: clamp(15px, 2vh, 17px); }
@@ -632,3 +635,30 @@ a.kpi:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(16, 24, 40
   .auth-links { margin-top: 12px; padding-top: 12px; }
   .pw-rules { gap: 1px; }
 }
+
+/* ----------------------------------------------------------------- page-to-page navigation
+   Every menu click loads a new page. To avoid a blank flash:
+   - before the script runs, an empty app page already paints the navy top bar and side bar;
+   - the shell is drawn at once from the last known account (see shell.js);
+   - supporting browsers cross-fade only the content, the frame stays put. */
+body.app-pending:empty { min-height: 100vh; background: linear-gradient(var(--shell) 0 var(--topbar-h), var(--bg) var(--topbar-h)); }
+@media (min-width: 960px) {
+  body.app-pending:empty { background:
+    linear-gradient(var(--shell) 0 var(--topbar-h), transparent var(--topbar-h)),
+    linear-gradient(90deg, var(--shell) 252px, var(--bg) 252px); }
+}
+@view-transition { navigation: auto; }
+.topbar { view-transition-name: topbar; }
+@media (min-width: 960px) { .sidenav { view-transition-name: sidenav; } }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .14s; }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+
+/* Contact card in the home hero */
+.contact-card { margin-top: clamp(14px, 2.4vh, 24px); display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 12px 16px;
+  font-style: normal; border-radius: var(--radius); background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .14); color: #e3e6f6; }
+.contact-card__company { font-size: 15px; color: #fff; padding-right: 18px; border-right: 1px solid rgba(255, 255, 255, .18); }
+.contact-card ul { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0; padding: 0; list-style: none; }
+.contact-card a { display: inline-flex; align-items: center; gap: 7px; color: inherit; font-size: 14px; text-decoration: none; }
+.contact-card a:hover { color: #fff; text-decoration: underline; }
+.contact-card .icon { color: var(--brand-3); }
+@media (max-width: 560px) { .contact-card__company { border-right: 0; padding-right: 0; width: 100%; } }

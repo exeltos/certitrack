@@ -114,6 +114,9 @@ export type OrganizationUpdate = Partial<Pick<OrganizationRow,
 
 export interface OpenedFile { url: string; fileName: string }
 
+/** Contact card on the public home page; edited by the platform owner. */
+export interface SiteContact { company: string; email: string | null; phone: string | null; website: string | null }
+
 export interface NetworkEdge {
   connection_id: string; status: ConnectionStatus; created_at: string; responded_at: string | null; ended_at: string | null;
   requester_id: string; requester_name: string; addressee_id: string; addressee_name: string;
@@ -177,4 +180,7 @@ export interface Api {
   adminCertificates(): Promise<AdminCertificate[]>;
   adminAudit(limit?: number): Promise<AuditEntry[]>;
   adminSetOrganizationState(id: string, state: 'active' | 'suspended' | 'closed', reason?: string): Promise<void>;
+
+  siteContact(): Promise<SiteContact>;
+  setSiteContact(contact: SiteContact): Promise<SiteContact>;
 }

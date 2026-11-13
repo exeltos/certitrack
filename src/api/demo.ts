@@ -6,7 +6,7 @@ import { DEMO_PDF_URL } from './demoAssets';
 import type {
   Api, AppContext, AuditEntry, Certificate, CertificateInput, CertificateShare, CertificateType, CertificateView,
   Connection, ConnectionResult, ConnectionStatus, DocumentRequest, Invitation, NetworkEdge, Notification,
-  NotificationPreferences, Organization, OrganizationUpdate, PartnerCandidate, Sharing, ShareInput
+  NotificationPreferences, Organization, OrganizationUpdate, PartnerCandidate, Sharing, ShareInput, SiteContact
 } from '../types/domain';
 
 type DemoCert = Omit<Certificate, 'type' | 'shares'> & { deleted_at?: string | null };
@@ -186,6 +186,8 @@ const isPair = (c: DemoConnection, a: string, b: string): boolean =>
   (c.requester_org_id === a && c.addressee_org_id === b) || (c.requester_org_id === b && c.addressee_org_id === a);
 const byExpiry = (a: { expiry_date: string | null }, b: { expiry_date: string | null }): number =>
   String(a.expiry_date ?? '9').localeCompare(String(b.expiry_date ?? '9'));
+
+let demoContact: SiteContact = { company: 'Exeltos', email: 'info@exeltos.com', phone: '6942471022', website: 'https://exeltos.com' };
 
 export const demoApi = {
   mode: 'demo' as const,
@@ -392,5 +394,7 @@ export const demoApi = {
 
   async adminCertificates() { await wait(); return load().certificates.filter(c => !c.deleted_at).map(withType); },
   async adminAudit(): Promise<AuditEntry[]> { await wait(); return load().audit; },
-  async adminSetOrganizationState(id: string, state: 'active' | 'suspended' | 'closed') { await wait(); orgById(id).status = state; save(); }
+  async adminSetOrganizationState(id: string, state: 'active' | 'suspended' | 'closed') { await wait(); orgById(id).status = state; save(); },
+  async siteContact() { return { ...demoContact }; },
+  async setSiteContact(c: SiteContact) { await wait(); demoContact = { ...c }; return { ...demoContact }; }
 } satisfies Api;

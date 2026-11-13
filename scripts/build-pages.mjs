@@ -41,7 +41,7 @@ const shell = script => `<!doctype html>
 <script>try{var s=localStorage.getItem('theme');document.documentElement.dataset.theme=(s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}catch(e){}</script>
 <script type="module" src="/src/pages/${entry(script)}"></script>
 </head>
-<body></body>
+<body${/^(organization|admin)\//.test(script) ? ' class="app-pending"' : ''}></body>
 </html>
 `;
 
