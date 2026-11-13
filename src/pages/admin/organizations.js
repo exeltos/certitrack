@@ -1,11 +1,11 @@
-import { api } from '../../api/index.js';
-import { html, mount, raw } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { formatDate } from '../../lib/format.js';
-import { startPage } from '../../ui/shell.js';
-import { icon, avatar, emptyState, errorState } from '../../ui/components.js';
-import { openDialog, toast } from '../../ui/dialog.js';
-import { orgStatusBadge, connStatusBadge } from './data.js';
+import { api } from '../../api/index';
+import { html, mount, raw } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { formatDate } from '../../lib/format';
+import { startPage } from '../../ui/shell';
+import { icon, avatar, emptyState, errorState } from '../../ui/components';
+import { openDialog, toast } from '../../ui/dialog';
+import { orgStatusBadge, connStatusBadge } from './data';
 
 const { content } = await startPage({ area: 'admin', page: 'organizations', title: 'admin.orgsTitle', subtitle: 'admin.orgsSubtitle' });
 let orgs = [], network = [], certs = [], q = '', status = 'all';

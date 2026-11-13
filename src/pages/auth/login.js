@@ -1,12 +1,12 @@
-import { endDemo } from '../../api/index.js';
-import { supabaseApi } from '../../api/supabase.js';
-import { html } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { friendlyError } from '../../ui/components.js';
-import { openDialog } from '../../ui/dialog.js';
-import { passwordField, bindPasswordFields } from '../../ui/password.js';
-import { publicPage, authCard, formError, busy } from '../public/layout.js';
-import { PATHS } from '../../ui/shell.js';
+import { endDemo } from '../../api/index';
+import { supabaseApi } from '../../api/supabase';
+import { html } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { friendlyError } from '../../ui/components';
+import { openDialog } from '../../ui/dialog';
+import { passwordField, bindPasswordFields } from '../../ui/password';
+import { publicPage, authCard, formError, busy } from '../public/layout';
+import { PATHS } from '../../ui/shell';
 
 const root = publicPage({
   titleKey: 'auth.signInTitle',

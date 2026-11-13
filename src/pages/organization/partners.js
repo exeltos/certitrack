@@ -1,11 +1,11 @@
-import { api } from '../../api/index.js';
-import { html, mount } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { relativeTime, formatDate } from '../../lib/format.js';
-import { startPage, setNavCount } from '../../ui/shell.js';
-import { icon, avatar, emptyState, errorState, friendlyError } from '../../ui/components.js';
-import { openDialog, confirmDialog, toast, toastError } from '../../ui/dialog.js';
-import { splitConnections, visibleTo } from './model.js';
+import { api } from '../../api/index';
+import { html, mount } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { relativeTime, formatDate } from '../../lib/format';
+import { startPage, setNavCount } from '../../ui/shell';
+import { icon, avatar, emptyState, errorState, friendlyError } from '../../ui/components';
+import { openDialog, confirmDialog, toast, toastError } from '../../ui/dialog';
+import { splitConnections, visibleTo } from './model';
 
 const { ctx, content, actions } = await startPage({ area: 'organization', page: 'connections', title: 'conn.title', subtitle: 'conn.subtitle' });
 const canManage = ['owner', 'admin'].includes(ctx.role);

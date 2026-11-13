@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validatePassword, passwordPolicyMessage, PASSWORD_POLICY } from '../../src/auth/passwordPolicy.js';
+import { validatePassword, passwordPolicyMessage, PASSWORD_POLICY } from '../../src/auth/passwordPolicy';
 
 describe('validatePassword', () => {
   it('rejects an empty password', () => {

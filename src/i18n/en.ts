@@ -1,5 +1,7 @@
-// English. Missing keys fall back to Greek (a unit test checks there are none).
-export const en = {
+// English. Must have exactly the keys of the Greek dictionary (checked by TypeScript).
+import type { el } from './el';
+
+export const en: Record<keyof typeof el, string> = {
   'common.accept': 'Accept', 'common.decline': 'Decline', 'common.cancel': 'Cancel', 'common.close': 'Close',
   'common.confirm': 'Confirm', 'common.save': 'Save', 'common.saved': 'Changes saved.',
   'common.delete': 'Delete', 'common.edit': 'Edit', 'common.view': 'View', 'common.download': 'Download',

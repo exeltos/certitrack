@@ -1,12 +1,12 @@
-import { api } from '../../api/index.js';
-import { html, mount } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { formatDate, relativeTime, daysUntil } from '../../lib/format.js';
-import { startPage, setNavCount } from '../../ui/shell.js';
-import { icon, avatar, badge, emptyState, errorState, typeName, expiryText } from '../../ui/components.js';
-import { confirmDialog, toast, toastError } from '../../ui/dialog.js';
-import { requestState, bestOfType, coverage } from './model.js';
-import { askDialog, respondDialog } from './requestForms.js';
+import { api } from '../../api/index';
+import { html, mount } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { formatDate, relativeTime, daysUntil } from '../../lib/format';
+import { startPage, setNavCount } from '../../ui/shell';
+import { icon, avatar, badge, emptyState, errorState, typeName, expiryText } from '../../ui/components';
+import { confirmDialog, toast, toastError } from '../../ui/dialog';
+import { requestState, bestOfType, coverage } from './model';
+import { askDialog, respondDialog } from './requestForms';
 
 const { ctx, content, actions } = await startPage({ area: 'organization', page: 'requests', title: 'req.title', subtitle: 'req.subtitle' });
 const me = ctx.organization.id;

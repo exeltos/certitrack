@@ -1,7 +1,7 @@
 // Layout for public (signed-out) pages.
-import { html, mount } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { brand, utilityButtons, bindUtilityButtons, prepareDocument } from '../../ui/shell.js';
+import { html, mount } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { brand, utilityButtons, bindUtilityButtons, prepareDocument } from '../../ui/shell';
 
 export function publicPage({ titleKey, body, nav = '' }) {
   prepareDocument(titleKey);

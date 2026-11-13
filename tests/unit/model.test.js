@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { visibleTo, bestOfType, requestState, coverage, splitConnections } from '../../src/pages/organization/model.js';
+import { visibleTo, bestOfType, requestState, coverage, splitConnections } from '../../src/pages/organization/model';
 
 const NOW = new Date('2026-11-13T10:00:00');
 const day = n => new Date(NOW.getTime() + n * 86400000).toISOString().slice(0, 10);

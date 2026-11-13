@@ -1,7 +1,7 @@
-import { html } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { icon, avatar } from '../../ui/components.js';
-import { publicPage } from './layout.js';
+import { html } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { icon, avatar } from '../../ui/components';
+import { publicPage } from './layout';
 
 const node = (name, sub) => html`<div class="preview__node">${avatar(name, { size: 'lg' })}<span>${name}</span><small>${sub}</small></div>`;
 

@@ -1,12 +1,12 @@
-import { api } from '../../api/index.js';
-import { html, mount, raw } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { formatDate, relativeTime } from '../../lib/format.js';
-import { startPage } from '../../ui/shell.js';
-import { icon, badge, stateBadge, emptyState, errorState, certTypeLabel, typeName, expiryText } from '../../ui/components.js';
-import { openDialog, confirmDialog, toast, toastError, showPdf } from '../../ui/dialog.js';
-import { visibleTo, requestState } from './model.js';
-import { askDialog, respondDialog } from './requestForms.js';
+import { api } from '../../api/index';
+import { html, mount, raw } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { formatDate, relativeTime } from '../../lib/format';
+import { startPage } from '../../ui/shell';
+import { icon, badge, stateBadge, emptyState, errorState, certTypeLabel, typeName, expiryText } from '../../ui/components';
+import { openDialog, confirmDialog, toast, toastError, showPdf } from '../../ui/dialog';
+import { visibleTo, requestState } from './model';
+import { askDialog, respondDialog } from './requestForms';
 
 const { ctx, content, actions, setHeading } = await startPage({ area: 'organization', page: 'connections', title: 'partner.title', subtitle: 'partner.subtitle', back: { href: '/pages/organization/partners.html', label: 'partner.back' } });
 const me = ctx.organization.id;

@@ -1,11 +1,11 @@
 // Certificate create/edit and sharing dialogs (used by several pages).
-import { api } from '../../api/index.js';
-import { html, raw } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { formatDate, relativeTime } from '../../lib/format.js';
-import { icon, avatar, typeName, emptyState, loading } from '../../ui/components.js';
-import { openDialog } from '../../ui/dialog.js';
-import { mount } from '../../lib/html.js';
+import { api } from '../../api/index';
+import { html, raw } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { formatDate, relativeTime } from '../../lib/format';
+import { icon, avatar, typeName, emptyState, loading } from '../../ui/components';
+import { openDialog, UserError } from '../../ui/dialog';
+import { mount } from '../../lib/html';
 
 const MAX_PDF = 25 * 1024 * 1024;
 
@@ -45,7 +45,7 @@ function readSharing(form) {
         return { org_id: cb.value, expires_at: until ? new Date(`${until}T23:59:59`).toISOString() : null };
       })
     : [];
-  if (mode === 'selected' && !shares.length) throw Object.assign(new Error('pick'), { userMessage: t('sharing.pickAtLeastOne') });
+  if (mode === 'selected' && !shares.length) throw new UserError(t('sharing.pickAtLeastOne'));
   return { mode, shares };
 }
 
@@ -90,10 +90,10 @@ export async function certificateDialog({ cert = null, types, partners, presetTy
     },
     async onSubmit(form) {
       const file = form.file.files[0] || null;
-      if (file && (file.type && file.type !== 'application/pdf' || !/\.pdf$/i.test(file.name))) throw Object.assign(new Error('pdf'), { userMessage: t('cert.pdfOnly') });
-      if (file && file.size > MAX_PDF) throw Object.assign(new Error('size'), { userMessage: t('cert.tooLarge') });
+      if (file && (file.type && file.type !== 'application/pdf' || !/\.pdf$/i.test(file.name))) throw new UserError(t('cert.pdfOnly'));
+      if (file && file.size > MAX_PDF) throw new UserError(t('cert.tooLarge'));
       const issue = form.issue_date.value, expiry = form.expiry_date.value;
-      if (issue && expiry && expiry < issue) throw Object.assign(new Error('dates'), { userMessage: t('cert.datesOrder') });
+      if (issue && expiry && expiry < issue) throw new UserError(t('cert.datesOrder'));
       const fields = Object.fromEntries(['title', 'certificate_type_id', 'custom_type_label', 'certificate_number', 'issuer', 'issue_date', 'expiry_date', 'notes']
         .map(k => [k, form[k].value.trim()]));
       if (fields.certificate_type_id !== other?.id) fields.custom_type_label = '';

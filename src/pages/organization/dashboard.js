@@ -1,11 +1,11 @@
-import { api } from '../../api/index.js';
-import { html, mount } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { certificateState, relativeTime, formatDate } from '../../lib/format.js';
-import { startPage, setNavCount } from '../../ui/shell.js';
-import { icon, avatar, badge, emptyState, errorState, typeName, expiryText } from '../../ui/components.js';
-import { toast, toastError } from '../../ui/dialog.js';
-import { requestState, splitConnections } from './model.js';
+import { api } from '../../api/index';
+import { html, mount } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { certificateState, relativeTime, formatDate } from '../../lib/format';
+import { startPage, setNavCount } from '../../ui/shell';
+import { icon, avatar, badge, emptyState, errorState, typeName, expiryText } from '../../ui/components';
+import { toast, toastError } from '../../ui/dialog';
+import { requestState, splitConnections } from './model';
 
 const { ctx, content } = await startPage({ area: 'organization', page: 'dashboard', title: 'dash.title', subtitle: 'dash.subtitle' });
 const me = ctx.organization.id;

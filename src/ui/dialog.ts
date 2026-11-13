@@ -1,13 +1,33 @@
 // Native <dialog> based modals, confirmations and toasts. No dependencies.
-import { html, mount } from '../lib/html.js';
-import { icon, friendlyError } from './components.js';
-import { t } from '../lib/i18n.js';
+import { html, mount, type Renderable } from '../lib/html';
+import { icon, friendlyError } from './components';
+import { t } from '../lib/i18n';
 
 // Open a modal. `body` is a template; `onSubmit(form, dialog)` may return false
 // (keep open) or throw (error is shown inside the dialog). Resolves with the
 // onSubmit result, or null when dismissed.
-export function openDialog({ title, description, body = '', submitLabel, cancelLabel = t('common.cancel'),
-  danger = false, wide = false, onOpen, onSubmit, hideSubmit = false }) {
+export interface DialogOptions<R> {
+  title: string;
+  description?: string;
+  body?: Renderable;
+  submitLabel?: string;
+  cancelLabel?: string;
+  danger?: boolean;
+  wide?: boolean;
+  hideSubmit?: boolean;
+  /** `finish(value)` closes the dialog and resolves with value (for extra action buttons). */
+  onOpen?: (form: HTMLFormElement, dialog: HTMLDialogElement, finish: (value: R) => void) => void;
+  /** Return false to keep the dialog open; throw to show the error inside it. */
+  onSubmit?: (form: HTMLFormElement, dialog: HTMLDialogElement) => Promise<R | false | void> | R | false | void;
+}
+
+/** Errors that already carry a message meant for the user. */
+export class UserError extends Error {
+  constructor(readonly userMessage: string) { super(userMessage); }
+}
+
+export function openDialog<R = true>({ title, description, body = '', submitLabel, cancelLabel = t('common.cancel'),
+  danger = false, wide = false, onOpen, onSubmit, hideSubmit = false }: DialogOptions<R>): Promise<R | true | null> {
   return new Promise(resolve => {
     const dlg = document.createElement('dialog');
     dlg.className = `dialog${wide ? ' dialog--wide' : ''}`;
@@ -25,17 +45,17 @@ export function openDialog({ title, description, body = '', submitLabel, cancelL
         </footer>
       </form>`);
     document.body.appendChild(dlg);
-    const form = dlg.querySelector('form');
-    const errorEl = dlg.querySelector('.dialog__error');
-    let result = null;
+    const form = dlg.querySelector('form') as HTMLFormElement;
+    const errorEl = dlg.querySelector('.dialog__error') as HTMLElement;
+    let result: R | true | null = null;
     const close = () => { dlg.close(); };
     dlg.addEventListener('close', () => { dlg.remove(); resolve(result); });
-    dlg.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
+    dlg.querySelectorAll<HTMLElement>('[data-close]').forEach(b => b.addEventListener('click', close));
     dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
     form.addEventListener('submit', async e => {
       e.preventDefault();
       if (!form.reportValidity()) return;
-      const btn = form.querySelector('[type=submit]');
+      const btn = form.querySelector<HTMLButtonElement>('[type=submit]');
       btn?.setAttribute('aria-busy', 'true'); if (btn) btn.disabled = true;
       errorEl.hidden = true;
       try {
@@ -45,7 +65,7 @@ export function openDialog({ title, description, body = '', submitLabel, cancelL
         close();
       } catch (err) {
         console.error(err);
-        errorEl.textContent = err?.userMessage || friendlyError(err);
+        errorEl.textContent = err instanceof UserError ? err.userMessage : friendlyError(err);
         errorEl.hidden = false;
       } finally {
         btn?.removeAttribute('aria-busy'); if (btn) btn.disabled = false;
@@ -54,17 +74,17 @@ export function openDialog({ title, description, body = '', submitLabel, cancelL
     dlg.showModal();
     // finish(value): close and resolve with value (for extra action buttons).
     onOpen?.(form, dlg, value => { result = value; close(); });
-    form.querySelector('[autofocus]')?.focus();
+    form.querySelector<HTMLElement>('[autofocus]')?.focus();
   });
 }
 
-export async function confirmDialog({ title, text, confirmLabel, danger = false }) {
+export async function confirmDialog({ title, text, confirmLabel, danger = false }: { title: string; text?: string; confirmLabel?: string; danger?: boolean }): Promise<boolean> {
   const ok = await openDialog({ title, body: text ? html`<p class="muted">${text}</p>` : '', submitLabel: confirmLabel || t('common.confirm'), danger });
   return ok === true;
 }
 
-let toastHost;
-export function toast(message, kind = 'success') {
+let toastHost: HTMLDivElement | undefined;
+export function toast(message: string, kind: 'success' | 'error' | 'info' = 'success'): void {
   toastHost ||= Object.assign(document.body.appendChild(document.createElement('div')), { className: 'toasts' });
   toastHost.setAttribute('role', 'status');
   const el = document.createElement('div');
@@ -74,10 +94,10 @@ export function toast(message, kind = 'success') {
   setTimeout(() => { el.classList.add('toast--out'); setTimeout(() => el.remove(), 300); }, 3600);
 }
 
-export function toastError(err) { console.error(err); toast(friendlyError(err), 'error'); }
+export function toastError(err: unknown): void { console.error(err); toast(friendlyError(err), 'error'); }
 
 // Show a PDF in a full-height modal.
-export async function showPdf({ url, fileName, title }) {
+export async function showPdf({ url, fileName, title }: { url: string; fileName: string; title?: string }): Promise<void> {
   await openDialog({
     title: title || fileName, wide: true, hideSubmit: true, cancelLabel: t('common.close'),
     body: html`<div class="pdf-frame"><iframe src="${url}" title="${title || fileName}"></iframe></div>

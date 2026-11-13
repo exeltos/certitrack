@@ -1,11 +1,11 @@
-import { api } from '../../api/index.js';
-import { html, mount, raw } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { certificateState } from '../../lib/format.js';
-import { startPage } from '../../ui/shell.js';
-import { icon, stateBadge, sharingBadge, emptyState, errorState, certTypeLabel, expiryText } from '../../ui/components.js';
-import { confirmDialog, toast, toastError, showPdf } from '../../ui/dialog.js';
-import { certificateDialog, sharingDialog, viewsDialog } from './certificateForms.js';
+import { api } from '../../api/index';
+import { html, mount, raw } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { certificateState } from '../../lib/format';
+import { startPage } from '../../ui/shell';
+import { icon, stateBadge, sharingBadge, emptyState, errorState, certTypeLabel, expiryText } from '../../ui/components';
+import { confirmDialog, toast, toastError, showPdf } from '../../ui/dialog';
+import { certificateDialog, sharingDialog, viewsDialog } from './certificateForms';
 
 const { ctx, content, actions } = await startPage({ area: 'organization', page: 'certificates', title: 'certs.title', subtitle: 'certs.subtitle' });
 const canEdit = ['owner', 'admin', 'member'].includes(ctx.role);

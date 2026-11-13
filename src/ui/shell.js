@@ -1,11 +1,11 @@
 // Application shell: access guard, top bar, navigation, notifications,
 // theme and language. Every authenticated page starts with startPage().
-import { api, isDemo, endDemo } from '../api/index.js';
-import { html, mount } from '../lib/html.js';
-import { t, getLanguage, setLanguage } from '../lib/i18n.js';
-import { relativeTime } from '../lib/format.js';
-import { icon, avatar, loading, emptyState, friendlyError } from './components.js';
-import { initMonitoring } from '../shared/monitoring.js';
+import { api, isDemo, endDemo } from '../api/index';
+import { html, mount } from '../lib/html';
+import { t, getLanguage, setLanguage } from '../lib/i18n';
+import { relativeTime } from '../lib/format';
+import { icon, avatar, loading, emptyState, friendlyError } from './components';
+import { initMonitoring } from '../shared/monitoring';
 
 export const PATHS = {
   home: '/index.html',

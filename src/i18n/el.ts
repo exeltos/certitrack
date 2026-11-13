@@ -240,4 +240,4 @@ export const el = {
   'error.vatExists': 'Υπάρχει ήδη οργανισμός με αυτό το ΑΦΜ.', 'error.emailExists': 'Υπάρχει ήδη λογαριασμός με αυτό το email.',
   'error.wrongPassword': 'Ο τρέχων κωδικός δεν είναι σωστός.', 'error.demoReadonly': 'Δεν είναι διαθέσιμο στο demo.',
   'error.shareNotConnected': 'Μπορείτε να μοιραστείτε μόνο με οργανισμούς με τους οποίους είστε συνδεδεμένοι.'
-};
+} as const;

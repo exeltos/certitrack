@@ -1,11 +1,12 @@
-import { supabaseApi } from '../../api/supabase.js';
-import { endDemo } from '../../api/index.js';
-import { html, mount } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { icon, friendlyError } from '../../ui/components.js';
-import { passwordField, bindPasswordFields, checkNewPassword } from '../../ui/password.js';
-import { publicPage, authCard, formError, busy } from '../public/layout.js';
-import { normalizeVat } from '../../lib/format.js';
+import { UserError } from '../../ui/dialog';
+import { supabaseApi } from '../../api/supabase';
+import { endDemo } from '../../api/index';
+import { html, mount } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { icon, friendlyError } from '../../ui/components';
+import { passwordField, bindPasswordFields, checkNewPassword } from '../../ui/password';
+import { publicPage, authCard, formError, busy } from '../public/layout';
+import { normalizeVat } from '../../lib/format';
 
 const root = publicPage({
   titleKey: 'auth.registerTitle',
@@ -32,11 +33,11 @@ root.querySelector('[data-register]').addEventListener('submit', e => {
   busy(form.querySelector('[type=submit]'), async () => {
     try {
       const vat = normalizeVat(form.vat.value);
-      if (!form.name.value.trim() || !form.email.value.trim()) throw Object.assign(new Error('x'), { userMessage: t('auth.fillAll') });
-      if (!/^\d{9}$/.test(vat)) throw Object.assign(new Error('x'), { userMessage: t('auth.vatInvalid') });
-      if (!form.email.checkValidity()) throw Object.assign(new Error('x'), { userMessage: t('auth.emailInvalid') });
+      if (!form.name.value.trim() || !form.email.value.trim()) throw new UserError(t('auth.fillAll'));
+      if (!/^\d{9}$/.test(vat)) throw new UserError(t('auth.vatInvalid'));
+      if (!form.email.checkValidity()) throw new UserError(t('auth.emailInvalid'));
       const password = checkNewPassword(form);
-      if (!form.terms.checked) throw Object.assign(new Error('x'), { userMessage: t('auth.acceptTerms') });
+      if (!form.terms.checked) throw new UserError(t('auth.acceptTerms'));
       endDemo();
       await supabaseApi.signUp({ email: form.email.value.trim().toLowerCase(), password, name: form.name.value.trim(), vat,
         redirectTo: new URL('/pages/auth/login.html', location.origin).href });

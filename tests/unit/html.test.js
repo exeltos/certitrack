@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { html, raw } from '../../src/lib/html.js';
-import { escapeHtml } from '../../src/shared/html.js';
+import { html, raw } from '../../src/lib/html';
+import { escapeHtml } from '../../src/shared/html';
 
 describe('escapeHtml', () => {
   it('escapes the five HTML-significant characters', () => {

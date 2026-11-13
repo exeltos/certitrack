@@ -1,9 +1,9 @@
-import { api } from '../../api/index.js';
-import { html, mount, raw } from '../../lib/html.js';
-import { t } from '../../lib/i18n.js';
-import { formatDateTime } from '../../lib/format.js';
-import { startPage } from '../../ui/shell.js';
-import { icon, badge, emptyState, errorState } from '../../ui/components.js';
+import { api } from '../../api/index';
+import { html, mount, raw } from '../../lib/html';
+import { t } from '../../lib/i18n';
+import { formatDateTime } from '../../lib/format';
+import { startPage } from '../../ui/shell';
+import { icon, badge, emptyState, errorState } from '../../ui/components';
 
 const { content } = await startPage({ area: 'admin', page: 'audit', title: 'admin.auditTitle', subtitle: 'admin.auditSubtitle' });
 let rows = [], orgName = new Map(), q = '', entity = 'all';

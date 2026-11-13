@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { el } from '../../src/i18n/el.js';
-import { en } from '../../src/i18n/en.js';
+import { el } from '../../src/i18n/el';
+import { en } from '../../src/i18n/en';
 
 function files(dir) {
   return readdirSync(dir).flatMap(f => statSync(join(dir, f)).isDirectory() ? files(join(dir, f)) : f.endsWith('.js') ? [join(dir, f)] : []);
