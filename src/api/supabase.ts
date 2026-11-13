@@ -7,7 +7,7 @@ import type {
   AdminCertificate, Api, AppContext, AuditEntry, Certificate, CertificateInput, CertificateType, CertificateView,
   Connection, ConnectionResult, ConnectionStatus, DocumentRequest, Invitation, MemberRole, MfaFactor, NetworkEdge,
   Notification, NotificationPreferences, Organization, OrganizationStatus, OrganizationUpdate, OpenedFile,
-  PartnerCandidate, RequestStatus, Sharing, ShareInput
+  PartnerCandidate, RequestStatus, Sharing, ShareInput, SiteContact
 } from '../types/domain';
 
 type Client = SupabaseClient<Database>;
@@ -74,6 +74,12 @@ async function verifiedFactor(sb: Client): Promise<MfaFactor | null> {
   const { data } = await sb.auth.mfa.listFactors();
   const factor = data?.totp?.find(f => f.status === 'verified');
   return factor ? { id: factor.id, status: factor.status } : null;
+}
+
+export const DEFAULT_CONTACT: SiteContact = { company: 'Exeltos', email: 'info@exeltos.com', phone: '6942471022', website: 'https://exeltos.com' };
+function toSiteContact(v: Partial<SiteContact> | null | undefined): SiteContact {
+  if (!v?.company) return DEFAULT_CONTACT;
+  return { company: v.company, email: v.email || null, phone: v.phone || null, website: v.website || null };
 }
 
 export const supabaseApi = {
@@ -343,5 +349,18 @@ export const supabaseApi = {
   },
   async adminSetOrganizationState(id: string, state: 'active' | 'suspended' | 'closed', reason?: string) {
     await rpc('ct_platform_set_organization_state', { p_org: id, p_state: state, ...(reason ? { p_reason: reason } : {}) });
+  },
+
+  // ---------------------------------------------------------------- public contact card
+  // Read with a plain request so the home page does not have to load supabase-js.
+  async siteContact(): Promise<SiteContact> {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_settings?key=eq.contact&select=value`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } });
+    if (!res.ok) throw new ApiError(`contact card: HTTP ${res.status}`);
+    const rows = await res.json() as { value: Partial<SiteContact> }[];
+    return toSiteContact(rows[0]?.value);
+  },
+  async setSiteContact(c: SiteContact) {
+    return toSiteContact(await rpc('ct_set_site_contact', { p_company: c.company, p_email: c.email || null, p_phone: c.phone || null, p_website: c.website || null }) as Partial<SiteContact>);
   }
 } satisfies Api & Record<string, unknown>;

@@ -31,6 +31,15 @@ const NAV = {
   ]
 };
 
+// Page-to-page cross-fades (see app.css) are a nicety: a skipped or aborted
+// transition must not surface as an error.
+for (const type of ['pageswap', 'pagereveal']) {
+  window.addEventListener(type, e => {
+    const vt = e.viewTransition;
+    if (vt) for (const p of [vt.ready, vt.finished, vt.updateCallbackDone]) p?.catch(() => {});
+  });
+}
+
 // ------------------------------------------------------------------ theme & language
 export function applyTheme() {
   let saved = null;
@@ -107,6 +116,8 @@ async function openNotifications(btn) {
 }
 
 // ------------------------------------------------------------------ layout
+let documentListeners = false;
+let shellPopovers = [];
 function renderShell({ area, page, ctx, title, subtitle, back }) {
   const nav = NAV[area];
   const who = ctx.organization?.name || t('shell.platformOwner');
@@ -157,21 +168,25 @@ function renderShell({ area, page, ctx, title, subtitle, back }) {
   });
   const bell = document.getElementById('bellBtn');
   if (bell) { popovers.push(['bellBtn', 'notePanel']); bell.addEventListener('click', () => openNotifications(bell)); refreshBell(); }
+  shellPopovers = popovers;
+  document.querySelector('[data-action=logout]').addEventListener('click', async () => {
+    writeSnapshot(null);
+    await api.signOut().catch(() => {});
+    location.href = PATHS.home;
+  });
+  document.querySelector('[data-action=exit-demo]')?.addEventListener('click', () => { endDemo(); location.href = PATHS.home; });
+  if (documentListeners) return;
+  documentListeners = true;
   document.addEventListener('click', e => {
-    for (const [b, p] of popovers) {
+    for (const [b, p] of shellPopovers) {
       const panel = document.getElementById(p);
       if (!panel.hidden && !e.target.closest(`#${b}`) && !e.target.closest(`#${p}`)) { panel.hidden = true; document.getElementById(b).setAttribute('aria-expanded', 'false'); }
     }
   });
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    for (const [b, p] of popovers) { const panel = document.getElementById(p); if (!panel.hidden) { panel.hidden = true; document.getElementById(b).focus(); } }
+    for (const [b, p] of shellPopovers) { const panel = document.getElementById(p); if (!panel.hidden) { panel.hidden = true; document.getElementById(b).focus(); } }
   });
-  document.querySelector('[data-action=logout]').addEventListener('click', async () => {
-    await api.signOut().catch(() => {});
-    location.href = PATHS.home;
-  });
-  document.querySelector('[data-action=exit-demo]')?.addEventListener('click', () => { endDemo(); location.href = PATHS.home; });
 }
 
 export function setNavCount(key, count) {
@@ -179,9 +194,26 @@ export function setNavCount(key, count) {
   if (el) { el.textContent = count > 99 ? '99+' : String(count); el.hidden = !count; }
 }
 
+// What the shell shows about the account, kept for this tab so the next page can
+// draw its frame immediately instead of waiting for the network.
+const SNAPSHOT_KEY = 'certitrack.shell';
+const snapshotOf = ctx => ({ email: ctx.user.email, org: ctx.organization?.name || null, isAdmin: !!ctx.isAdmin, status: ctx.organization?.status || null });
+function readSnapshot() { try { return JSON.parse(sessionStorage.getItem(SNAPSHOT_KEY) || 'null'); } catch { return null; } }
+function writeSnapshot(snap) { try { snap ? sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap)) : sessionStorage.removeItem(SNAPSHOT_KEY); } catch { /* ignore */ } }
+const sameSnapshot = (a, b) => !!a && !!b && a.email === b.email && a.org === b.org && a.isAdmin === b.isAdmin && a.status === b.status;
+const snapshotFits = (snap, area) => !!snap && (area === 'admin' ? snap.isAdmin : !!snap.org);
+
 // Guard + shell. Returns { ctx, content, actions } or never resolves when redirecting.
 export async function startPage({ area, page, title, subtitle, back }) {
   prepareDocument(`nav.${page}`);
+  const shellArgs = ctx => ({ area, page, ctx, title: t(title), subtitle: subtitle ? t(subtitle) : '', back });
+  // Draw the frame right away from the last known account; it is confirmed below.
+  const snap = readSnapshot();
+  let drawn = null;
+  if (snapshotFits(snap, area)) {
+    renderShell(shellArgs({ user: { email: snap.email }, organization: snap.org ? { name: snap.org } : null, isAdmin: snap.isAdmin }));
+    drawn = snap;
+  }
   let ctx;
   try {
     ctx = await api.context();
@@ -190,15 +222,18 @@ export async function startPage({ area, page, title, subtitle, back }) {
     mount(document.body, html`<main class="center-page">${emptyState({ iconName: 'circle-alert', title: t('common.loadFailed'), text: friendlyError(err) })}</main>`);
     return new Promise(() => {});
   }
-  const redirect = to => { location.replace(to); return new Promise(() => {}); };
+  const redirect = to => { writeSnapshot(null); location.replace(to); return new Promise(() => {}); };
   if (!ctx) return redirect(`${PATHS.login}?next=${encodeURIComponent(location.pathname + location.search)}`);
   if (area === 'admin' && !ctx.isAdmin) return redirect(ctx.organization ? PATHS.orgHome : PATHS.login);
   if (area === 'organization' && !ctx.organization) {
     if (ctx.isAdmin) return redirect(PATHS.adminHome);
+    writeSnapshot(null);
     mount(document.body, html`<main class="center-page">${emptyState({ iconName: 'building', title: t('shell.noOrganization'), text: t('shell.noOrganizationText') })}</main>`);
     return new Promise(() => {});
   }
-  renderShell({ area, page, ctx, title: t(title), subtitle: subtitle ? t(subtitle) : '', back });
+  const fresh = snapshotOf(ctx);
+  writeSnapshot(fresh);
+  if (!sameSnapshot(drawn, fresh)) renderShell(shellArgs(ctx));
 
   const status = ctx.organization?.status;
   if (status && status !== 'active') {

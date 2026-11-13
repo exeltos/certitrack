@@ -279,6 +279,26 @@ select t_ok(exists(select 1 from connections c join organizations o on o.id = c.
             'the invitation becomes a pending connection when they register');
 
 -- ---------------------------------------------------------------------------
+-- Public contact card on the home page
+-- ---------------------------------------------------------------------------
+set role anon;
+select t_ok((select value->>'email' from site_settings where key = 'contact') = 'info@exeltos.com', 'visitors can read the contact card');
+select t_fails($$update site_settings set value = '{}'$$, 'visitors cannot change the contact card');
+set role authenticated;
+select t_as(:ua);
+select t_fails($$select ct_set_site_contact('Hacker', 'x@x.gr', null, null)$$, 'an organization cannot change the contact card');
+select t_fails($$update site_settings set value = '{}'$$, 'no direct writes to the contact card');
+select t_as(:uadm);
+select t_fails($$select ct_set_site_contact('Exeltos', 'info@exeltos.com', null, 'javascript:alert(1)')$$, 'website must be a plain web address');
+select t_fails($$select ct_set_site_contact('Exeltos', 'not-an-email', null, null)$$, 'email is validated');
+select t_fails($$select ct_set_site_contact('', 'info@exeltos.com', null, null)$$, 'company name is required');
+select t_ok((ct_set_site_contact('Exeltos IKE', 'Sales@Exeltos.com', '+30 694 247 1022', 'exeltos.com/el'))->>'website' = 'https://exeltos.com/el',
+            'platform admin updates the contact card (website gets https://)');
+select t_ok((select value->>'email' from site_settings where key = 'contact') = 'sales@exeltos.com', 'the change is stored');
+reset role;
+select t_ok(exists(select 1 from audit_log where action = 'site_contact.updated'), 'the change is audited');
+
+-- ---------------------------------------------------------------------------
 -- Deleting a whole organization (cascades through certificates, connections…)
 -- ---------------------------------------------------------------------------
 reset role;
