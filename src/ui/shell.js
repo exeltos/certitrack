@@ -6,6 +6,7 @@ import { t, getLanguage, setLanguage } from '../lib/i18n';
 import { relativeTime } from '../lib/format';
 import { icon, avatar, loading, emptyState, friendlyError } from './components';
 import { initMonitoring } from '../shared/monitoring';
+import { redirectAuthCallback } from '../lib/authRedirect';
 
 export const PATHS = {
   home: '/index.html',
@@ -45,6 +46,8 @@ function toggleTheme() {
 function toggleLanguage() { setLanguage(getLanguage() === 'en' ? 'el' : 'en'); location.reload(); }
 
 export function prepareDocument(titleKey) {
+  // A password-recovery link that landed here: go to the reset page instead.
+  if (redirectAuthCallback()) throw new Error('redirecting');
   applyTheme();
   initMonitoring();
   document.documentElement.lang = getLanguage();
