@@ -1,16 +1,15 @@
 import { api } from '../../api/index';
-import { html, mount, raw } from '../../lib/html';
+import { html, mount } from '../../lib/html';
 import { t } from '../../lib/i18n';
 import { relativeTime } from '../../lib/format';
 import { startPage } from '../../ui/shell';
 import { icon, avatar, emptyState, errorState } from '../../ui/components';
-import { openDialog, toast, UserError } from '../../ui/dialog';
 import { orgStatusBadge, connStatusBadge } from './data';
 
 const { content } = await startPage({ area: 'admin', page: 'adminDashboard', title: 'admin.title', subtitle: 'admin.subtitle' });
 
 try {
-  const [orgs, network, certs, contact] = await Promise.all([api.adminOrganizations(), api.adminNetwork(), api.adminCertificates(), api.siteContact()]);
+  const [orgs, network, certs] = await Promise.all([api.adminOrganizations(), api.adminNetwork(), api.adminCertificates()]);
   const active = network.filter(c => c.status === 'active');
   const pending = network.filter(c => c.status === 'pending');
   const openReqs = network.reduce((n, c) => n + Number(c.open_requests || 0), 0);
@@ -35,45 +34,6 @@ try {
         ${network.length ? html`<ul class="rows">${network.slice(0, 6).map(c => html`<li class="row"><span class="row__icon">${icon('link-2')}</span>
           <div class="row__main"><span class="row__title">${c.requester_name} ↔ ${c.addressee_name}</span><span class="row__meta"><span>${relativeTime(c.created_at)}</span></span></div>
           <div class="row__side">${connStatusBadge(c.status)}</div></li>`)}</ul>` : emptyState({ iconName: 'network', title: t('admin.noConnections') })}</section>
-    </div>
-    <section class="card" style="margin-top:16px" data-contact-card>${contactSection(contact)}</section>`);
-  bindContact(contact);
+    </div>`);
 } catch (err) { console.error(err); mount(content, errorState(err)); }
 
-// ---------------------------------------------------------------- home page contact card
-function contactSection(c) {
-  const row = (ic, label, value) => html`<li class="row"><span class="row__icon">${icon(ic)}</span><div class="row__main"><span class="row__title">${value || '—'}</span><span class="row__meta"><span>${label}</span></span></div></li>`;
-  return html`<div class="card__head"><div><h2>${t('admin.contactTitle')}</h2><p>${t('admin.contactText')}</p></div>
-      <button type="button" class="btn btn--sm btn--secondary" data-edit-contact>${icon('pencil', { size: 16 })}${t('common.edit')}</button></div>
-    <ul class="rows">${row('building', t('admin.contactCompany'), c.company)}${row('mail', t('home.contactEmail'), c.email)}${row('phone', t('home.contactPhone'), c.phone)}${row('globe', t('home.contactWebsite'), c.website)}</ul>`;
-}
-
-function bindContact(c) {
-  document.querySelector('[data-edit-contact]').addEventListener('click', async () => {
-    const field = (name, label, type, value) => html`<div class="field"><label for="c-${name}">${label}</label>
-      <input class="input" id="c-${name}" name="${name}" type="${type}" value="${value || ''}" maxlength="200" ${name === 'company' ? raw('required') : ''}></div>`;
-    const saved = await openDialog({
-      title: t('admin.contactTitle'), description: t('admin.contactText'),
-      body: html`<div class="form-grid">
-        ${field('company', t('admin.contactCompany'), 'text', c.company)}
-        ${field('email', t('home.contactEmail'), 'email', c.email)}
-        ${field('phone', t('home.contactPhone'), 'tel', c.phone)}
-        ${field('website', t('home.contactWebsite'), 'text', c.website)}</div>`,
-      onSubmit: async form => {
-        const f = new FormData(form);
-        const value = k => String(f.get(k) || '').trim();
-        try {
-          return await api.setSiteContact({ company: value('company'), email: value('email') || null, phone: value('phone') || null, website: value('website') || null });
-        } catch (err) {
-          const bad = /Invalid (email|phone|website|company)/.exec(err?.message || '')?.[1];
-          throw bad ? new UserError(t(`admin.contactInvalid.${bad}`)) : err;
-        }
-      }
-    });
-    if (saved && saved !== true) {
-      toast(t('admin.contactSaved'));
-      mount('[data-contact-card]', contactSection(saved));
-      bindContact(saved);
-    }
-  });
-}

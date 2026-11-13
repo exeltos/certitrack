@@ -2,7 +2,7 @@ import { html, mount } from '../../lib/html';
 import { t } from '../../lib/i18n';
 import { icon, avatar } from '../../ui/components';
 import { publicPage } from './layout';
-import { api, DEMO_ENABLED } from '../../api/index';
+import { api, DEMO_OPEN } from '../../api/index';
 import { DEFAULT_CONTACT } from '../../api/supabase';
 
 const node = (name, sub) => html`<div class="preview__node">${avatar(name, { size: 'lg' })}<span>${name}</span><small>${sub}</small></div>`;
@@ -10,7 +10,7 @@ const node = (name, sub) => html`<div class="preview__node">${avatar(name, { siz
 // "Request a presentation" opens an email to the contact address.
 const mailto = (c, subject) => `mailto:${c.email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`;
 const cta = c => html`${c.email ? html`<a class="btn btn--primary btn--lg" href="${mailto(c, t('home.presentationSubject'))}">${icon('presentation')}${t('home.ctaPresentation')}</a>` : ''}
-  ${DEMO_ENABLED ? html`<a class="btn btn--secondary btn--lg" href="/pages/demo/index.html">${icon('eye')}${t('home.ctaDemo')}</a>` : ''}`;
+  ${DEMO_OPEN ? html`<a class="btn btn--secondary btn--lg" href="/pages/demo/index.html">${icon('eye')}${t('home.ctaDemo')}</a>` : ''}`;
 const webLink = url => /^https?:\/\//i.test(url || '') ? url : null;
 const contactCard = c => html`<address class="contact-card" aria-label="${t('home.contactTitle')}">
   <strong class="contact-card__company">${c.company}</strong>

@@ -19,7 +19,7 @@ export const el = {
   // navigation
   'nav.dashboard': 'Επισκόπηση', 'nav.certificates': 'Πιστοποιητικά', 'nav.connections': 'Συνδέσεις',
   'nav.requests': 'Αιτήματα', 'nav.settings': 'Ρυθμίσεις', 'nav.adminDashboard': 'Επισκόπηση',
-  'nav.organizations': 'Οργανισμοί', 'nav.network': 'Δίκτυο', 'nav.audit': 'Ιστορικό ενεργειών',
+  'nav.organizations': 'Οργανισμοί', 'nav.network': 'Δίκτυο', 'nav.audit': 'Ιστορικό ενεργειών', 'nav.adminSettings': 'Ρυθμίσεις', 'nav.demo': 'Demo',
 
   'orgStatus.pending_verification.title': 'Εκκρεμεί η επιβεβαίωση του email',
   'orgStatus.pending_verification.text': 'Ο οργανισμός θα ενεργοποιηθεί μόλις επιβεβαιωθεί το email του λογαριασμού.',
@@ -203,6 +203,8 @@ export const el = {
   'home.lead': 'Συνδεθείτε με προμηθευτές, πελάτες και συνεργάτες. Ο καθένας αποφασίζει τι βλέπει ο άλλος, και το CertiTrack σας ειδοποιεί πριν λήξει οτιδήποτε.',
   'home.ctaPresentation': 'Ζητήστε παρουσίαση', 'home.presentationSubject': 'Παρουσίαση CertiTrack',
   'home.contactTitle': 'Επικοινωνία', 'home.contactEmail': 'Email', 'home.contactPhone': 'Τηλέφωνο', 'home.contactWebsite': 'Ιστότοπος',
+  'admin.settingsTitle': 'Ρυθμίσεις', 'admin.settingsSubtitle': 'Ρυθμίσεις της πλατφόρμας.',
+  'conn.tabActive': 'Ενεργές',
   'admin.contactTitle': 'Στοιχεία επικοινωνίας αρχικής', 'admin.contactText': 'Εμφανίζονται στην αρχική σελίδα, στην κάρτα «Επικοινωνία».',
   'admin.contactInvalid.email': 'Το email δεν είναι έγκυρο.', 'admin.contactInvalid.phone': 'Το τηλέφωνο δεν είναι έγκυρο.',
   'admin.contactInvalid.website': 'Ο ιστότοπος πρέπει να είναι διεύθυνση όπως exeltos.com.', 'admin.contactInvalid.company': 'Συμπληρώστε το όνομα της εταιρείας.',

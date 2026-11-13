@@ -73,39 +73,46 @@ function renderActive() {
   })}</ul>`);
 }
 
+// Tabs instead of stacked lists, so the screen fits without scrolling.
+let tab = 'active';
 function render() {
   const { active, incoming, outgoing } = splitConnections(data.connections);
   setNavCount('connections', incoming.length);
-  mount(content, html`<div class="stack">
-    ${incoming.length ? html`<section class="card">
+  const waiting = outgoing.length + data.invitations.length;
+  const tabs = [['active', t('conn.tabActive'), active.length],
+    ...(incoming.length ? [['incoming', t('conn.incomingTitle'), incoming.length]] : []),
+    ...(waiting ? [['outgoing', t('conn.outgoingTitle'), waiting]] : [])];
+  if (!tabs.some(([k]) => k === tab)) tab = 'active';
+  mount(content, html`<div class="tabs" role="tablist">${tabs.map(([key, label, n]) => html`<button type="button" class="tab" role="tab" data-tab="${key}" aria-selected="${tab === key}">${label}<span class="count">${n}</span></button>`)}</div>
+    ${tab === 'incoming' ? html`<section class="card" role="tabpanel">
       <div class="card__head"><div><h2>${t('conn.incomingTitle')}</h2><p>${t('conn.incomingText')}</p></div></div>
       <ul class="rows">${incoming.map(c => row(c, canManage
         ? html`<button class="btn btn--sm btn--secondary" data-decline="${c.id}">${t('common.decline')}</button><button class="btn btn--sm btn--primary" data-accept="${c.id}">${t('common.accept')}</button>`
-        : html`<span class="hint">${t('conn.ownersRespond')}</span>`))}</ul></section>` : ''}
-
-    <section class="card">
-      <div class="card__head"><div><h2>${t('conn.activeTitle', { count: active.length })}</h2><p>${t('conn.activeText')}</p></div>
-        <label class="search">${icon('search', { size: 16 })}<span class="sr-only">${t('common.search')}</span>
-          <input class="input" type="search" data-q placeholder="${t('conn.searchPlaceholder')}" value="${q}"></label></div>
-      <div data-active></div>
-    </section>
-
-    ${outgoing.length || data.invitations.length ? html`<section class="card">
+        : html`<span class="hint">${t('conn.ownersRespond')}</span>`))}</ul></section>`
+    : tab === 'outgoing' ? html`<section class="card" role="tabpanel">
       <div class="card__head"><div><h2>${t('conn.outgoingTitle')}</h2><p>${t('conn.outgoingText')}</p></div></div>
       <ul class="rows">
         ${outgoing.map(c => row(c, html`<span class="badge badge--warning">${t('conn.awaiting')}</span>${canManage ? html`<button class="btn btn--sm btn--ghost" data-cancel="${c.id}">${t('common.cancel')}</button>` : ''}`))}
         ${data.invitations.map(i => html`<li class="row"><span class="row__icon">${icon('mail')}</span>
           <div class="row__main"><span class="row__title">${i.email}</span><span class="row__meta"><span>${t('conn.invitationSent')}</span><span>${relativeTime(i.created_at)}</span></span></div>
           <div class="row__side"><span class="badge badge--neutral">${t('conn.invitation')}</span><button class="btn btn--sm btn--ghost" data-cancel-invite="${i.id}">${t('common.cancel')}</button></div></li>`)}
-      </ul></section>` : ''}
-
-    <div class="callout callout--info">${icon('shield-check')}<div><strong>${t('conn.privacyTitle')}</strong><p>${t('conn.privacyText')}</p></div></div>
-  </div>`);
-  content.querySelector('[data-q]').addEventListener('input', e => { q = e.target.value; renderActive(); });
-  renderActive();
+      </ul></section>`
+    : html`<section class="card" role="tabpanel">
+      <div class="card__head"><div><h2>${t('conn.activeTitle', { count: active.length })}</h2><p>${t('conn.activeText')}</p></div>
+        <label class="search">${icon('search', { size: 16 })}<span class="sr-only">${t('common.search')}</span>
+          <input class="input" type="search" data-q placeholder="${t('conn.searchPlaceholder')}" value="${q}"></label></div>
+      <div data-active></div>
+    </section>`}
+    <div class="callout callout--info" style="margin-top:16px">${icon('shield-check')}<div><strong>${t('conn.privacyTitle')}</strong><p>${t('conn.privacyText')}</p></div></div>`);
+  if (tab === 'active') {
+    content.querySelector('[data-q]').addEventListener('input', e => { q = e.target.value; renderActive(); });
+    renderActive();
+  }
 }
 
 content.addEventListener('click', async e => {
+  const tabBtn = e.target.closest('[data-tab]');
+  if (tabBtn) { tab = tabBtn.dataset.tab; render(); return; }
   const b = e.target.closest('[data-accept],[data-decline],[data-cancel],[data-cancel-invite]');
   if (!b) return;
   try {

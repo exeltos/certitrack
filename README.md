@@ -11,7 +11,7 @@ Netlify + Supabase (Postgres, Auth, Storage, one Edge Function).
 
 ```bash
 npm install
-npm run dev        # http://127.0.0.1:8888 — open /pages/demo/index.html for the in-browser demo (dev only; production builds leave the demo out — build with VITE_ENABLE_DEMO=true to include it)
+npm run dev        # http://127.0.0.1:8888 — open /pages/demo/index.html for the in-browser demo (open to anyone in dev and in builds made with VITE_ENABLE_DEMO=true; on the real site only the platform owner can start it, from the "Demo" menu item)
 npm run typecheck  # TypeScript (strict for .ts files)
 npm test           # unit tests (vitest)
 npm run build      # production build into dist/ (what Netlify serves)

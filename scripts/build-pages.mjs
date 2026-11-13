@@ -20,7 +20,8 @@ export const PAGES = {
   'pages/admin/dashboard.html': 'admin/dashboard.js',
   'pages/admin/organizations.html': 'admin/organizations.js',
   'pages/admin/network.html': 'admin/network.js',
-  'pages/admin/audit.html': 'admin/audit.js'
+  'pages/admin/audit.html': 'admin/audit.js',
+  'pages/admin/settings.html': 'admin/settings.js'
 };
 
 // Pages are listed as .js; use the .ts file instead once a page has been converted.
@@ -39,7 +40,7 @@ const shell = script => `<!doctype html>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/src/styles/app.css">
 <script>try{var s=localStorage.getItem('theme');document.documentElement.dataset.theme=(s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}catch(e){}</script>
-<script type="module" src="/src/pages/${entry(script)}"></script>
+<script type="module" blocking="render" src="/src/pages/${entry(script)}"></script>
 </head>
 <body${/^(organization|admin)\//.test(script) ? ' class="app-pending"' : ''}></body>
 </html>

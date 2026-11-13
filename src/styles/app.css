@@ -176,6 +176,7 @@ img, svg { display: block; }
 .input[readonly] { background: var(--surface-2); color: var(--text-2); }
 .form-grid { display: grid; gap: 16px; }
 @media (min-width: 640px) { .form-grid--2 { grid-template-columns: 1fr 1fr; } .span-2 { grid-column: 1 / -1; } }
+@media (min-width: 1200px) { .form-grid--wide-3 { grid-template-columns: repeat(3, 1fr); } }
 .search { position: relative; flex: 1 1 240px; max-width: 360px; }
 .search .icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
 .search .input { padding-left: 36px; }
@@ -662,3 +663,31 @@ body.app-pending:empty { min-height: 100vh; background: linear-gradient(var(--sh
 .contact-card a:hover { color: #fff; text-decoration: underline; }
 .contact-card .icon { color: var(--brand-3); }
 @media (max-width: 560px) { .contact-card__company { border-right: 0; padding-right: 0; width: 100%; } }
+
+/* ----------------------------------------------------------------- desktop: screens fit the window
+   The window itself never scrolls: top bar, menu, title and summary cards stay
+   in place, and only a long list scrolls inside its own card. Phones and small
+   windows keep normal page scrolling. */
+@media (min-width: 960px) and (min-height: 560px) {
+  body.app { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  body.app > * { flex: none; }
+  body.app > .layout { flex: 1 1 auto; min-height: 0; }
+  body.app .sidenav { height: auto; overflow-y: auto; }
+  body.app .main { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; padding-bottom: 20px; }
+  body.app .main > * { flex: none; }
+  body.app #content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  body.app #content > * { flex: none; }
+  body.app #content > :is(.card, .stack, .grid-2, .settings-panels) { flex: 0 1 auto; min-height: 0; }
+  body.app #content :is(.stack, .settings-panels) { display: flex; flex-direction: column; gap: 18px; min-height: 0; }
+  body.app #content .stack > .card { flex: 0 1 auto; min-height: 120px; }
+  /* Two lists one above the other share the height equally. */
+  body.app #content .stack--split > .card { flex: 1 1 0; min-height: 0; }
+  body.app #content .grid-2 { min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  body.app #content .grid-2 > * { min-height: 0; }
+  body.app #content .card { display: flex; flex-direction: column; min-height: 0; }
+  body.app #content .card > * { flex: none; }
+  body.app #content .card > :is(.rows, .table-wrap, .card__body, form, .empty, [data-list], [data-active]) { flex: 0 1 auto; min-height: 0; overflow: auto; }
+  body.app #content .card > [data-table] { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  body.app #content [data-table] > .table-wrap { flex: 0 1 auto; min-height: 0; overflow: auto; }
+  body.app #content .table th { position: sticky; top: 0; z-index: 1; }
+}

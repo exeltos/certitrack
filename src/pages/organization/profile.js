@@ -14,11 +14,16 @@ const PREFS = ['in_app_enabled', 'email_enabled', 'expiry_in_app_enabled', 'expi
 function render(org, prefs) {
   const field = (name, type = 'text', span = false) => html`<div class="field ${span ? 'span-2' : ''}"><label for="o-${name}">${t(`org.${name}`)}</label>
     <input class="input" id="o-${name}" name="${name}" type="${type}" value="${org[name] || ''}" ${canEditOrg ? '' : raw('readonly')}></div>`;
-  mount(content, html`<div class="stack" style="max-width:860px">
-    <section class="card">
+  const tabs = [['org', t('settings.orgTitle')], ['notif', t('settings.notifTitle')], ['security', t('settings.securityTitle')],
+    ...(isOwner ? [['closure', t('settings.closureTitle')]] : [])];
+  if (!tabs.some(([k]) => k === tab)) tab = 'org';
+  // One section at a time, so the page fits the screen.
+  mount(content, html`<div class="tabs" role="tablist">${tabs.map(([key, label]) => html`<button type="button" class="tab" role="tab" data-tab="${key}" aria-selected="${tab === key}">${label}</button>`)}</div>
+  <div class="settings-panels" style="max-width:1100px">
+    <section class="card" data-panel="org">
       <div class="card__head"><div><h2>${t('settings.orgTitle')}</h2><p>${t('settings.orgText')}</p></div></div>
       <form class="card__body" data-org-form>
-        <div class="form-grid form-grid--2">
+        <div class="form-grid form-grid--2 form-grid--wide-3">
           ${field('legal_name')}${field('display_name')}
           <div class="field"><label for="o-vat">${t('common.vat')}</label><input class="input" id="o-vat" value="${org.vat_number}" readonly><small>${t('settings.vatLocked')}</small></div>
           ${field('contact_email', 'email')}${field('phone', 'tel')}${field('website', 'url')}
@@ -28,7 +33,7 @@ function render(org, prefs) {
       </form>
     </section>
 
-    <section class="card">
+    <section class="card" data-panel="notif">
       <div class="card__head"><div><h2>${t('settings.notifTitle')}</h2><p>${t('settings.notifText')}</p></div></div>
       <div class="card__body" style="padding-top:4px;padding-bottom:4px" data-prefs>
         ${PREFS.map(k => html`<label class="switch-row"><span><strong>${t(`prefs.${k}`)}</strong><small>${t(`prefs.${k}.help`)}</small></span>
@@ -36,7 +41,7 @@ function render(org, prefs) {
       </div>
     </section>
 
-    <section class="card">
+    <section class="card" data-panel="security">
       <div class="card__head"><div><h2>${t('settings.securityTitle')}</h2><p>${ctx.user.email}</p></div></div>
       <div class="card__body" style="padding-top:4px;padding-bottom:4px">
         <div class="switch-row"><span><strong>${t('settings.password')}</strong><small>${t('settings.passwordHelp')}</small></span>
@@ -47,13 +52,22 @@ function render(org, prefs) {
       </div>
     </section>
 
-    ${isOwner ? html`<section class="card">
+    ${isOwner ? html`<section class="card" data-panel="closure">
       <div class="card__head"><div><h2>${t('settings.closureTitle')}</h2><p>${t('settings.closureText')}</p></div></div>
       <div class="card__body">${org.status === 'closure_requested'
         ? html`<div class="pair"><span class="badge badge--warning">${t('settings.closurePending')}</span><button class="btn btn--secondary btn--sm" data-closure-cancel>${t('settings.closureCancel')}</button></div>`
         : html`<button class="btn btn--danger-ghost" data-closure>${t('settings.closureRequest')}</button>`}</div>
     </section>` : ''}
   </div>`);
+  showTab(tab);
+}
+
+let tab = location.hash.slice(1) || 'org';
+function showTab(key) {
+  tab = key;
+  content.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== key; });
+  content.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === key)));
+  history.replaceState(null, '', key === 'org' ? location.pathname : `#${key}`);
 }
 
 async function load() {
@@ -83,6 +97,8 @@ content.addEventListener('change', async e => {
 });
 
 content.addEventListener('click', async e => {
+  const tabBtn = e.target.closest('[data-tab]');
+  if (tabBtn) { showTab(tabBtn.dataset.tab); return; }
   const el = e.target.closest('[data-password],[data-mfa-on],[data-mfa-off],[data-closure],[data-closure-cancel]');
   if (!el) return;
   try {
