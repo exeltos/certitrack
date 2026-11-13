@@ -1,6 +1,6 @@
 const { chromium, devices } = require('playwright');
 // End-to-end smoke test of the demo (no backend needed).
-// Usage: npm run build && npm run preview  (in another terminal), then:  node tests/e2e/demo-flows.cjs [screenshot-dir]
+// Usage: VITE_ENABLE_DEMO=true npm run build && npm run preview  (in another terminal), then:  node tests/e2e/demo-flows.cjs [screenshot-dir]
 // Requires Playwright with Chromium. Applies the CSP from netlify.toml to every page.
 const fs = require('fs');
 const path = require('path');

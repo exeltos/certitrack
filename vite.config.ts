@@ -12,7 +12,10 @@ export default defineConfig({
     target: 'es2022',
     rollupOptions: {
       input: Object.fromEntries(
-        [...Object.keys(PAGES), 'pages/organization/compliance.html'].map(f => [f.replace(/\.html$/, ''), resolve(__dirname, f)])
+        [...Object.keys(PAGES), 'pages/organization/compliance.html']
+          // The demo is not part of the public site; only test builds include it.
+          .filter(f => f !== 'pages/demo/index.html' || process.env.VITE_ENABLE_DEMO === 'true')
+          .map(f => [f.replace(/\.html$/, ''), resolve(__dirname, f)])
       )
     }
   },

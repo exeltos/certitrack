@@ -21,7 +21,6 @@ interface Store {
 }
 
 const STORE_KEY = 'certitrack.demo.store.v2';
-const ROLE_KEY = 'certitrack.demo';
 
 const day = (n: number): string => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
 const ago = (mins: number): string => new Date(Date.now() - mins * 60000).toISOString();
@@ -152,11 +151,8 @@ function save() { try { sessionStorage.setItem(STORE_KEY, JSON.stringify(db)); }
 const wait = (ms = 120): Promise<void> => new Promise(r => setTimeout(r, ms));
 const fail = (message: string): never => { throw Object.assign(new Error(message), { code: 'demo' }); };
 
-export function demoRole(): 'organization' | 'admin' | null { try { const r = localStorage.getItem(ROLE_KEY); return r === 'admin' || r === 'organization' ? r : null; } catch { return null; } }
-export function startDemo(role: 'organization' | 'admin'): void {
-  try { localStorage.setItem(ROLE_KEY, role === 'admin' ? 'admin' : 'organization'); sessionStorage.removeItem(STORE_KEY); } catch { /* ignore */ }
-}
-export function endDemo(): void { try { localStorage.removeItem(ROLE_KEY); sessionStorage.removeItem(STORE_KEY); } catch { /* ignore */ } }
+export { demoRole, startDemo, endDemo } from './demoFlag';
+import { demoRole, endDemo } from './demoFlag';
 
 // --- the same visibility rule as ct_org_can_view_certificate --------------------
 function connected(a: string, b: string): boolean {
