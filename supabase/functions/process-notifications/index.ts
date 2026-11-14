@@ -74,7 +74,7 @@ function template(row:any){
   // Invitation to an organization that is not registered yet.
   if(row.template_key==='connection_invitation'){
     const inviter=String(p.partner_name||'Ένας οργανισμός');
-    const href=`${APP_URL}/pages/auth/register.html`;
+    const href=`${APP_URL}/pages/auth/register.html?invite=1&email=${encodeURIComponent(String(row.recipient_email))}`;
     return {
       subject:row.subject,
       text:`${inviter} σας προσκαλεί να συνδεθείτε στο CertiTrack για να ανταλλάσσετε πιστοποιητικά.\n\nΕγγραφή: ${href}\n\nΚάντε εγγραφή με αυτό το email και θα δείτε αμέσως το αίτημα σύνδεσης.`,
@@ -82,6 +82,23 @@ function template(row:any){
         eyebrow:'Πρόσκληση',
         title:`${inviter} σας προσκαλεί στο CertiTrack`,
         body:`Ο οργανισμός <strong style="color:#12213a;">${esc(inviter)}</strong> θέλει να συνδεθεί μαζί σας για να ανταλλάσσετε πιστοποιητικά. Ο καθένας βλέπει μόνο ό,τι επιλέγει να δείξει ο άλλος.<br><br>Κάντε εγγραφή με <strong>αυτό το email</strong> και θα δείτε αμέσως το αίτημα.`,
+        buttonLabel:'Εγγραφή στο CertiTrack',
+        buttonHref:href
+      })
+    };
+  }
+
+  // The platform owner invites an organization to sign up (sign-up is by invitation only).
+  if(row.template_key==='organization_invitation'){
+    const name=p.organization?String(p.organization):'';
+    const href=`${APP_URL}/pages/auth/register.html?invite=1&email=${encodeURIComponent(String(p.email||row.recipient_email))}`;
+    return {
+      subject:row.subject,
+      text:`${name?name+': ':''}σας προσκαλούμε να εγγραφείτε στο CertiTrack, το δίκτυο όπου οι οργανισμοί ανταλλάσσουν πιστοποιητικά με όσους επιλέγουν.\n\nΕγγραφή: ${href}\n\nΚάντε εγγραφή με αυτό το email. Η πρόσκληση ισχύει 30 ημέρες.`,
+      html:emailShell({
+        eyebrow:'Πρόσκληση',
+        title:'Σας προσκαλούμε στο CertiTrack',
+        body:`${name?`Για τον οργανισμό <strong style="color:#12213a;">${esc(name)}</strong>: `:''}μπορείτε πλέον να δημιουργήσετε τον λογαριασμό σας στο CertiTrack και να ανταλλάσσετε πιστοποιητικά με τους συνεργάτες σας. Ο καθένας βλέπει μόνο ό,τι επιλέγει να δείξει ο άλλος.<br><br>Κάντε εγγραφή με <strong>αυτό το email</strong>. Η πρόσκληση ισχύει 30 ημέρες.`,
         buttonLabel:'Εγγραφή στο CertiTrack',
         buttonHref:href
       })

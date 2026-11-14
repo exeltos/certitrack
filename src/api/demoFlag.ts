@@ -8,7 +8,7 @@
 export const DEMO_OPEN: boolean = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO === 'true';
 
 const ROLE_KEY = 'certitrack.demo';
-const STORE_KEYS = ['certitrack.demo.store.v2', 'certitrack.demo.presentations', 'certitrack.demo.team'];
+const STORE_KEYS = ['certitrack.demo.store.v2', 'certitrack.demo.presentations', 'certitrack.demo.team', 'certitrack.demo.orgInvites'];
 export type DemoRole = 'organization' | 'admin';
 
 export function demoRole(): DemoRole | null {

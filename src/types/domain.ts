@@ -122,6 +122,8 @@ export const isTeamAdmin = (role: MemberRole | null | undefined): boolean => rol
 export interface TeamMember { user_id: string; email: string; role: MemberRole; status: 'active' | 'pending_verification'; joined_at: string; is_me: boolean }
 export interface TeamInvitation { id: string; email: string; role: TeamRole; created_at: string; expires_at: string }
 export interface Team { members: TeamMember[]; invitations: TeamInvitation[] }
+/** An organization invited by the platform owner to sign up (sign-up is by invitation only). */
+export interface OrganizationInvitation { id: string; email: string; organization_name: string | null; created_at: string; expires_at: string }
 /** A "request a presentation" sent from the home page. */
 export interface PresentationRequest {
   id: string; name: string; company: string; email: string; phone: string | null; message: string | null;
@@ -207,5 +209,8 @@ export interface Api {
 
   submitPresentationRequest(input: PresentationInput): Promise<void>;
   presentationRequests(): Promise<PresentationRequest[]>;
+  organizationInvitations(): Promise<OrganizationInvitation[]>;
+  inviteOrganization(email: string, name?: string): Promise<void>;
+  cancelOrganizationInvitation(id: string): Promise<void>;
   setPresentationRequestStatus(id: string, status: PresentationStatus): Promise<void>;
 }

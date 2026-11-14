@@ -6,7 +6,7 @@ import { DEMO_PDF_URL } from './demoAssets';
 import type {
   Api, AppContext, AuditEntry, Certificate, CertificateInput, CertificateShare, CertificateType, CertificateView,
   Connection, ConnectionResult, ConnectionStatus, DocumentRequest, Invitation, NetworkEdge, Notification,
-  NotificationPreferences, Organization, OrganizationUpdate, PartnerCandidate, PresentationInput, PresentationRequest, PresentationStatus, Sharing, ShareInput, SiteContact, Team, TeamRole
+  NotificationPreferences, Organization, OrganizationInvitation, OrganizationUpdate, PartnerCandidate, PresentationInput, PresentationRequest, PresentationStatus, Sharing, ShareInput, SiteContact, Team, TeamRole
 } from '../types/domain';
 
 type DemoCert = Omit<Certificate, 'type' | 'shares'> & { deleted_at?: string | null };
@@ -221,6 +221,15 @@ function loadTeam(): Team { try { return JSON.parse(sessionStorage.getItem(TEAM_
 const demoTeam = loadTeam();
 function saveTeam(): void { try { sessionStorage.setItem(TEAM_KEY, JSON.stringify(demoTeam)); } catch { /* demo only */ } }
 const adminCount = () => demoTeam.members.filter(m => m.role === 'owner' || m.role === 'admin').length;
+
+// Organizations the platform owner invited to sign up.
+const ORG_INVITES_KEY = 'certitrack.demo.orgInvites';
+const SAMPLE_ORG_INVITES: OrganizationInvitation[] = [
+  { id: 'oi-1', email: 'info@nea-texniki.example', organization_name: 'Νέα Τεχνική ΑΕ', created_at: new Date(Date.now() - 3 * 86400000).toISOString(), expires_at: new Date(Date.now() + 27 * 86400000).toISOString() }
+];
+function loadOrgInvites(): OrganizationInvitation[] { try { return JSON.parse(sessionStorage.getItem(ORG_INVITES_KEY) || 'null') as OrganizationInvitation[] | null ?? structuredClone(SAMPLE_ORG_INVITES); } catch { return structuredClone(SAMPLE_ORG_INVITES); } }
+let demoOrgInvites = loadOrgInvites();
+function saveOrgInvites(): void { try { sessionStorage.setItem(ORG_INVITES_KEY, JSON.stringify(demoOrgInvites)); } catch { /* demo only */ } }
 
 let demoContact: SiteContact = { company: 'Exeltos', email: 'info@exeltos.com', phone: '6942471022', website: 'https://exeltos.com' };
 
@@ -470,6 +479,18 @@ export const demoApi = {
     savePresentations();
   },
   async presentationRequests() { await wait(); return demoPresentations.map(p => ({ ...p })); },
+  async organizationInvitations() { await wait(); return demoOrgInvites.map(i => ({ ...i })); },
+  async inviteOrganization(email: string, name?: string) {
+    await wait();
+    const e = email.trim().toLowerCase();
+    if (load().orgs.some(o => o.contact_email?.toLowerCase() === e)) throw new Error('This email already has a CertiTrack account');
+    const now = Date.now();
+    const old = demoOrgInvites.find(i => i.email === e);
+    demoOrgInvites = [{ id: old?.id ?? `oi-${now}`, email: e, organization_name: name || old?.organization_name || null,
+      created_at: new Date(now).toISOString(), expires_at: new Date(now + 30 * 86400000).toISOString() }, ...demoOrgInvites.filter(i => i.email !== e)];
+    saveOrgInvites();
+  },
+  async cancelOrganizationInvitation(id: string) { await wait(); demoOrgInvites = demoOrgInvites.filter(i => i.id !== id); saveOrgInvites(); },
   async setPresentationRequestStatus(id: string, status: PresentationStatus) {
     await wait();
     const p = demoPresentations.find(x => x.id === id);

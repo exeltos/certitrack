@@ -106,6 +106,10 @@ export type Database = {
         id: string; organization_id: string; email: string; role: string; status: string; invited_by: string | null;
         created_at: string; expires_at: string; accepted_at: string | null;
       }>;
+      organization_invitations: Table<{
+        id: string; email: string; organization_name: string | null; status: string; invited_by: string | null;
+        created_at: string; expires_at: string; accepted_at: string | null;
+      }>;
       presentation_requests: Table<{
         id: string; name: string; company: string; email: string; phone: string | null; message: string | null;
         status: string; created_at: string; updated_at: string; handled_by: string | null;
@@ -145,6 +149,8 @@ export type Database = {
       ct_platform_set_organization_state: { Args: { p_org: string; p_reason?: string; p_state: string }; Returns: OrganizationRow };
       ct_team: { Args: { p_org: string }; Returns: { user_id: string; email: string; role: string; status: string; joined_at: string; is_me: boolean }[] };
       ct_invite_team_member: { Args: { p_org: string; p_email: string; p_role: string }; Returns: string | null };
+      ct_invite_organization: { Args: { p_email: string; p_name?: string | null }; Returns: string };
+      ct_cancel_organization_invitation: { Args: { p_invitation: string }; Returns: undefined };
       ct_cancel_team_invitation: { Args: { p_invitation: string }; Returns: undefined };
       ct_set_team_role: { Args: { p_org: string; p_user: string; p_role: string }; Returns: undefined };
       ct_remove_team_member: { Args: { p_org: string; p_user: string }; Returns: undefined };

@@ -18,7 +18,7 @@ const root = publicPage({
       ${passwordField({ name: 'password', label: t('auth.password'), autocomplete: 'current-password' })}
       <button class="btn btn--primary btn--lg btn--block" type="submit">${t('auth.signIn')}</button>
     </form>
-    <div class="auth-links"><a href="/pages/auth/forgot.html">${t('auth.forgot')}</a><a href="/pages/auth/register.html">${t('auth.noAccount')}</a></div>`)
+    <div class="auth-links"><a href="/pages/auth/forgot.html">${t('auth.forgot')}</a></div>`)
 });
 bindPasswordFields(root);
 

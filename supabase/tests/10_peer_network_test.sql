@@ -43,6 +43,10 @@ grant execute on function public.t_ok(boolean, text), public.t_fails(text, text)
 -- ---------------------------------------------------------------------------
 -- Sign-up: organizations are created by the auth trigger.
 -- ---------------------------------------------------------------------------
+-- Sign-up is by invitation only.
+select t_fails($$insert into auth.users(email, raw_user_meta_data) values ('walk-in@x.gr', '{"type":"organization","name":"Walk-in AE","afm":"999999999"}')$$,
+               'an organization cannot sign up without an invitation');
+insert into public.organization_invitations(email) values ('a@a.gr'), ('b@b.gr'), ('C@c.gr'), ('d@d.gr');
 insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data) values
   (:ua, 'a@a.gr', now(), '{"type":"organization","name":"Alpha AE","afm":"111111111"}'),
   (:ub, 'b@b.gr', now(), '{"type":"organization","name":"Beta AE","afm":"222222222"}'),
@@ -54,6 +58,8 @@ insert into public.platform_admins(user_id) values (:uadm);
 
 select t_ok((select count(*) from organizations where status = 'active') = 4, 'sign-up creates active organizations after verification');
 select t_ok(not exists(select 1 from organization_members where user_id = :uadm), 'platform admin account has no organization');
+select t_ok((select count(*) from organization_invitations where status = 'accepted') = 4, 'the invitations are used up on sign-up');
+
 
 create temp table ids as
 select (select id from organizations where vat_number = '111111111') a,
@@ -277,6 +283,26 @@ values ('new@epsilon.gr', now(), '{"type":"organization","name":"Epsilon AE","af
 select t_ok(exists(select 1 from connections c join organizations o on o.id = c.addressee_org_id
                    where o.vat_number = '555555555' and c.requester_org_id = (select d from ids) and c.status = 'pending'),
             'the invitation becomes a pending connection when they register');
+
+-- ---------------------------------------------------------------------------
+-- The platform owner invites organizations
+-- ---------------------------------------------------------------------------
+set role authenticated;
+select t_as(:ua);
+select t_fails($$select ct_invite_organization('friend@zeta.gr')$$, 'an organization cannot invite organizations to sign up');
+select t_ok((select count(*) from organization_invitations) = 0, 'organizations do not see the owner''s invitations');
+select t_as(:uadm);
+select t_ok(ct_invite_organization('Info@Zeta.gr', 'Zeta AE') is not null, 'the platform owner invites an organization');
+select t_fails($$select ct_invite_organization('a@a.gr')$$, 'an email that already has an account cannot be invited');
+select t_ok((select count(*) from organization_invitations where status = 'pending') = 1, 'the platform owner sees pending invitations');
+reset role;
+select t_ok(exists(select 1 from email_outbox where template_key = 'organization_invitation' and recipient_email = 'info@zeta.gr'), 'the invitation email is queued');
+insert into auth.users(email, email_confirmed_at, raw_user_meta_data)
+values ('info@zeta.gr', now(), '{"type":"organization","name":"Zeta AE","afm":"666666666"}');
+select t_ok(exists(select 1 from organizations where vat_number = '666666666' and status = 'active'), 'the invited organization signs up');
+set role anon;
+select t_fails($$select ct_invite_organization('x@y.gr')$$, 'visitors cannot invite');
+reset role;
 
 -- ---------------------------------------------------------------------------
 -- Public contact card on the home page

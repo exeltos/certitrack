@@ -70,6 +70,8 @@ api.siteContact().then(c => { mount('[data-contact]', contactCard(c)); })
   .catch(err => console.warn('contact card', err));
 
 document.querySelector('[data-present]')?.addEventListener('click', () => { void requestPresentation(); });
+// Links such as the sign-up page's "Request a presentation" open the form directly.
+if (location.hash === '#presentation') { history.replaceState(null, '', location.pathname); void requestPresentation(); }
 
 /** The form; the request is stored for the owner and emailed to the contact address. */
 async function requestPresentation(): Promise<void> {

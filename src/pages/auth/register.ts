@@ -1,4 +1,7 @@
-// Create an organization account.
+// Sign-up is by invitation only:
+//   ?invite=1&email=…  an organization invited by the platform owner or by a partner
+//   ?join=1&email=…    a colleague invited to an organization's team
+// Without an invitation the page explains that and offers a presentation.
 import { supabaseApi } from '../../api/supabase';
 import { endDemo } from '../../api/index';
 import { html, mount } from '../../lib/html';
@@ -10,10 +13,9 @@ import { UserError } from '../../ui/dialog';
 import { passwordField, bindPasswordFields, checkNewPassword } from '../../ui/password';
 import { publicPage, authCard, formError, busy } from '../public/layout';
 
-// ?join=1&email=… comes from a team invitation email: the colleague only
-// chooses a password and joins the organization that invited them.
 const params = new URLSearchParams(location.search);
 const joining = params.get('join') === '1';
+const invited = params.get('invite') === '1';
 const invitedEmail = params.get('email') ?? '';
 
 const signUpForm = html`<h1>${t('auth.registerTitle')}</h1><p>${t('auth.registerText')}</p>
@@ -21,7 +23,7 @@ const signUpForm = html`<h1>${t('auth.registerTitle')}</h1><p>${t('auth.register
       <div class="form-grid form-grid--2">
         <div class="field span-2"><label for="name">${t('auth.orgName')}</label><input class="input" id="name" name="name" required maxlength="200" autocomplete="organization" autofocus></div>
         <div class="field"><label for="vat">${t('common.vat')}</label><input class="input" id="vat" name="vat" required inputmode="numeric" maxlength="12" placeholder="123456789"><small>${t('auth.vatHint')}</small></div>
-        <div class="field"><label for="email">${t('auth.workEmail')}</label><input class="input" type="email" id="email" name="email" required autocomplete="email"></div>
+        <div class="field"><label for="email">${t('auth.workEmail')}</label><input class="input" type="email" id="email" name="email" required autocomplete="email" value="${invitedEmail}"><small>${t('auth.inviteEmailHint')}</small></div>
         <div class="span-2">${passwordField({ name: 'password', label: t('auth.password'), rules: true })}</div>
         <div class="span-2">${passwordField({ name: 'confirm', label: t('auth.confirmPassword') })}</div>
         <label class="check span-2"><input type="checkbox" name="terms" required><span>${t('auth.terms')}</span></label>
@@ -40,13 +42,19 @@ const joinForm = html`<h1>${t('auth.joinTitle')}</h1><p>${t('auth.joinText')}</p
     </form>
     <div class="auth-links"><span class="muted">${t('auth.haveAccount')}</span><a href="/pages/auth/login.html">${t('auth.signIn')}</a></div>`;
 
+const inviteOnly = html`<div class="empty"><span class="empty__icon">${icon('mail', { size: 22 })}</span>
+    <strong>${t('auth.inviteOnlyTitle')}</strong><p>${t('auth.inviteOnlyText')}</p>
+    <a class="btn btn--primary" href="/#presentation">${icon('presentation')}${t('home.ctaPresentation')}</a>
+    <p class="hint">${t('auth.inviteOnlyHint')}</p></div>
+    <div class="auth-links"><span class="muted">${t('auth.haveAccount')}</span><a href="/pages/auth/login.html">${t('auth.signIn')}</a></div>`;
+
 const root = publicPage({
-  titleKey: joining ? 'auth.joinTitle' : 'auth.registerTitle',
-  body: authCard(joining ? joinForm : signUpForm, !joining)
+  titleKey: joining ? 'auth.joinTitle' : invited ? 'auth.registerTitle' : 'auth.inviteOnlyTitle',
+  body: authCard(joining ? joinForm : invited ? signUpForm : inviteOnly, invited && !joining)
 });
 bindPasswordFields(root);
 
-root.querySelector<HTMLFormElement>('[data-register]')!.addEventListener('submit', e => {
+root.querySelector<HTMLFormElement>('[data-register]')?.addEventListener('submit', e => {
   e.preventDefault();
   const form = e.currentTarget as HTMLFormElement;
   formError(form, '');
@@ -73,7 +81,13 @@ root.querySelector<HTMLFormElement>('[data-register]')!.addEventListener('submit
         const vat = normalizeVat(fieldValue(form, 'vat'));
         if (!name) throw new UserError(t('auth.fillAll'));
         if (!/^\d{9}$/.test(vat)) throw new UserError(t('auth.vatInvalid'));
-        await supabaseApi.signUp({ email: email.toLowerCase(), password, name, vat, redirectTo });
+        try {
+          await supabaseApi.signUp({ email: email.toLowerCase(), password, name, vat, redirectTo });
+        } catch (err) {
+          // The sign-up service hides the database's reason: no invitation, or the VAT number is taken.
+          if (/database error saving new user/i.test(err instanceof Error ? err.message : '')) throw new UserError(t('error.signupNoInvitation'));
+          throw err;
+        }
       }
       mount(root.querySelector('.auth-card'), html`<div class="empty"><span class="empty__icon">${icon('mail', { size: 22 })}</span>
         <strong>${t('auth.checkEmail')}</strong><p>${t('auth.checkEmailText', { email })}</p>

@@ -6,8 +6,9 @@ import { formatDate } from '../../lib/format';
 import { fieldValue } from '../../lib/form';
 import { definePage, type PageContext } from '../../app/page';
 import { icon, avatar, emptyState, errorState } from '../../ui/components';
-import { openDialog, toast } from '../../ui/dialog';
+import { openDialog, toast, toastError } from '../../ui/dialog';
 import { orgStatusBadge, connStatusBadge } from './data';
+import { inviteOrganizationDialog, pendingInvitationsDialog } from './invite';
 import type { AdminCertificate, NetworkEdge, Organization, OrganizationStatus } from '../../types/domain';
 
 type StatusFilter = 'all' | OrganizationStatus;
@@ -28,6 +29,11 @@ class OrganizationsPage {
   private status: StatusFilter = 'all';
 
   constructor(private readonly page: PageContext) {
+    // Sign-up is by invitation only: new organizations start here.
+    mount(page.actions, html`<button class="btn btn--secondary" data-pending>${icon('mail')}${t('orgInvite.pending')}</button>
+      <button class="btn btn--primary" data-invite>${icon('user-plus')}${t('orgInvite.button')}</button>`);
+    page.actions.querySelector('[data-invite]')!.addEventListener('click', () => { void inviteOrganizationDialog(); });
+    page.actions.querySelector('[data-pending]')!.addEventListener('click', () => { void pendingInvitationsDialog().catch(toastError); });
     page.content.addEventListener('click', e => {
       const b = (e.target as Element).closest<HTMLElement>('[data-open]');
       const org = b && this.orgs.find(o => o.id === b.dataset.open);

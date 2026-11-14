@@ -7,7 +7,7 @@ import type {
   AdminCertificate, Api, AppContext, AuditEntry, Certificate, CertificateInput, CertificateType, CertificateView,
   Connection, ConnectionResult, ConnectionStatus, DocumentRequest, Invitation, MemberRole, MfaFactor, NetworkEdge,
   Notification, NotificationPreferences, Organization, OrganizationStatus, OrganizationUpdate, OpenedFile,
-  PartnerCandidate, PresentationInput, Team, TeamMember, TeamRole, PresentationRequest, PresentationStatus, RequestStatus, Sharing, ShareInput, SiteContact
+  OrganizationInvitation, PartnerCandidate, PresentationInput, Team, TeamMember, TeamRole, PresentationRequest, PresentationStatus, RequestStatus, Sharing, ShareInput, SiteContact
 } from '../types/domain';
 
 type Client = SupabaseClient<Database>;
@@ -416,6 +416,14 @@ export const supabaseApi = {
       .select('id, name, company, email, phone, message, status, created_at, updated_at').order('created_at', { ascending: false }));
     return rows.map(r => ({ ...r, status: r.status as PresentationStatus }));
   },
+  async organizationInvitations(): Promise<OrganizationInvitation[]> {
+    return check(await (await client()).from('organization_invitations').select('id, email, organization_name, created_at, expires_at')
+      .eq('status', 'pending').gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }));
+  },
+  async inviteOrganization(email: string, name?: string) {
+    await rpc('ct_invite_organization', { p_email: email, p_name: name || null });
+  },
+  async cancelOrganizationInvitation(id: string) { await rpc('ct_cancel_organization_invitation', { p_invitation: id }); },
   async setPresentationRequestStatus(id: string, status: PresentationStatus) {
     await rpc('ct_set_presentation_request_status', { p_request: id, p_status: status });
   }

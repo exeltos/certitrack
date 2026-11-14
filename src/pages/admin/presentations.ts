@@ -8,6 +8,7 @@ import { setNavCount } from '../../app/shell';
 import { definePage, type PageContext } from '../../app/page';
 import { icon, avatar, badge, emptyState, errorState, type BadgeKind } from '../../ui/components';
 import { toast, toastError } from '../../ui/dialog';
+import { inviteOrganizationDialog } from './invite';
 import type { PresentationRequest, PresentationStatus } from '../../types/domain';
 
 type Tab = 'new' | 'all';
@@ -55,6 +56,7 @@ class PresentationsPage {
       <div class="row__side">
         ${badge(STATUS_KIND[r.status], t(`pres.status.${r.status}`))}
         <a class="icon-btn icon-btn--sm" href="mailto:${r.email}?subject=${subject}" title="${t('pres.reply')}" aria-label="${t('pres.reply')}">${icon('mail')}</a>
+        <button type="button" class="icon-btn icon-btn--sm" data-invite="${r.id}" title="${t('pres.invite')}" aria-label="${t('pres.invite')}: ${r.company}">${icon('user-plus')}</button>
         ${r.status === 'new' ? action('contacted', t('pres.markContacted')) : ''}
         ${r.status !== 'done' ? action('done', t('pres.markDone'), r.status === 'new' ? 'btn--ghost' : 'btn--secondary') : action('new', t('pres.reopen'), 'btn--ghost')}
       </div></li>`;
@@ -78,6 +80,16 @@ class PresentationsPage {
     const target = e.target as Element;
     const tabBtn = target.closest<HTMLElement>('[data-tab]');
     if (tabBtn) { this.tab = tabBtn.dataset.tab === 'all' ? 'all' : 'new'; this.render(); return; }
+    const inviteBtn = target.closest<HTMLElement>('[data-invite]');
+    const req = inviteBtn && this.rows.find(r => r.id === inviteBtn.dataset.invite);
+    if (req) {
+      // Invited after the presentation: they sign up with the email they gave us.
+      if (await inviteOrganizationDialog({ email: req.email, name: req.company }) && req.status === 'new') {
+        await api.setPresentationRequestStatus(req.id, 'contacted').catch(toastError);
+        await this.load();
+      }
+      return;
+    }
     const btn = target.closest<HTMLButtonElement>('[data-status]');
     if (!btn?.dataset.id) return;
     btn.disabled = true;
