@@ -127,6 +127,41 @@ const step = async (name: string, fn: () => Promise<unknown>): Promise<void> => 
     await p.screenshot({ path: `${out}/conns-dark.png` });
     await p.click('[data-action=theme]');
   });
+  await step('team: invite a colleague, change a level, remove a member', async () => {
+    await p.goto(B + '/pages/organization/profile.html#team', { waitUntil: 'networkidle' });
+    await p.waitForSelector('[data-panel=team] .rows');
+    const invitations = () => p.locator('[data-panel=team] [data-invite-cancel]').count();
+    const before = await invitations();
+    await p.click('[data-team-invite]');
+    await p.fill('#ti-email', 'new.colleague@demo-group.example');
+    await p.click('dialog [type=submit]');
+    await p.waitForFunction(n => document.querySelectorAll('[data-panel=team] [data-invite-cancel]').length === n, before + 1);
+    await p.locator('[data-team-role]').first().selectOption('admin');
+    await p.waitForFunction(() => (document.querySelector('[data-team-role]') as HTMLSelectElement | null)?.value === 'admin');
+    const members = await p.locator('[data-team-remove]').count();
+    await p.locator('[data-team-remove]').first().click();
+    await p.click('dialog [type=submit]');
+    await p.waitForFunction(n => document.querySelectorAll('[data-team-remove]').length === n, members - 1);
+  });
+  await step('invitation link opens the join form', async () => {
+    await p.goto(B + '/pages/auth/register.html?join=1&email=colleague%40example.com', { waitUntil: 'networkidle' });
+    if (await p.inputValue('#email') !== 'colleague@example.com') throw new Error('email not prefilled');
+    if (await p.locator('#vat').count()) throw new Error('join form should not ask for a VAT number');
+  });
+  await step('sign-up without an invitation explains it and offers a presentation', async () => {
+    await p.goto(B + '/pages/auth/register.html', { waitUntil: 'networkidle' });
+    if (await p.locator('form[data-register]').count()) throw new Error('the sign-up form should need an invitation');
+    if (!await p.locator('a[href="/#presentation"]').count()) throw new Error('no presentation link');
+  });
+  await step('organization invitation link opens the sign-up form', async () => {
+    await p.goto(B + '/pages/auth/register.html?invite=1&email=new%40org.example', { waitUntil: 'networkidle' });
+    if (await p.inputValue('#email') !== 'new@org.example') throw new Error('email not prefilled');
+    if (!await p.locator('#vat').count()) throw new Error('the organization form asks for the VAT number');
+  });
+  await step('sign-in page has no sign-up link', async () => {
+    await p.goto(B + '/pages/auth/login.html', { waitUntil: 'networkidle' });
+    if (await p.locator('a[href*="register"]').count()) throw new Error('sign-up link still shown');
+  });
   // While still in the demo, so nothing reaches the real backend.
   await step('request a presentation from the home page', async () => {
     await p.goto(B + '/index.html', { waitUntil: 'networkidle' });
@@ -142,6 +177,29 @@ const step = async (name: string, fn: () => Promise<unknown>): Promise<void> => 
     await p.locator('.presentation', { hasText: 'E2E Company' }).waitFor();
     await p.locator('.presentation', { hasText: 'E2E Company' }).locator('[data-status=contacted]').click();
     await p.waitForFunction(() => ![...document.querySelectorAll('.presentation')].some(r => r.textContent.includes('E2E Company')));
+  });
+  await step('owner invites an organization from a presentation request', async () => {
+    const row = p.locator('.presentation').filter({ has: p.locator('[data-invite]') }).first();
+    const company = (await row.locator('.row__title').textContent())?.trim() ?? '';
+    await row.locator('[data-invite]').click();
+    if (!await p.inputValue('#oi-email')) throw new Error('email not prefilled');
+    if (await p.inputValue('#oi-name') !== company) throw new Error('name not prefilled');
+    await p.click('dialog [type=submit]');
+    await p.waitForSelector('dialog', { state: 'detached' });
+  });
+  await step('owner invites an organization and sees it pending', async () => {
+    await p.click('a[href="/pages/admin/organizations.html"]');
+    await p.waitForSelector('[data-invite]');
+    await p.click('[data-invite]');
+    await p.fill('#oi-email', 'hello@e2e-org.example');
+    await p.click('dialog [type=submit]');
+    await p.waitForSelector('dialog', { state: 'detached' });
+    await p.click('[data-pending]');
+    await p.locator('dialog [data-invites]', { hasText: 'hello@e2e-org.example' }).waitFor();
+    await p.locator('dialog [data-cancel]').first().click();
+    await p.click('dialog >> nth=-1 >> [type=submit]');
+    await p.waitForFunction(() => document.querySelectorAll('dialog').length === 1);
+    await p.keyboard.press('Escape');
   });
   await step('exit demo goes home', async () => {
     await p.click('[data-action=exit-demo]');

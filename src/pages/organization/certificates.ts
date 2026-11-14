@@ -36,7 +36,7 @@ class CertificatesPage {
   constructor(private readonly page: PageContext) {
     const role = page.ctx.role;
     this.canEdit = role === 'owner' || role === 'admin' || role === 'member';
-    this.canDelete = role === 'owner' || role === 'admin';
+    this.canDelete = this.canEdit;   // every Μέλος may delete
     const state = this.params.get('state');
     this.filters = { q: '', state: STATE_FILTERS.includes(state as StateFilter) ? state as StateFilter : 'all', sharing: 'all' };
   }

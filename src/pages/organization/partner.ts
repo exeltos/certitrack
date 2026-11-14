@@ -131,7 +131,7 @@ class PartnerPage {
     const c = d.c;
     if (c.status !== 'active') {
       mount(this.page.content, html`<section class="card">${emptyState({ iconName: 'clock', title: t('partner.pendingTitle'), text: t('partner.pendingText'),
-        action: c.direction === 'incoming' && this.canManage ? html`<div class="pair"><button class="btn btn--secondary" data-respond-conn="0">${t('common.decline')}</button><button class="btn btn--primary" data-respond-conn="1">${t('common.accept')}</button></div>` : '' })}</section>`);
+        action: c.direction === 'incoming' && this.canEdit ? html`<div class="pair"><button class="btn btn--secondary" data-respond-conn="0">${t('common.decline')}</button><button class="btn btn--primary" data-respond-conn="1">${t('common.accept')}</button></div>` : '' })}</section>`);
       return;
     }
     const openTheir = d.requests.filter(r => r.responder_org_id === this.me && r.status === 'open').length;

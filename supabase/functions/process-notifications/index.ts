@@ -74,7 +74,7 @@ function template(row:any){
   // Invitation to an organization that is not registered yet.
   if(row.template_key==='connection_invitation'){
     const inviter=String(p.partner_name||'Ένας οργανισμός');
-    const href=`${APP_URL}/pages/auth/register.html`;
+    const href=`${APP_URL}/pages/auth/register.html?invite=1&email=${encodeURIComponent(String(row.recipient_email))}`;
     return {
       subject:row.subject,
       text:`${inviter} σας προσκαλεί να συνδεθείτε στο CertiTrack για να ανταλλάσσετε πιστοποιητικά.\n\nΕγγραφή: ${href}\n\nΚάντε εγγραφή με αυτό το email και θα δείτε αμέσως το αίτημα σύνδεσης.`,
@@ -83,6 +83,56 @@ function template(row:any){
         title:`${inviter} σας προσκαλεί στο CertiTrack`,
         body:`Ο οργανισμός <strong style="color:#12213a;">${esc(inviter)}</strong> θέλει να συνδεθεί μαζί σας για να ανταλλάσσετε πιστοποιητικά. Ο καθένας βλέπει μόνο ό,τι επιλέγει να δείξει ο άλλος.<br><br>Κάντε εγγραφή με <strong>αυτό το email</strong> και θα δείτε αμέσως το αίτημα.`,
         buttonLabel:'Εγγραφή στο CertiTrack',
+        buttonHref:href
+      })
+    };
+  }
+
+  // The platform owner invites an organization to sign up (sign-up is by invitation only).
+  if(row.template_key==='organization_invitation'){
+    const name=p.organization?String(p.organization):'';
+    const href=`${APP_URL}/pages/auth/register.html?invite=1&email=${encodeURIComponent(String(p.email||row.recipient_email))}`;
+    return {
+      subject:row.subject,
+      text:`${name?name+': ':''}σας προσκαλούμε να εγγραφείτε στο CertiTrack, το δίκτυο όπου οι οργανισμοί ανταλλάσσουν πιστοποιητικά με όσους επιλέγουν.\n\nΕγγραφή: ${href}\n\nΚάντε εγγραφή με αυτό το email. Η πρόσκληση ισχύει 30 ημέρες.`,
+      html:emailShell({
+        eyebrow:'Πρόσκληση',
+        title:'Σας προσκαλούμε στο CertiTrack',
+        body:`${name?`Για τον οργανισμό <strong style="color:#12213a;">${esc(name)}</strong>: `:''}μπορείτε πλέον να δημιουργήσετε τον λογαριασμό σας στο CertiTrack και να ανταλλάσσετε πιστοποιητικά με τους συνεργάτες σας. Ο καθένας βλέπει μόνο ό,τι επιλέγει να δείξει ο άλλος.<br><br>Κάντε εγγραφή με <strong>αυτό το email</strong>. Η πρόσκληση ισχύει 30 ημέρες.`,
+        buttonLabel:'Εγγραφή στο CertiTrack',
+        buttonHref:href
+      })
+    };
+  }
+
+  // A colleague invited to join an organization's team.
+  if(row.template_key==='team_invitation'){
+    const org=String(p.organization||'Ένας οργανισμός');
+    const role=p.role==='admin'?'Διαχειριστής':'Μέλος';
+    // A former colleague who was added back already has an account: they just sign in.
+    if(p.rejoined){
+      const login=`${APP_URL}/pages/auth/login.html`;
+      return {
+        subject:row.subject,
+        text:`Η ${org} σας πρόσθεσε ξανά στην ομάδα της στο CertiTrack (ρόλος: ${role}).\n\nΣυνδεθείτε με τον λογαριασμό σας: ${login}`,
+        html:emailShell({
+          eyebrow:'Επιστροφή στην ομάδα',
+          title:`Η ${org} σας πρόσθεσε ξανά στην ομάδα`,
+          body:`Έχετε ξανά πρόσβαση στην ομάδα της <strong style="color:#12213a;">${esc(org)}</strong> ως <strong>${esc(role)}</strong>.<br><br>Συνδεθείτε με τον λογαριασμό που ήδη έχετε.`,
+          buttonLabel:'Σύνδεση',
+          buttonHref:login
+        })
+      };
+    }
+    const href=`${APP_URL}/pages/auth/register.html?join=1&email=${encodeURIComponent(String(p.email||row.recipient_email))}`;
+    return {
+      subject:row.subject,
+      text:`Η ${org} σας προσκαλεί στην ομάδα της στο CertiTrack (ρόλος: ${role}).\n\nΔημιουργήστε τον λογαριασμό σας με αυτό το email: ${href}\n\nΗ πρόσκληση ισχύει 14 ημέρες.`,
+      html:emailShell({
+        eyebrow:'Πρόσκληση στην ομάδα',
+        title:`Η ${org} σας προσκαλεί στο CertiTrack`,
+        body:`Σας προσκάλεσαν να συμμετέχετε στην ομάδα της <strong style="color:#12213a;">${esc(org)}</strong> ως <strong>${esc(role)}</strong>, για να διαχειρίζεστε μαζί πιστοποιητικά, συνδέσεις και αιτήματα.<br><br>Δημιουργήστε τον λογαριασμό σας με <strong>αυτό το email</strong>. Η πρόσκληση ισχύει 14 ημέρες.`,
+        buttonLabel:'Δημιουργία λογαριασμού',
         buttonHref:href
       })
     };

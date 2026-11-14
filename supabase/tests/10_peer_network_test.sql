@@ -43,6 +43,10 @@ grant execute on function public.t_ok(boolean, text), public.t_fails(text, text)
 -- ---------------------------------------------------------------------------
 -- Sign-up: organizations are created by the auth trigger.
 -- ---------------------------------------------------------------------------
+-- Sign-up is by invitation only.
+select t_fails($$insert into auth.users(email, raw_user_meta_data) values ('walk-in@x.gr', '{"type":"organization","name":"Walk-in AE","afm":"999999999"}')$$,
+               'an organization cannot sign up without an invitation');
+insert into public.organization_invitations(email) values ('a@a.gr'), ('b@b.gr'), ('C@c.gr'), ('d@d.gr');
 insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data) values
   (:ua, 'a@a.gr', now(), '{"type":"organization","name":"Alpha AE","afm":"111111111"}'),
   (:ub, 'b@b.gr', now(), '{"type":"organization","name":"Beta AE","afm":"222222222"}'),
@@ -54,6 +58,8 @@ insert into public.platform_admins(user_id) values (:uadm);
 
 select t_ok((select count(*) from organizations where status = 'active') = 4, 'sign-up creates active organizations after verification');
 select t_ok(not exists(select 1 from organization_members where user_id = :uadm), 'platform admin account has no organization');
+select t_ok((select count(*) from organization_invitations where status = 'accepted') = 4, 'the invitations are used up on sign-up');
+
 
 create temp table ids as
 select (select id from organizations where vat_number = '111111111') a,
@@ -279,6 +285,26 @@ select t_ok(exists(select 1 from connections c join organizations o on o.id = c.
             'the invitation becomes a pending connection when they register');
 
 -- ---------------------------------------------------------------------------
+-- The platform owner invites organizations
+-- ---------------------------------------------------------------------------
+set role authenticated;
+select t_as(:ua);
+select t_fails($$select ct_invite_organization('friend@zeta.gr')$$, 'an organization cannot invite organizations to sign up');
+select t_ok((select count(*) from organization_invitations) = 0, 'organizations do not see the owner''s invitations');
+select t_as(:uadm);
+select t_ok(ct_invite_organization('Info@Zeta.gr', 'Zeta AE') is not null, 'the platform owner invites an organization');
+select t_fails($$select ct_invite_organization('a@a.gr')$$, 'an email that already has an account cannot be invited');
+select t_ok((select count(*) from organization_invitations where status = 'pending') = 1, 'the platform owner sees pending invitations');
+reset role;
+select t_ok(exists(select 1 from email_outbox where template_key = 'organization_invitation' and recipient_email = 'info@zeta.gr'), 'the invitation email is queued');
+insert into auth.users(email, email_confirmed_at, raw_user_meta_data)
+values ('info@zeta.gr', now(), '{"type":"organization","name":"Zeta AE","afm":"666666666"}');
+select t_ok(exists(select 1 from organizations where vat_number = '666666666' and status = 'active'), 'the invited organization signs up');
+set role anon;
+select t_fails($$select ct_invite_organization('x@y.gr')$$, 'visitors cannot invite');
+reset role;
+
+-- ---------------------------------------------------------------------------
 -- Public contact card on the home page
 -- ---------------------------------------------------------------------------
 set role anon;
@@ -333,6 +359,60 @@ select ct_set_presentation_request_status((select id from presentation_requests 
 select t_ok((select count(*) from presentation_requests where status = 'contacted') = 1, 'the platform owner marks a request as handled');
 select t_fails($$select ct_set_presentation_request_status((select id from presentation_requests limit 1), 'archived')$$, 'status is validated');
 reset role;
+
+-- ---------------------------------------------------------------------------
+-- Team: colleagues of the same organization (Διαχειριστής / Μέλος)
+-- ---------------------------------------------------------------------------
+set role authenticated;
+select t_as(:ua);
+select t_ok(ct_invite_team_member((select a from ids), 'Colleague@A.gr', 'member') is not null, 'an administrator invites a colleague');
+reset role;
+select t_ok(exists(select 1 from email_outbox where template_key = 'team_invitation' and recipient_email = 'colleague@a.gr'), 'the invitation email is queued');
+set role authenticated;
+select t_as(:ua);
+select t_fails($$select ct_invite_team_member((select a from ids), 'c@c.gr', 'member')$$, 'an email that already has an account cannot be invited');
+select t_fails($$select ct_invite_team_member((select a from ids), 'x@a.gr', 'owner')$$, 'only Διαχειριστής or Μέλος can be given');
+select t_as(:uc);
+select t_fails($$select ct_invite_team_member((select a from ids), 'spy@c.gr', 'admin')$$, 'another organization cannot invite into A');
+select t_ok((select count(*) from team_invitations) = 0, 'another organization does not see A''s invitations');
+select t_fails($$select * from ct_team((select a from ids))$$, 'another organization cannot list A''s team');
+reset role;
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data)
+values ('a0a0a0a0-0000-4000-8000-000000000002', 'colleague@a.gr', null, '{"type":"team_member"}');
+select t_ok((select status from organization_members where user_id = 'a0a0a0a0-0000-4000-8000-000000000002') = 'pending_verification', 'the invited colleague is pending until the email is verified');
+update auth.users set email_confirmed_at = now() where id = 'a0a0a0a0-0000-4000-8000-000000000002';
+select t_ok((select organization_id = (select a from ids) and role = 'member' and status = 'active'
+             from organization_members where user_id = 'a0a0a0a0-0000-4000-8000-000000000002'), 'after verification the colleague is a Μέλος of A');
+select t_fails($$insert into auth.users(email, raw_user_meta_data) values ('stranger@x.gr', '{"type":"team_member"}')$$, 'joining a team needs an invitation');
+set role authenticated;
+select t_as('a0a0a0a0-0000-4000-8000-000000000002');
+select t_ok((select count(*) from ct_team((select a from ids))) = 2, 'colleagues see their team');
+select t_ok((select count(*) from organizations where id = (select a from ids)) = 1, 'the colleague works inside A');
+select t_fails($$select ct_invite_team_member((select a from ids), 'more@a.gr', 'member')$$, 'a Μέλος cannot invite');
+select t_fails($$select ct_set_team_role((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002', 'admin')$$, 'a Μέλος cannot make themselves Διαχειριστής');
+select t_as(:ua);
+select ct_set_team_role((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002', 'admin');
+select t_ok((select role from organization_members where user_id = 'a0a0a0a0-0000-4000-8000-000000000002') = 'admin', 'an administrator promotes a colleague to Διαχειριστής');
+select t_as('a0a0a0a0-0000-4000-8000-000000000002');
+select ct_set_team_role((select a from ids), :ua, 'member');
+select t_fails($$select ct_remove_team_member((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002')$$, 'the last Διαχειριστής cannot be removed');
+select t_fails($$select ct_set_team_role((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002', 'member')$$, 'the last Διαχειριστής cannot step down');
+select ct_set_team_role((select a from ids), :ua, 'admin');
+select t_as(:ua);
+select ct_remove_team_member((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002');
+select t_ok((select count(*) from ct_team((select a from ids))) = 1, 'a removed colleague leaves the team');
+select t_as('a0a0a0a0-0000-4000-8000-000000000002');
+select t_ok((select count(*) from organizations where id = (select a from ids)) = 0, 'a removed colleague no longer sees A');
+select t_as(:uc);
+select t_fails($$select ct_invite_team_member((select c from ids), 'colleague@a.gr', 'member')$$, 'another organization cannot take a former colleague of A');
+select t_as(:ua);
+select ct_invite_team_member((select a from ids), 'colleague@a.gr', 'admin');
+select t_ok((select count(*) from ct_team((select a from ids)) where email = 'colleague@a.gr' and role = 'admin' and status = 'active') = 1,
+            'inviting a former colleague again brings them back');
+select t_as('a0a0a0a0-0000-4000-8000-000000000002');
+select t_ok((select count(*) from organizations where id = (select a from ids)) = 1, 'the returning colleague sees A again');
+reset role;
+select t_ok(exists(select 1 from email_outbox where recipient_email = 'colleague@a.gr' and (payload->>'rejoined')::boolean), 'they are told by email that they can sign in again');
 
 -- ---------------------------------------------------------------------------
 -- Deleting a whole organization (cascades through certificates, connections…)
