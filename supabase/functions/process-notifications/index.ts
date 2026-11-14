@@ -88,6 +88,26 @@ function template(row:any){
     };
   }
 
+  // "Request a presentation" from the home page, sent to the platform owner.
+  // Replying to the email answers the person who asked (see replyTo below).
+  if(row.template_key==='presentation_request'){
+    const line=(label:string,value:unknown)=>value?`<tr><td style="padding:6px 12px 6px 0;color:#64748b;white-space:nowrap;vertical-align:top;">${label}</td><td style="padding:6px 0;color:#12213a;">${esc(String(value)).replace(/\n/g,'<br>')}</td></tr>`:'';
+    const href=`${APP_URL}/pages/admin/presentations.html`;
+    const fields:[string,unknown][]=[['Όνομα',p.name],['Εταιρεία',p.company],['Email',p.email],['Τηλέφωνο',p.phone],['Μήνυμα',p.message]];
+    return {
+      subject:row.subject,
+      replyTo:typeof p.email==='string'?p.email:undefined,
+      text:`Νέο αίτημα παρουσίασης από την αρχική σελίδα.\n\n${fields.filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join('\n')}\n\nΑπαντήστε σε αυτό το email για να γράψετε απευθείας στον ενδιαφερόμενο.\n\nΌλα τα αιτήματα: ${href}`,
+      html:emailShell({
+        eyebrow:'Αίτημα παρουσίασης',
+        title:`${String(p.company||'Νέο αίτημα')} ζητά παρουσίαση`,
+        body:`<table role="presentation" style="border-collapse:collapse;font-size:14px;">${fields.map(([k,v])=>line(k,v)).join('')}</table><br>Απαντήστε σε αυτό το email για να γράψετε απευθείας στον ενδιαφερόμενο.`,
+        buttonLabel:'Όλα τα αιτήματα',
+        buttonHref:href
+      })
+    };
+  }
+
   const route=ROUTES[row.template_key]||{path:'/pages/organization/dashboard.html',eyebrow:'CertiTrack',button:'Άνοιγμα CertiTrack'};
   const href=`${APP_URL}${route.path}`;
   const title=String(p.title||row.subject||'Ενημέρωση');
@@ -128,6 +148,7 @@ async function sendViaSmtp(row:any){
       address:EMAIL_FROM
     },
     to:row.recipient_email,
+    ...('replyTo' in t && t.replyTo ? {replyTo:t.replyTo} : {}),
     subject:t.subject,
     text:t.text,
     html:t.html

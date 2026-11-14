@@ -7,7 +7,7 @@ import type {
   AdminCertificate, Api, AppContext, AuditEntry, Certificate, CertificateInput, CertificateType, CertificateView,
   Connection, ConnectionResult, ConnectionStatus, DocumentRequest, Invitation, MemberRole, MfaFactor, NetworkEdge,
   Notification, NotificationPreferences, Organization, OrganizationStatus, OrganizationUpdate, OpenedFile,
-  PartnerCandidate, RequestStatus, Sharing, ShareInput, SiteContact
+  PartnerCandidate, PresentationInput, PresentationRequest, PresentationStatus, RequestStatus, Sharing, ShareInput, SiteContact
 } from '../types/domain';
 
 type Client = SupabaseClient<Database>;
@@ -362,5 +362,28 @@ export const supabaseApi = {
   },
   async setSiteContact(c: SiteContact) {
     return toSiteContact(await rpc('ct_set_site_contact', { p_company: c.company, p_email: c.email || null, p_phone: c.phone || null, p_website: c.website || null }) as Partial<SiteContact>);
+  },
+
+  // ---------------------------------------------------------------- "request a presentation"
+  // Sent from the public home page with a plain request (no supabase-js needed there).
+  async submitPresentationRequest(input: PresentationInput) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/ct_submit_presentation_request`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_name: input.name, p_company: input.company, p_email: input.email,
+        p_phone: input.phone || null, p_message: input.message || null, p_trap: input.trap || null })
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null) as { message?: string } | null;
+      throw new ApiError(body?.message || `HTTP ${res.status}`);
+    }
+  },
+  async presentationRequests(): Promise<PresentationRequest[]> {
+    const rows = check(await (await client()).from('presentation_requests')
+      .select('id, name, company, email, phone, message, status, created_at, updated_at').order('created_at', { ascending: false }));
+    return rows.map(r => ({ ...r, status: r.status as PresentationStatus }));
+  },
+  async setPresentationRequestStatus(id: string, status: PresentationStatus) {
+    await rpc('ct_set_presentation_request_status', { p_request: id, p_status: status });
   }
 } satisfies Api & Record<string, unknown>;

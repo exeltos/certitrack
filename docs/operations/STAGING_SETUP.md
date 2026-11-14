@@ -39,9 +39,9 @@ CRON_SECRET=<a different secret than production>
 SENTRY_DSN=<optionally a separate Sentry project/environment tag>
 ```
 
-For the frontend config (`src/config/appConfig.js`), since this is a static
+For the frontend config (`src/config/appConfig.ts`), since this is a static
 no-build site, you'll need either:
-- A staging-specific copy of `appConfig.js` deployed only to the staging
+- A staging-specific copy of `appConfig.ts` deployed only to the staging
   site (simplest given the current no-build setup), or
 - A small build step that injects the right config per environment (a
   bigger change — only worth it once you're maintaining staging regularly).

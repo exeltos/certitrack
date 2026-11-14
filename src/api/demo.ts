@@ -6,7 +6,7 @@ import { DEMO_PDF_URL } from './demoAssets';
 import type {
   Api, AppContext, AuditEntry, Certificate, CertificateInput, CertificateShare, CertificateType, CertificateView,
   Connection, ConnectionResult, ConnectionStatus, DocumentRequest, Invitation, NetworkEdge, Notification,
-  NotificationPreferences, Organization, OrganizationUpdate, PartnerCandidate, Sharing, ShareInput, SiteContact
+  NotificationPreferences, Organization, OrganizationUpdate, PartnerCandidate, PresentationInput, PresentationRequest, PresentationStatus, Sharing, ShareInput, SiteContact
 } from '../types/domain';
 
 type DemoCert = Omit<Certificate, 'type' | 'shares'> & { deleted_at?: string | null };
@@ -186,6 +186,24 @@ const isPair = (c: DemoConnection, a: string, b: string): boolean =>
   (c.requester_org_id === a && c.addressee_org_id === b) || (c.requester_org_id === b && c.addressee_org_id === a);
 const byExpiry = (a: { expiry_date: string | null }, b: { expiry_date: string | null }): number =>
   String(a.expiry_date ?? '9').localeCompare(String(b.expiry_date ?? '9'));
+
+const hoursAgo = (h: number) => new Date(Date.now() - h * 3600000).toISOString();
+const SAMPLE_PRESENTATIONS: PresentationRequest[] = [
+  { id: 'p-1', name: 'Νίκος Παπαδόπουλος', company: 'Ionian Foods Α.Ε.', email: 'n.papadopoulos@ionianfoods.example', phone: '+30 2610 123456',
+    message: 'Έχουμε 40 προμηθευτές και θέλουμε να δούμε πώς θα μαζεύουμε τα ISO τους.', status: 'new', created_at: hoursAgo(3), updated_at: hoursAgo(3) },
+  { id: 'p-2', name: 'Ελένη Γεωργίου', company: 'MedLine Distribution', email: 'eleni@medline.example', phone: null,
+    message: null, status: 'contacted', created_at: hoursAgo(50), updated_at: hoursAgo(30) },
+  { id: 'p-3', name: 'Γιώργος Αντωνίου', company: 'BuildCo ΕΠΕ', email: 'g.antoniou@buildco.example', phone: '6900000000',
+    message: 'Παρουσίαση για την ομάδα ποιότητας.', status: 'done', created_at: hoursAgo(200), updated_at: hoursAgo(120) }
+];
+
+// Kept for the tab, like the rest of the demo (pages change with full loads from the home page).
+const PRESENTATIONS_KEY = 'certitrack.demo.presentations';
+function loadPresentations(): PresentationRequest[] {
+  try { return JSON.parse(sessionStorage.getItem(PRESENTATIONS_KEY) || 'null') as PresentationRequest[] | null ?? SAMPLE_PRESENTATIONS; } catch { return SAMPLE_PRESENTATIONS; }
+}
+const demoPresentations = loadPresentations();
+function savePresentations(): void { try { sessionStorage.setItem(PRESENTATIONS_KEY, JSON.stringify(demoPresentations)); } catch { /* demo only */ } }
 
 let demoContact: SiteContact = { company: 'Exeltos', email: 'info@exeltos.com', phone: '6942471022', website: 'https://exeltos.com' };
 
@@ -396,5 +414,19 @@ export const demoApi = {
   async adminAudit(): Promise<AuditEntry[]> { await wait(); return load().audit; },
   async adminSetOrganizationState(id: string, state: 'active' | 'suspended' | 'closed') { await wait(); orgById(id).status = state; save(); },
   async siteContact() { return { ...demoContact }; },
-  async setSiteContact(c: SiteContact) { await wait(); demoContact = { ...c }; return { ...demoContact }; }
+  async setSiteContact(c: SiteContact) { await wait(); demoContact = { ...c }; return { ...demoContact }; },
+  async submitPresentationRequest(input: PresentationInput) {
+    await wait();
+    if (input.trap) return;
+    const now = new Date().toISOString();
+    demoPresentations.unshift({ id: `p-${Date.now()}`, name: input.name, company: input.company, email: input.email,
+      phone: input.phone || null, message: input.message || null, status: 'new', created_at: now, updated_at: now });
+    savePresentations();
+  },
+  async presentationRequests() { await wait(); return demoPresentations.map(p => ({ ...p })); },
+  async setPresentationRequestStatus(id: string, status: PresentationStatus) {
+    await wait();
+    const p = demoPresentations.find(x => x.id === id);
+    if (p) { p.status = status; p.updated_at = new Date().toISOString(); savePresentations(); }
+  }
 } satisfies Api;

@@ -299,6 +299,42 @@ reset role;
 select t_ok(exists(select 1 from audit_log where action = 'site_contact.updated'), 'the change is audited');
 
 -- ---------------------------------------------------------------------------
+-- "Request a presentation" from the home page
+-- ---------------------------------------------------------------------------
+set role anon;
+select ct_submit_presentation_request('Maria P', 'Acme AE', 'Maria@Acme.gr', '+30 210 1234567', 'Θέλουμε παρουσίαση');
+reset role;
+select t_ok((select count(*) from presentation_requests) = 1, 'a visitor can send a presentation request');
+select t_ok((select email from presentation_requests) = 'maria@acme.gr', 'the email is stored in lower case');
+select t_ok(exists(select 1 from email_outbox where template_key = 'presentation_request'
+                   and recipient_email = (select value->>'email' from site_settings where key = 'contact')),
+            'an email is queued to the contact address of the home page');
+set role anon;
+select ct_submit_presentation_request('Bot', 'Spam', 'bot@spam.gr', null, null, 'http://spam');
+reset role;
+select t_ok((select count(*) from presentation_requests) = 1, 'a filled hidden field (bot) is silently ignored');
+set role anon;
+select t_fails($$select ct_submit_presentation_request('', 'Acme', 'a@b.gr')$$, 'name is required');
+select t_fails($$select ct_submit_presentation_request('Maria', 'Acme', 'not-an-email')$$, 'email is validated');
+select t_fails($$select ct_submit_presentation_request('Maria', 'Acme', 'a@b.gr', 'call me maybe')$$, 'phone is validated');
+select t_fails($$select ct_submit_presentation_request(E'Maria\nBcc: x@y.gr', 'Acme', 'a@b.gr')$$, 'no line breaks in the name (email header injection)');
+select ct_submit_presentation_request('Maria P', 'Acme AE', 'maria@acme.gr');
+select ct_submit_presentation_request('Maria P', 'Acme AE', 'maria@acme.gr');
+select t_fails($$select ct_submit_presentation_request('Maria P', 'Acme AE', 'maria@acme.gr')$$, 'at most 3 requests per email address a day');
+select t_fails($$select * from presentation_requests$$, 'visitors cannot read the requests');
+select t_fails($$select ct_set_presentation_request_status((select id from presentation_requests limit 1), 'done')$$, 'visitors cannot change a request');
+set role authenticated;
+select t_as(:ua);
+select t_ok((select count(*) from presentation_requests) = 0, 'organizations do not see the requests');
+select t_fails($$select ct_set_presentation_request_status('00000000-0000-0000-0000-000000000000', 'done')$$, 'organizations cannot change a request');
+select t_as(:uadm);
+select t_ok((select count(*) from presentation_requests) = 3, 'the platform owner sees every request');
+select ct_set_presentation_request_status((select id from presentation_requests order by created_at limit 1), 'contacted');
+select t_ok((select count(*) from presentation_requests where status = 'contacted') = 1, 'the platform owner marks a request as handled');
+select t_fails($$select ct_set_presentation_request_status((select id from presentation_requests limit 1), 'archived')$$, 'status is validated');
+reset role;
+
+-- ---------------------------------------------------------------------------
 -- Deleting a whole organization (cascades through certificates, connections…)
 -- ---------------------------------------------------------------------------
 reset role;

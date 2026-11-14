@@ -47,8 +47,8 @@ so running often is safe) and send `x-cron-secret`.
 
 ## 5. Frontend (Netlify)
 
-Publish directory `.` (no build). `src/config/appConfig.js` must point at the
-same Supabase project. For the erasure tool set `SUPABASE_URL` and
+Netlify runs `npm run build` and publishes `dist/` (see `netlify.toml`).
+`src/config/appConfig.ts` must point at the same Supabase project. For the erasure tool set `SUPABASE_URL` and
 `SUPABASE_SERVICE_ROLE_KEY` as Netlify environment variables.
 
 After changing page list or icons:

@@ -23,3 +23,8 @@ export function t(key: MessageKey, vars?: Vars): string {
   return text;
 }
 
+
+/** For keys built from data (e.g. a database value): true when a translation exists. */
+export function isMessageKey(key: string): key is MessageKey {
+  return Object.prototype.hasOwnProperty.call(el, key);
+}

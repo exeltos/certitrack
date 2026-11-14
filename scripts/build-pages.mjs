@@ -1,33 +1,32 @@
 // Writes the HTML shell of every page. All pages are identical except for the
 // script they load; content is rendered by that script.
 // Usage: node scripts/build-pages.mjs
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
+// HTML file -> entry script (under src/). Every signed-in page loads the same
+// app entry: the router inside it shows the right page and moves between pages
+// without reloading.
+const APP = 'app/main.ts';
 export const PAGES = {
-  'index.html': 'public/home.js',
-  'pages/demo/index.html': 'public/demo.js',
-  'pages/auth/login.html': 'auth/login.js',
-  'pages/auth/register.html': 'auth/register.js',
-  'pages/auth/forgot.html': 'auth/forgot.js',
-  'pages/auth/reset-password.html': 'auth/resetPassword.js',
-  'pages/organization/dashboard.html': 'organization/dashboard.js',
-  'pages/organization/certificates.html': 'organization/certificates.js',
-  'pages/organization/partners.html': 'organization/partners.js',
-  'pages/organization/partner.html': 'organization/partner.js',
-  'pages/organization/requests.html': 'organization/requests.js',
-  'pages/organization/profile.html': 'organization/profile.js',
-  'pages/admin/dashboard.html': 'admin/dashboard.js',
-  'pages/admin/organizations.html': 'admin/organizations.js',
-  'pages/admin/network.html': 'admin/network.js',
-  'pages/admin/audit.html': 'admin/audit.js',
-  'pages/admin/settings.html': 'admin/settings.js'
-};
-
-// Pages are listed as .js; use the .ts file instead once a page has been converted.
-const entry = script => {
-  const ts = script.replace(/\.js$/, '.ts');
-  return existsSync(new URL(`../src/pages/${ts}`, import.meta.url)) ? ts : script;
+  'index.html': 'pages/public/home.ts',
+  'pages/demo/index.html': 'pages/public/demo.ts',
+  'pages/auth/login.html': 'pages/auth/login.ts',
+  'pages/auth/register.html': 'pages/auth/register.ts',
+  'pages/auth/forgot.html': 'pages/auth/forgot.ts',
+  'pages/auth/reset-password.html': 'pages/auth/resetPassword.ts',
+  'pages/organization/dashboard.html': APP,
+  'pages/organization/certificates.html': APP,
+  'pages/organization/partners.html': APP,
+  'pages/organization/partner.html': APP,
+  'pages/organization/requests.html': APP,
+  'pages/organization/profile.html': APP,
+  'pages/admin/dashboard.html': APP,
+  'pages/admin/organizations.html': APP,
+  'pages/admin/network.html': APP,
+  'pages/admin/audit.html': APP,
+  'pages/admin/settings.html': APP,
+  'pages/admin/presentations.html': APP
 };
 
 const shell = script => `<!doctype html>
@@ -40,9 +39,9 @@ const shell = script => `<!doctype html>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/src/styles/app.css">
 <script>try{var s=localStorage.getItem('theme');document.documentElement.dataset.theme=(s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}catch(e){}</script>
-<script type="module" blocking="render" src="/src/pages/${entry(script)}"></script>
+<script type="module" blocking="render" src="/src/${script}"></script>
 </head>
-<body${/^(organization|admin)\//.test(script) ? ' class="app-pending"' : ''}></body>
+<body${script === APP ? ' class="app-pending"' : ''}></body>
 </html>
 `;
 
