@@ -144,7 +144,7 @@ export type Database = {
       ct_cancel_organization_closure: { Args: { p_org: string }; Returns: OrganizationRow };
       ct_platform_set_organization_state: { Args: { p_org: string; p_reason?: string; p_state: string }; Returns: OrganizationRow };
       ct_team: { Args: { p_org: string }; Returns: { user_id: string; email: string; role: string; status: string; joined_at: string; is_me: boolean }[] };
-      ct_invite_team_member: { Args: { p_org: string; p_email: string; p_role: string }; Returns: string };
+      ct_invite_team_member: { Args: { p_org: string; p_email: string; p_role: string }; Returns: string | null };
       ct_cancel_team_invitation: { Args: { p_invitation: string }; Returns: undefined };
       ct_set_team_role: { Args: { p_org: string; p_user: string; p_role: string }; Returns: undefined };
       ct_remove_team_member: { Args: { p_org: string; p_user: string }; Returns: undefined };

@@ -377,7 +377,16 @@ select ct_remove_team_member((select a from ids), 'a0a0a0a0-0000-4000-8000-00000
 select t_ok((select count(*) from ct_team((select a from ids))) = 1, 'a removed colleague leaves the team');
 select t_as('a0a0a0a0-0000-4000-8000-000000000002');
 select t_ok((select count(*) from organizations where id = (select a from ids)) = 0, 'a removed colleague no longer sees A');
+select t_as(:uc);
+select t_fails($$select ct_invite_team_member((select c from ids), 'colleague@a.gr', 'member')$$, 'another organization cannot take a former colleague of A');
+select t_as(:ua);
+select ct_invite_team_member((select a from ids), 'colleague@a.gr', 'admin');
+select t_ok((select count(*) from ct_team((select a from ids)) where email = 'colleague@a.gr' and role = 'admin' and status = 'active') = 1,
+            'inviting a former colleague again brings them back');
+select t_as('a0a0a0a0-0000-4000-8000-000000000002');
+select t_ok((select count(*) from organizations where id = (select a from ids)) = 1, 'the returning colleague sees A again');
 reset role;
+select t_ok(exists(select 1 from email_outbox where recipient_email = 'colleague@a.gr' and (payload->>'rejoined')::boolean), 'they are told by email that they can sign in again');
 
 -- ---------------------------------------------------------------------------
 -- Deleting a whole organization (cascades through certificates, connections…)

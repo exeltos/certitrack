@@ -92,6 +92,21 @@ function template(row:any){
   if(row.template_key==='team_invitation'){
     const org=String(p.organization||'Ένας οργανισμός');
     const role=p.role==='admin'?'Διαχειριστής':'Μέλος';
+    // A former colleague who was added back already has an account: they just sign in.
+    if(p.rejoined){
+      const login=`${APP_URL}/pages/auth/login.html`;
+      return {
+        subject:row.subject,
+        text:`Η ${org} σας πρόσθεσε ξανά στην ομάδα της στο CertiTrack (ρόλος: ${role}).\n\nΣυνδεθείτε με τον λογαριασμό σας: ${login}`,
+        html:emailShell({
+          eyebrow:'Επιστροφή στην ομάδα',
+          title:`Η ${org} σας πρόσθεσε ξανά στην ομάδα`,
+          body:`Έχετε ξανά πρόσβαση στην ομάδα της <strong style="color:#12213a;">${esc(org)}</strong> ως <strong>${esc(role)}</strong>.<br><br>Συνδεθείτε με τον λογαριασμό που ήδη έχετε.`,
+          buttonLabel:'Σύνδεση',
+          buttonHref:login
+        })
+      };
+    }
     const href=`${APP_URL}/pages/auth/register.html?join=1&email=${encodeURIComponent(String(p.email||row.recipient_email))}`;
     return {
       subject:row.subject,
