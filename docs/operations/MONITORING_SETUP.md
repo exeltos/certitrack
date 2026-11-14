@@ -1,7 +1,7 @@
 # Monitoring Setup
 
-Error tracking wiring is already in the codebase (`src/shared/monitoring.js`
-for the browser, `netlify/functions/_lib/monitoring.js` for functions). It
+Error tracking wiring is already in the codebase (`src/shared/monitoring.ts`
+for the browser, `netlify/functions/_lib/monitoring.mts` for functions). It
 no-ops until you complete this setup — nothing breaks if you skip it, but
 you also won't hear about production errors until a user reports them.
 
@@ -32,7 +32,7 @@ In Netlify: **Site settings → Environment variables**, add:
 SENTRY_DSN=https://xxxxx@xxxxx.ingest.sentry.io/xxxxx
 ```
 
-Then install the Node SDK so `netlify/functions/_lib/monitoring.js` can
+Then install the Node SDK so `netlify/functions/_lib/monitoring.mts` can
 `require('@sentry/node')`:
 
 ```

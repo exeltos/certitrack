@@ -86,29 +86,43 @@ function render(page: PageContext, { certs, connections, requests, partnerCerts,
         ${todo.length ? html`<ul class="rows">${todo}</ul>` : emptyState({ iconName: 'circle-check', title: t('dash.allClear'), text: t('dash.allClearText') })}
       </section>
 
-      <div class="stack stack--split">
-        <section class="card">
-          <div class="card__head"><div><h2>${t('dash.partnersTitle')}</h2><p>${t('dash.partnersText')}</p></div>
-            <a class="btn btn--sm btn--ghost" href="/pages/organization/requests.html">${t('common.viewAll')}</a></div>
-          ${myAsks.length === 0
-            ? emptyState({ iconName: 'inbox', title: t('dash.noAsks'), text: t('dash.noAsksText') })
-            : partnerIssues.length === 0
-              ? emptyState({ iconName: 'circle-check', title: t('dash.partnersOk'), text: t('dash.partnersOkText', { count: myAsks.length }) })
-              : html`<ul class="rows">${partnerIssues.slice(0, 6).map(r => html`<li class="row">
-                  ${avatar(nameOf(r.responder_org_id), { size: 'md' })}
-                  <div class="row__main"><span class="row__title">${nameOf(r.responder_org_id)}</span><span class="row__meta"><span>${typeName(r.type)}</span></span></div>
-                  <div class="row__side">${badge(REQ_KIND[r.state], t(`reqState.${r.state}`))}</div></li>`)}</ul>`}
-        </section>
-
-        <section class="card">
-          <div class="card__head"><div><h2>${t('dash.viewsTitle')}</h2><p>${t('dash.viewsText')}</p></div></div>
-          ${views.length ? html`<ul class="rows">${views.map(v => html`<li class="row">
-              <span class="row__icon">${icon('eye')}</span>
-              <div class="row__main"><span class="row__title">${v.viewer_org_name}</span><span class="row__meta"><span>${v.certificate?.title || '—'}</span><span>${relativeTime(v.viewed_at)}</span></span></div></li>`)}</ul>`
-            : emptyState({ iconName: 'eye', title: t('dash.noViews'), text: t('dash.noViewsText') })}
-        </section>
-      </div>
+      <section class="card" data-side></section>
     </div>`);
+
+  // One card, two views: what we asked partners for, and who viewed our documents.
+  const side = content.querySelector<HTMLElement>('[data-side]')!;
+  let tab: 'partners' | 'views' = partnerIssues.length || !views.length ? 'partners' : 'views';
+  const renderSide = () => {
+    mount(side, html`<div class="card__head card__head--tabs">
+        <div class="tabs tabs--inline" role="tablist">
+          <button type="button" class="tab" role="tab" data-side-tab="partners" aria-selected="${String(tab === 'partners')}">${t('dash.partnersTab')}${partnerIssues.length ? html`<span class="count">${partnerIssues.length}</span>` : ''}</button>
+          <button type="button" class="tab" role="tab" data-side-tab="views" aria-selected="${String(tab === 'views')}">${t('dash.viewsTab')}</button>
+        </div>
+      </div>
+      <div class="card__sub"><p>${tab === 'partners' ? t('dash.partnersText') : t('dash.viewsText')}</p>
+        ${tab === 'partners' ? html`<a href="/pages/organization/requests.html?tab=outgoing">${t('common.viewAll')}</a>` : ''}</div>
+      ${tab === 'partners'
+        ? myAsks.length === 0
+          ? emptyState({ iconName: 'inbox', title: t('dash.noAsks'), text: t('dash.noAsksText') })
+          : partnerIssues.length === 0
+            ? emptyState({ iconName: 'circle-check', title: t('dash.partnersOk'), text: t('dash.partnersOkText', { count: myAsks.length }) })
+            : html`<ul class="rows">${partnerIssues.map(r => html`<li class="row">
+                ${avatar(nameOf(r.responder_org_id), { size: 'md' })}
+                <div class="row__main"><span class="row__title">${nameOf(r.responder_org_id)}</span><span class="row__meta"><span>${typeName(r.type)}</span></span></div>
+                <div class="row__side">${badge(REQ_KIND[r.state], t(`reqState.${r.state}`))}</div></li>`)}</ul>`
+        : views.length ? html`<ul class="rows">${views.map(v => html`<li class="row">
+            <span class="row__icon">${icon('eye')}</span>
+            <div class="row__main"><span class="row__title">${v.viewer_org_name}</span><span class="row__meta"><span>${v.certificate?.title || '—'}</span><span>${relativeTime(v.viewed_at)}</span></span></div></li>`)}</ul>`
+          : emptyState({ iconName: 'eye', title: t('dash.noViews'), text: t('dash.noViewsText') })}`);
+  };
+  side.addEventListener('click', e => {
+    const b = (e.target as Element).closest<HTMLElement>('[data-side-tab]');
+    if (!b) return;
+    tab = b.dataset.sideTab === 'views' ? 'views' : 'partners';
+    renderSide();
+    side.querySelector<HTMLElement>(`[data-side-tab="${tab}"]`)?.focus();
+  });
+  renderSide();
 
   content.querySelectorAll<HTMLButtonElement>('[data-accept],[data-decline]').forEach(btn => btn.addEventListener('click', async () => {
     const accept = !!btn.dataset.accept;

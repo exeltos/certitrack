@@ -11,11 +11,11 @@ export default definePage({
   area: 'admin', nav: 'adminDashboard', title: 'admin.title', subtitle: 'admin.subtitle',
   async render({ content, signal }) {
     try {
-      const [orgs, network, certs] = await Promise.all([api.adminOrganizations(), api.adminNetwork(), api.adminCertificates()]);
+      const [orgs, network, certs, presentations] = await Promise.all([api.adminOrganizations(), api.adminNetwork(), api.adminCertificates(), api.presentationRequests()]);
       if (signal.aborted) return;
       const active = network.filter(c => c.status === 'active');
       const pending = network.filter(c => c.status === 'pending');
-      const openReqs = network.reduce((n, c) => n + Number(c.open_requests || 0), 0);
+      const freshPresentations = presentations.filter(r => r.status === 'new');
       const waiting = orgs.filter(o => o.status === 'pending_verification' || o.status === 'closure_requested');
       mount(content, html`
         <section class="kpis">
@@ -25,12 +25,16 @@ export default definePage({
             <span class="kpi__meta">${t('admin.pendingConnections', { count: pending.length })}</span></a>
           <div class="kpi"><span class="kpi__label">${icon('badge-check', { size: 16 })}${t('nav.certificates')}</span><span class="kpi__value">${certs.length}</span>
             <span class="kpi__meta">${t('admin.sharedCount', { count: certs.filter(c => c.sharing !== 'private').length })}</span></div>
-          <div class="kpi"><span class="kpi__label">${icon('inbox', { size: 16 })}${t('admin.openRequests')}</span><span class="kpi__value">${openReqs}</span>
-            <span class="kpi__meta">${t('admin.acrossNetwork')}</span></div>
+          <a class="kpi ${freshPresentations.length ? 'kpi--warning' : ''}" href="/pages/admin/presentations.html"><span class="kpi__label">${icon('presentation', { size: 16 })}${t('nav.presentations')}</span><span class="kpi__value">${freshPresentations.length}</span>
+            <span class="kpi__meta">${t('admin.newPresentations', { count: presentations.length })}</span></a>
         </section>
         <div class="grid-2">
           <section class="card"><div class="card__head"><div><h2>${t('admin.needsAttention')}</h2><p>${t('admin.needsAttentionText')}</p></div></div>
-            ${waiting.length ? html`<ul class="rows">${waiting.map(o => html`<li><a class="row row--link" href="/pages/admin/organizations.html?id=${o.id}">${avatar(o.name)}
+            ${waiting.length || freshPresentations.length ? html`<ul class="rows">
+              ${freshPresentations.map(r => html`<li><a class="row row--link" href="/pages/admin/presentations.html"><span class="row__icon row__icon--info">${icon('presentation')}</span>
+                <div class="row__main"><span class="row__title">${t('admin.presentationFrom', { company: r.company })}</span><span class="row__meta"><span>${r.name}</span><span>${relativeTime(r.created_at)}</span></span></div>
+                <div class="row__side">${icon('chevron-right', { cls: 'chevron' })}</div></a></li>`)}
+              ${waiting.map(o => html`<li><a class="row row--link" href="/pages/admin/organizations.html?id=${o.id}">${avatar(o.name)}
               <div class="row__main"><span class="row__title">${o.name}</span><span class="row__meta"><span>${t('common.vat')} ${o.vat_number}</span><span>${relativeTime(o.created_at)}</span></span></div>
               <div class="row__side">${orgStatusBadge(o.status)}</div></a></li>`)}</ul>` : emptyState({ iconName: 'circle-check', title: t('admin.nothingWaiting') })}</section>
           <section class="card"><div class="card__head"><div><h2>${t('admin.latestConnections')}</h2></div><a class="btn btn--sm btn--ghost" href="/pages/admin/network.html">${t('common.viewAll')}</a></div>

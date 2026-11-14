@@ -1,6 +1,6 @@
 // Writes the HTML shell of every page. All pages are identical except for the
 // script they load; content is rendered by that script.
-// Usage: node scripts/build-pages.mjs
+// Usage: node scripts/build-pages.mts
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
@@ -8,7 +8,7 @@ import { dirname } from 'node:path';
 // app entry: the router inside it shows the right page and moves between pages
 // without reloading.
 const APP = 'app/main.ts';
-export const PAGES = {
+export const PAGES: Record<string, string> = {
   'index.html': 'pages/public/home.ts',
   'pages/demo/index.html': 'pages/public/demo.ts',
   'pages/auth/login.html': 'pages/auth/login.ts',
@@ -29,7 +29,7 @@ export const PAGES = {
   'pages/admin/presentations.html': APP
 };
 
-const shell = script => `<!doctype html>
+const shell = (script: string): string => `<!doctype html>
 <html lang="el">
 <head>
 <meta charset="utf-8">
@@ -47,7 +47,7 @@ const shell = script => `<!doctype html>
 
 if (import.meta.url === `file://${process.argv[1]}`) build();
 
-function build() {
+function build(): void {
 for (const [file, script] of Object.entries(PAGES)) {
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, shell(script));

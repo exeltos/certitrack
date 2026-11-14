@@ -1,0 +1,6 @@
+{
+  // Unit tests: the browser code under test plus Node APIs (fs, path) used by the tests themselves.
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": ["vite/client", "node"] },
+  "include": ["src", "tests/unit"]
+}

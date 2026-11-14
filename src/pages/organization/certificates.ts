@@ -6,6 +6,7 @@ import { certificateState, type CertificateState } from '../../lib/format';
 import { definePage, type PageContext } from '../../app/page';
 import { icon, stateBadge, sharingBadge, emptyState, errorState, certTypeLabel, expiryText } from '../../ui/components';
 import { confirmDialog, toast, toastError, showPdf } from '../../ui/dialog';
+import { menuButton, openMenu, type MenuItem } from '../../ui/menu';
 import { certificateDialog, sharingDialog, viewsDialog } from './certificateForms';
 import type { Certificate, CertificateType, Connection, Sharing } from '../../types/domain';
 
@@ -13,6 +14,9 @@ type StateFilter = 'all' | Exclude<CertificateState, 'none'>;
 type SharingFilter = 'all' | Sharing;
 const STATE_FILTERS: readonly StateFilter[] = ['all', 'valid', 'expiring', 'expired'];
 const SHARING_FILTERS: readonly SharingFilter[] = ['all', 'private', 'all_connections', 'selected'];
+type SortKey = 'title' | 'expiry' | 'state';
+// Most urgent first when sorting by state.
+const STATE_ORDER: Record<CertificateState, number> = { expired: 0, expiring: 1, valid: 2, none: 3 };
 
 export default definePage({
   area: 'organization', nav: 'certificates', title: 'certs.title', subtitle: 'certs.subtitle',
@@ -27,6 +31,7 @@ class CertificatesPage {
   private certs: Certificate[] = [];
   private types: CertificateType[] = [];
   private partners: Connection[] = [];
+  private sort: { key: SortKey; dir: 1 | -1 } = { key: 'expiry', dir: 1 };
 
   constructor(private readonly page: PageContext) {
     const role = page.ctx.role;
@@ -95,6 +100,18 @@ class CertificatesPage {
     }
   }
 
+  private sorted(list: Certificate[]): Certificate[] {
+    const { key, dir } = this.sort;
+    const value = (c: Certificate): string | number =>
+      key === 'title' ? c.title.toLocaleLowerCase()
+        : key === 'state' ? STATE_ORDER[certificateState(c.expiry_date)]
+          : c.expiry_date || '9999-12-31';   // no expiry last
+    return [...list].sort((a, b) => {
+      const x = value(a), y = value(b);
+      return (x < y ? -1 : x > y ? 1 : a.title.localeCompare(b.title)) * dir;
+    });
+  }
+
   private renderList(): void {
     const { content, actions } = this.page;
     const host = content.querySelector<HTMLElement>('[data-list]')!;
@@ -104,35 +121,58 @@ class CertificatesPage {
       host.querySelector('[data-empty-new]')?.addEventListener('click', () => actions.querySelector<HTMLElement>('[data-new]')?.click());
       return;
     }
-    const list = this.certs.filter(c => this.matches(c));
+    const list = this.sorted(this.certs.filter(c => this.matches(c)));
     if (!list.length) { mount(host, emptyState({ iconName: 'search', title: t('certs.noMatch'), text: t('certs.noMatchText') })); return; }
-    const btn = (act: string, id: string, ic: string, label: string) =>
-      html`<button class="icon-btn icon-btn--sm" data-act="${act}" data-id="${id}" title="${label}" aria-label="${label}">${icon(ic)}</button>`;
-    mount(host, html`<ul class="rows">${list.map(c => html`<li class="row" id="cert-${c.id}">
-      <span class="row__icon">${icon('file-text')}</span>
-      <div class="row__main">
-        <span class="row__title">${c.title}</span>
-        <span class="row__meta"><span>${certTypeLabel(c)}</span>${c.issuer ? html`<span>${c.issuer}</span>` : ''}<span>${expiryText(c.expiry_date)}</span></span>
-      </div>
-      <div class="row__side">
-        ${stateBadge(c.expiry_date)}
-        ${sharingBadge(c)}
-        <span class="row__actions">
-          ${c.current_file_id ? btn('view', c.id, 'eye', t('common.view')) : ''}
-          ${this.canEdit ? btn('share', c.id, 'share-2', t('sharing.dialogTitle')) : ''}
-          ${btn('views', c.id, 'activity', t('views.title'))}
-          ${this.canEdit ? btn('edit', c.id, 'pencil', t('common.edit')) : ''}
-          ${this.canDelete ? btn('delete', c.id, 'trash', t('common.delete')) : ''}
-        </span>
-      </div></li>`)}</ul>`);
+    const head = (key: SortKey, label: string) => {
+      const on = this.sort.key === key;
+      return html`<th aria-sort="${on ? (this.sort.dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" class="th-sort ${on ? 'is-on' : ''}" data-sort="${key}">${label}${icon(on && this.sort.dir === -1 ? 'arrow-up' : 'arrow-down', { size: 13 })}</button></th>`;
+    };
+    mount(host, html`<table class="table table--certs">
+      <thead><tr>${head('title', t('certs.colTitle'))}${head('expiry', t('certs.colExpiry'))}${head('state', t('certs.colState'))}<th>${t('certs.colSharing')}</th><th><span class="sr-only">${t('common.actions')}</span></th></tr></thead>
+      <tbody>${list.map(c => html`<tr id="cert-${c.id}">
+        <td class="cert-name"><div class="cert-cell"><span class="row__icon">${icon('file-text')}</span><span><strong>${c.title}</strong><small>${certTypeLabel(c)}${c.issuer ? ` · ${c.issuer}` : ''}</small></span></div></td>
+        <td class="cert-expiry">${expiryText(c.expiry_date)}</td>
+        <td>${stateBadge(c.expiry_date)}</td>
+        <td>${sharingBadge(c)}</td>
+        <td class="cert-actions">
+          ${c.current_file_id ? html`<button type="button" class="btn btn--sm btn--secondary" data-act="view" data-id="${c.id}">${icon('eye', { size: 16 })}${t('common.view')}</button>` : ''}
+          ${menuButton(c.id, t('common.moreActions'))}
+        </td></tr>`)}</tbody></table>`);
+  }
+
+  private menuItems(): MenuItem[] {
+    const items: MenuItem[] = [];
+    if (this.canEdit) items.push({ action: 'share', label: t('sharing.dialogTitle'), icon: 'share-2' });
+    items.push({ action: 'views', label: t('views.title'), icon: 'activity' });
+    if (this.canEdit) items.push({ action: 'edit', label: t('common.edit'), icon: 'pencil' });
+    if (this.canDelete) items.push({ action: 'delete', label: t('common.delete'), icon: 'trash', danger: true });
+    return items;
   }
 
   private async onAction(e: Event): Promise<void> {
-    const button = (e.target as Element).closest<HTMLElement>('[data-act]');
+    const target = e.target as Element;
+    const sortBtn = target.closest<HTMLElement>('[data-sort]');
+    if (sortBtn) {
+      const key = sortBtn.dataset.sort as SortKey;
+      this.sort = { key, dir: this.sort.key === key ? (this.sort.dir === 1 ? -1 : 1) : 1 };
+      this.renderList();
+      this.page.content.querySelector<HTMLElement>(`[data-sort="${key}"]`)?.focus();
+      return;
+    }
+    const menuBtn = target.closest<HTMLElement>('[data-menu]');
+    if (menuBtn) {
+      const cert = this.certs.find(c => c.id === menuBtn.dataset.menu);
+      if (cert) openMenu(menuBtn, this.menuItems(), action => { void this.run(action, cert); });
+      return;
+    }
+    const button = target.closest<HTMLElement>('[data-act]');
     const cert = button && this.certs.find(c => c.id === button.dataset.id);
-    if (!button || !cert) return;
+    if (button?.dataset.act && cert) await this.run(button.dataset.act, cert);
+  }
+
+  private async run(action: string, cert: Certificate): Promise<void> {
     try {
-      switch (button.dataset.act) {
+      switch (action) {
         case 'view': { const f = await api.openCertificate(cert.id); await showPdf({ ...f, title: cert.title }); break; }
         case 'share': if (await sharingDialog({ cert, partners: this.partners })) { toast(t('sharing.saved')); void this.refresh(); } break;
         case 'views': await viewsDialog(cert); break;
