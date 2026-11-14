@@ -7,7 +7,7 @@ import { html, mount } from '../lib/html';
 import { t } from '../lib/i18n';
 import { emptyState, friendlyError } from '../ui/components';
 import { PATHS, prepareDocument } from '../ui/chrome';
-import { drawShell, readSnapshot, writeSnapshot, sameIdentity, type ShellIdentity } from './shell';
+import { drawShell, readSnapshot, writeSnapshot, sameIdentity, setNavCount, type ShellIdentity } from './shell';
 import { routeFor, startRouter } from './router';
 import type { AppContext } from '../types/domain';
 import type { Area } from './page';
@@ -52,6 +52,9 @@ async function start(area: Area, nav: Parameters<typeof drawShell>[2], load: () 
   if (!fits || !sameIdentity(snap, who)) drawShell(area, who, nav);
   writeSnapshot(who);
   startRouter(ctx, area);
+  if (area === 'admin') {
+    api.presentationRequests().then(rows => setNavCount('presentations', rows.filter(r => r.status === 'new').length), () => {});
+  }
 }
 
 function fail(iconName: string, title: string, text: string): void {

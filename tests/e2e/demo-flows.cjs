@@ -18,7 +18,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
     if ((headers['content-type'] || '').includes('text/html')) headers['content-security-policy'] = CSP;
     await route.fulfill({ response: res, headers });
   });
-  await ctx.addInitScript(() => localStorage.setItem('certitrack.demo', 'organization'));
+  await ctx.addInitScript(() => { if (!localStorage.getItem('certitrack.demo')) localStorage.setItem('certitrack.demo', 'organization'); });
   const p = await ctx.newPage();
   p.on('pageerror', e => { console.log('PAGEERROR', e.message); errors.push('pageerror'); });
   p.on('console', m => { if (m.type() === 'error' || /Content Security Policy/.test(m.text())) { console.log('CONSOLE', m.text().slice(0, 200)); if (/Content Security Policy/.test(m.text())) errors.push('csp'); } });
@@ -114,6 +114,22 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
     await p.goto(B + '/pages/organization/partners.html', { waitUntil: 'networkidle' });
     await p.screenshot({ path: `${out}/conns-dark.png` });
     await p.click('[data-action=theme]');
+  });
+  // While still in the demo, so nothing reaches the real backend.
+  await step('request a presentation from the home page', async () => {
+    await p.goto(B + '/index.html', { waitUntil: 'networkidle' });
+    await p.click('[data-present]');
+    await p.fill('#pr-name', 'E2E Tester'); await p.fill('#pr-company', 'E2E Company'); await p.fill('#pr-email', 'e2e@example.com');
+    await p.click('dialog [type=submit]');
+    await p.waitForSelector('dialog .empty');
+    await p.keyboard.press('Escape');
+  });
+  await step('owner sees it under Presentations', async () => {
+    await p.evaluate(() => localStorage.setItem('certitrack.demo', 'admin'));
+    await p.goto(B + '/pages/admin/presentations.html', { waitUntil: 'networkidle' });
+    await p.locator('.presentation', { hasText: 'E2E Company' }).waitFor();
+    await p.locator('.presentation', { hasText: 'E2E Company' }).locator('[data-status=contacted]').click();
+    await p.waitForFunction(() => ![...document.querySelectorAll('.presentation')].some(r => r.textContent.includes('E2E Company')));
   });
   await step('exit demo goes home', async () => {
     await p.click('[data-action=exit-demo]');

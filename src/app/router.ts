@@ -26,6 +26,7 @@ export const ROUTES: Record<string, Route> = {
   '/pages/admin/organizations.html': { area: 'admin', nav: 'organizations', load: () => import('../pages/admin/organizations') },
   '/pages/admin/network.html': { area: 'admin', nav: 'network', load: () => import('../pages/admin/network') },
   '/pages/admin/audit.html': { area: 'admin', nav: 'audit', load: () => import('../pages/admin/audit') },
+  '/pages/admin/presentations.html': { area: 'admin', nav: 'presentations', load: () => import('../pages/admin/presentations') },
   '/pages/admin/settings.html': { area: 'admin', nav: 'adminSettings', load: () => import('../pages/admin/settings') }
 };
 

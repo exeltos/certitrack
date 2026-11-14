@@ -25,7 +25,8 @@ export const PAGES = {
   'pages/admin/organizations.html': APP,
   'pages/admin/network.html': APP,
   'pages/admin/audit.html': APP,
-  'pages/admin/settings.html': APP
+  'pages/admin/settings.html': APP,
+  'pages/admin/presentations.html': APP
 };
 
 const shell = script => `<!doctype html>

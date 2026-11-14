@@ -694,3 +694,11 @@ body.app::after { content: ''; position: fixed; z-index: 40; left: 0; top: var(-
 body.app.is-navigating::after { opacity: 1; animation: nav-progress 1.6s cubic-bezier(.2, .7, .3, 1) forwards; }
 @keyframes nav-progress { from { transform: scaleX(.05); } to { transform: scaleX(.85); } }
 @media (prefers-reduced-motion: reduce) { body.app.is-navigating::after { animation: none; transform: scaleX(.6); } }
+
+/* Presentation requests (owner) */
+.presentation { align-items: flex-start; }
+.presentation .row__meta a { color: inherit; }
+.presentation .row__meta a:hover { color: var(--primary-text); }
+.presentation__message { margin: 6px 0 0; color: var(--text-2); font-size: 13.5px; max-width: 70ch; white-space: pre-line; }
+.presentation .row__side { flex-wrap: wrap; justify-content: flex-end; }
+.hp-field { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }

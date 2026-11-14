@@ -8,15 +8,15 @@
 export const DEMO_OPEN: boolean = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO === 'true';
 
 const ROLE_KEY = 'certitrack.demo';
-const STORE_KEY = 'certitrack.demo.store.v2';
+const STORE_KEYS = ['certitrack.demo.store.v2', 'certitrack.demo.presentations'];
 export type DemoRole = 'organization' | 'admin';
 
 export function demoRole(): DemoRole | null {
   try { const r = localStorage.getItem(ROLE_KEY); return r === 'admin' || r === 'organization' ? r : null; } catch { return null; }
 }
 export function startDemo(role: DemoRole): void {
-  try { localStorage.setItem(ROLE_KEY, role); sessionStorage.removeItem(STORE_KEY); } catch { /* ignore */ }
+  try { localStorage.setItem(ROLE_KEY, role); STORE_KEYS.forEach(k => sessionStorage.removeItem(k)); } catch { /* ignore */ }
 }
 export function endDemo(): void {
-  try { localStorage.removeItem(ROLE_KEY); sessionStorage.removeItem(STORE_KEY); } catch { /* ignore */ }
+  try { localStorage.removeItem(ROLE_KEY); STORE_KEYS.forEach(k => sessionStorage.removeItem(k)); } catch { /* ignore */ }
 }

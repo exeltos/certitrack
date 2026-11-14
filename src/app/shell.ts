@@ -20,6 +20,7 @@ export const NAV: Record<Area, readonly (readonly [NavKey, string, string])[]> =
   ],
   admin: [
     ['adminDashboard', 'layout-dashboard', '/pages/admin/dashboard.html'],
+    ['presentations', 'presentation', '/pages/admin/presentations.html'],
     ['organizations', 'building', '/pages/admin/organizations.html'],
     ['network', 'network', '/pages/admin/network.html'],
     ['audit', 'list-checks', '/pages/admin/audit.html'],

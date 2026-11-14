@@ -9,7 +9,7 @@ export type Area = 'organization' | 'admin';
 
 export type NavKey =
   | 'dashboard' | 'certificates' | 'connections' | 'requests' | 'settings'
-  | 'adminDashboard' | 'organizations' | 'network' | 'audit' | 'demo' | 'adminSettings';
+  | 'adminDashboard' | 'presentations' | 'organizations' | 'network' | 'audit' | 'demo' | 'adminSettings';
 
 export interface PageContext {
   ctx: AppContext;

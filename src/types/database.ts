@@ -102,6 +102,10 @@ export type Database = {
       notifications: Table<NotificationRow>;
       audit_log: Table<AuditLogRow>;
       site_settings: Table<{ key: string; value: Json; updated_at: string; updated_by: string | null }>;
+      presentation_requests: Table<{
+        id: string; name: string; company: string; email: string; phone: string | null; message: string | null;
+        status: string; created_at: string; updated_at: string; handled_by: string | null;
+      }>;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -135,6 +139,8 @@ export type Database = {
       ct_request_organization_closure: { Args: { p_org: string; p_reason?: string }; Returns: OrganizationRow };
       ct_cancel_organization_closure: { Args: { p_org: string }; Returns: OrganizationRow };
       ct_platform_set_organization_state: { Args: { p_org: string; p_reason?: string; p_state: string }; Returns: OrganizationRow };
+      ct_submit_presentation_request: { Args: { p_name: string; p_company: string; p_email: string; p_phone?: string | null; p_message?: string | null; p_trap?: string | null }; Returns: undefined };
+      ct_set_presentation_request_status: { Args: { p_request: string; p_status: string }; Returns: undefined };
       ct_set_site_contact: { Args: { p_company: string; p_email: string | null; p_phone: string | null; p_website: string | null }; Returns: Json };
       ct_admin_network: {
         Args: never;

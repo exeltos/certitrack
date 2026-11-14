@@ -114,6 +114,14 @@ export type OrganizationUpdate = Partial<Pick<OrganizationRow,
 
 export interface OpenedFile { url: string; fileName: string }
 
+export type PresentationStatus = 'new' | 'contacted' | 'done';
+/** A "request a presentation" sent from the home page. */
+export interface PresentationRequest {
+  id: string; name: string; company: string; email: string; phone: string | null; message: string | null;
+  status: PresentationStatus; created_at: string; updated_at: string;
+}
+export interface PresentationInput { name: string; company: string; email: string; phone?: string; message?: string; trap?: string }
+
 /** Contact card on the public home page; edited by the platform owner. */
 export interface SiteContact { company: string; email: string | null; phone: string | null; website: string | null }
 
@@ -183,4 +191,8 @@ export interface Api {
 
   siteContact(): Promise<SiteContact>;
   setSiteContact(contact: SiteContact): Promise<SiteContact>;
+
+  submitPresentationRequest(input: PresentationInput): Promise<void>;
+  presentationRequests(): Promise<PresentationRequest[]>;
+  setPresentationRequestStatus(id: string, status: PresentationStatus): Promise<void>;
 }

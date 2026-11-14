@@ -2,6 +2,8 @@
 import { html, mount, type SafeHtml } from '../../lib/html';
 import { t } from '../../lib/i18n';
 import { icon, avatar } from '../../ui/components';
+import { openDialog, UserError } from '../../ui/dialog';
+import { fieldValue } from '../../lib/form';
 import { publicPage } from './layout';
 import { api, DEMO_OPEN } from '../../api/index';
 import { DEFAULT_CONTACT } from '../../api/supabase';
@@ -9,9 +11,9 @@ import type { SiteContact } from '../../types/domain';
 
 const node = (name: string, sub: string) => html`<div class="preview__node">${avatar(name, { size: 'lg' })}<span>${name}</span><small>${sub}</small></div>`;
 
-// "Request a presentation" opens an email to the contact address.
 const mailto = (c: SiteContact, subject?: string) => `mailto:${c.email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`;
-const cta = (c: SiteContact): SafeHtml => html`${c.email ? html`<a class="btn btn--primary btn--lg" href="${mailto(c, t('home.presentationSubject'))}">${icon('presentation')}${t('home.ctaPresentation')}</a>` : ''}
+// "Request a presentation" opens a short form (requestPresentation below).
+const cta = (): SafeHtml => html`<button type="button" class="btn btn--primary btn--lg" data-present>${icon('presentation')}${t('home.ctaPresentation')}</button>
   ${DEMO_OPEN ? html`<a class="btn btn--secondary btn--lg" href="/pages/demo/index.html">${icon('eye')}${t('home.ctaDemo')}</a>` : ''}`;
 /** Only plain web addresses become links (the value is editable by the owner). */
 const webLink = (url: string | null): string | null => (url && /^https?:\/\//i.test(url) ? url : null);
@@ -39,7 +41,7 @@ publicPage({
         <span class="eyebrow">${icon('shield-check', { size: 14 })}${t('home.eyebrow')}</span>
         <h1>${t('home.headline')} <em>${t('home.headlineAccent')}</em></h1>
         <p class="hero__lead">${t('home.lead')}</p>
-        <div class="hero__cta" data-cta>${cta(DEFAULT_CONTACT)}</div>
+        <div class="hero__cta">${cta()}</div>
         <div data-contact>${contactCard(DEFAULT_CONTACT)}</div>
       </div>
       <div class="card preview" aria-label="${t('home.previewLabel')}">
@@ -64,7 +66,46 @@ publicPage({
 });
 
 // The details are editable by the platform owner; show the saved ones.
-api.siteContact().then(c => {
-  mount('[data-cta]', cta(c));
-  mount('[data-contact]', contactCard(c));
-}).catch(err => console.warn('contact card', err));
+api.siteContact().then(c => { mount('[data-contact]', contactCard(c)); })
+  .catch(err => console.warn('contact card', err));
+
+document.querySelector('[data-present]')?.addEventListener('click', () => { void requestPresentation(); });
+
+/** The form; the request is stored for the owner and emailed to the contact address. */
+async function requestPresentation(): Promise<void> {
+  let sentTo = '';
+  const input = (name: string, label: string, type: string, extra: SafeHtml | '' = '') => html`<div class="field"><label for="pr-${name}">${label}</label>
+    <input class="input" id="pr-${name}" name="${name}" type="${type}" ${extra}></div>`;
+  const sent = await openDialog({
+    title: t('pres.formTitle'), description: t('pres.formText'), submitLabel: t('pres.send'),
+    body: html`<div class="form-grid form-grid--2">
+        ${input('name', t('pres.name') + ' *', 'text', html`required maxlength="120" autocomplete="name" autofocus`)}
+        ${input('company', t('pres.company') + ' *', 'text', html`required maxlength="160" autocomplete="organization"`)}
+        ${input('email', t('pres.email') + ' *', 'email', html`required maxlength="254" autocomplete="email"`)}
+        ${input('phone', t('pres.phone'), 'tel', html`maxlength="40" autocomplete="tel" pattern="\\+?[0-9 \\.\\-\\(\\)]{5,}"`)}
+        <div class="field span-2"><label for="pr-message">${t('pres.message')}</label>
+          <textarea class="textarea" id="pr-message" name="message" rows="3" maxlength="2000" placeholder="${t('pres.messagePlaceholder')}"></textarea></div>
+      </div>
+      <div class="hp-field" aria-hidden="true"><label for="pr-website">Website</label><input id="pr-website" name="website" tabindex="-1" autocomplete="off"></div>
+      <small class="hint">${t('pres.privacy')}</small>`,
+    async onSubmit(form) {
+      const email = fieldValue(form, 'email');
+      try {
+        await api.submitPresentationRequest({ name: fieldValue(form, 'name'), company: fieldValue(form, 'company'), email,
+          phone: fieldValue(form, 'phone'), message: fieldValue(form, 'message'), trap: fieldValue(form, 'website') });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : '';
+        if (/Too many requests/.test(message)) throw new UserError(t('pres.tooMany'));
+        const bad = /Invalid (name|company|email|phone|message)/.exec(message)?.[1] as 'name' | 'company' | 'email' | 'phone' | 'message' | undefined;
+        throw bad ? new UserError(t(`pres.invalid.${bad}`)) : err;
+      }
+      sentTo = email;
+      return true;
+    }
+  });
+  if (sent !== true) return;
+  await openDialog({
+    title: t('pres.thanksTitle'), hideSubmit: true, cancelLabel: t('common.close'),
+    body: html`<div class="empty" style="padding:8px 0"><span class="empty__icon">${icon('circle-check', { size: 22 })}</span><p>${t('pres.thanksText', { email: sentTo })}</p></div>`
+  });
+}
