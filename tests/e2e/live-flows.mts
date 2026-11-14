@@ -49,10 +49,10 @@ const step = async (name: string, fn: () => Promise<unknown>): Promise<void> => 
     await A.setInputFiles('input[name=file]', PDF);
     await A.check('input[name=sharing][value=private]', { force: true });
     await A.click('dialog [type=submit]');
-    await A.waitForSelector('li.row:has-text("E2E ISO 9001:2015")', { timeout: 20000 });
+    await A.waitForSelector('.table--certs tr:has-text("E2E ISO 9001:2015")', { timeout: 20000 });
   });
   await step('A: open own PDF through signed URL', async () => {
-    await A.locator('li.row', { hasText: 'E2E ISO 9001:2015' }).locator('[data-act=view]').click();
+    await A.locator('.table--certs tr', { hasText: 'E2E ISO 9001:2015' }).locator('[data-act=view]').click();
     const src = await (await A.waitForSelector('dialog[open] iframe')).getAttribute('src') ?? '';
     if (!/supabase\.co\/storage\/v1\/object\/sign\//.test(src)) throw new Error('not a signed URL: ' + src);
     const r = await A.request.get(src); if (r.status() !== 200) throw new Error('PDF fetch ' + r.status());

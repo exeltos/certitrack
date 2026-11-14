@@ -63,8 +63,11 @@ export async function certificateDialog({ cert = null, types, partners, presetTy
     title: isEdit ? t('cert.editTitle') : t('cert.newTitle'),
     description: isEdit ? '' : t('cert.newText'),
     submitLabel: isEdit ? t('common.save') : t('cert.create'),
-    body: html`
-      <div class="form-grid form-grid--2">
+    wide: true,
+    // Two columns on wide screens: the details on the left; the PDF and who
+    // sees it on the right, so the whole form fits without scrolling.
+    body: html`<div class="cert-form">
+      <div class="form-grid form-grid--2 cert-form__main">
         <div class="field span-2"><label for="f-title">${t('cert.fieldTitle')} *</label>
           <input class="input" id="f-title" name="title" required maxlength="200" value="${cert?.title || ''}" placeholder="${t('cert.titlePlaceholder')}" autofocus></div>
         <div class="field"><label for="f-type">${t('cert.fieldType')} *</label>
@@ -81,12 +84,15 @@ export async function certificateDialog({ cert = null, types, partners, presetTy
           <input class="input" type="date" id="f-expiry" name="expiry_date" value="${cert?.expiry_date || ''}"><small>${t('cert.expiryHint')}</small></div>
         <div class="field span-2"><label for="f-notes">${t('cert.fieldNotes')}</label>
           <textarea class="textarea" id="f-notes" name="notes" maxlength="2000" rows="2">${cert?.notes || ''}</textarea></div>
-        <div class="field span-2"><span class="field-label">${t('cert.fieldFile')}${isEdit ? '' : ' *'}</span>
+      </div>
+      <div class="cert-form__side">
+        <div class="field"><span class="field-label">${t('cert.fieldFile')}${isEdit ? '' : ' *'}</span>
           <label class="file-drop">${icon('upload')}<span><strong data-file-name>${isEdit ? t('cert.replaceFile') : t('cert.chooseFile')}</strong>
             <small>${isEdit && cert.file ? t('cert.currentFile', { name: cert.file.original_file_name }) : t('cert.fileHint')}</small></span>
             <input type="file" name="file" accept="application/pdf,.pdf" ${isEdit ? '' : raw('required')}></label></div>
+        ${isEdit ? '' : sharingSection(null, partners)}
       </div>
-      ${isEdit ? '' : sharingSection(null, partners)}`,
+    </div>`,
     onOpen(form) {
       const sel = field<HTMLSelectElement>(form, 'certificate_type_id');
       const custom = form.querySelector<HTMLElement>('[data-custom]')!;

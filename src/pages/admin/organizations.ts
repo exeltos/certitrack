@@ -59,14 +59,14 @@ class OrganizationsPage {
     const q = this.q.toLowerCase();
     const list = this.orgs.filter(o => (this.status === 'all' || o.status === this.status) && `${o.name} ${o.vat_number} ${o.contact_email || ''}`.toLowerCase().includes(q));
     mount(this.page.content.querySelector('[data-table]'), list.length ? html`<div class="table-wrap"><table class="table">
-      <thead><tr><th>${t('admin.colOrg')}</th><th>${t('common.vat')}</th><th>${t('admin.colStatus')}</th><th class="num">${t('admin.connections')}</th><th class="num">${t('nav.certificates')}</th><th>${t('admin.colCreated')}</th><th></th></tr></thead>
-      <tbody>${list.map(o => html`<tr>
+      <thead><tr><th>${t('admin.colOrg')}</th><th>${t('common.vat')}</th><th>${t('admin.colStatus')}</th><th class="num">${t('admin.connections')}</th><th class="num">${t('nav.certificates')}</th><th class="col-optional">${t('admin.colCreated')}</th><th><span class="sr-only">${t('common.details')}</span></th></tr></thead>
+      <tbody>${list.map(o => html`<tr class="tr-link" data-open="${o.id}">
         <td><span class="cell-org">${avatar(o.name, { size: 'sm' })}<span><strong>${o.name}</strong><small>${o.contact_email || ''}</small></span></span></td>
         <td>${o.vat_number}</td><td>${orgStatusBadge(o.status)}</td>
         <td class="num">${this.network.filter(c => c.status === 'active' && (c.requester_id === o.id || c.addressee_id === o.id)).length}</td>
         <td class="num">${this.certs.filter(c => c.organization_id === o.id).length}</td>
-        <td>${formatDate(o.created_at)}</td>
-        <td><button class="btn btn--sm btn--ghost" data-open="${o.id}">${t('common.details')}</button></td></tr>`)}</tbody></table></div>`
+        <td class="col-optional">${formatDate(o.created_at)}</td>
+        <td class="num"><button class="icon-btn icon-btn--sm" data-open="${o.id}" title="${t('common.details')}" aria-label="${t('common.details')}: ${o.name}">${icon('chevron-right')}</button></td></tr>`)}</tbody></table></div>`
       : emptyState({ iconName: 'building', title: t('common.noResults') }));
   }
 

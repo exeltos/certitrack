@@ -22,16 +22,15 @@ export default definePage({
       const renderTable = () => {
         const list = rows.filter(c => (status === 'all' || c.status === status) && `${c.requester_name} ${c.addressee_name}`.toLowerCase().includes(q.toLowerCase()));
         mount(content.querySelector('[data-table]'), list.length ? html`<div class="table-wrap"><table class="table">
-          <thead><tr><th>${t('admin.colRequester')}</th><th></th><th>${t('admin.colAddressee')}</th><th>${t('admin.colStatus')}</th>
-            <th class="num" title="${t('admin.sharedHint')}">${t('admin.colShared')}</th><th class="num">${t('admin.colOpenReqs')}</th><th>${t('admin.colSince')}</th></tr></thead>
+          <thead><tr><th>${t('admin.colRequester')}</th><th>${t('admin.colAddressee')}</th><th>${t('admin.colStatus')}</th>
+            <th class="num" title="${t('admin.sharedHint')}">${t('admin.colSharedByRequester')}</th><th class="num" title="${t('admin.sharedHint')}">${t('admin.colSharedByAddressee')}</th><th class="num">${t('admin.colOpenReqs')}</th><th class="col-optional">${t('admin.colSince')}</th></tr></thead>
           <tbody>${list.map(c => html`<tr>
             <td><span class="cell-org">${avatar(c.requester_name, { size: 'sm' })}<strong>${c.requester_name}</strong></span></td>
-            <td>${icon('link-2', { size: 16, cls: 'chevron' })}</td>
             <td><span class="cell-org">${avatar(c.addressee_name, { size: 'sm' })}<strong>${c.addressee_name}</strong></span></td>
             <td>${connStatusBadge(c.status)}</td>
-            <td class="num">${c.status === 'active' ? `${c.shared_by_requester} ⇄ ${c.shared_by_addressee}` : '—'}</td>
+            <td class="num">${c.status === 'active' ? c.shared_by_requester : '—'}</td><td class="num">${c.status === 'active' ? c.shared_by_addressee : '—'}</td>
             <td class="num">${c.open_requests}</td>
-            <td>${formatDate(c.responded_at || c.created_at)}</td></tr>`)}</tbody></table></div>`
+            <td class="col-optional">${formatDate(c.responded_at || c.created_at)}</td></tr>`)}</tbody></table></div>`
           : emptyState({ iconName: 'network', title: t('common.noResults') }));
       };
       const count = (s: ConnectionStatus) => rows.filter(c => c.status === s).length;

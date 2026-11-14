@@ -51,14 +51,21 @@ const step = async (name: string, fn: () => Promise<unknown>): Promise<void> => 
     await p.click('dialog [data-close]');
   });
   await step('share dialog: make private', async () => {
-    const row = p.locator('li.row', { hasText: 'ISO 9001:2015' });
-    await row.locator('[data-act=share]').click();
+    const row = p.locator('.table--certs tr', { hasText: 'ISO 9001:2015' });
+    await row.locator('[data-menu]').click();
+    await p.click('.action-menu [data-pick=share]');
     await p.check('input[name=sharing][value=private]', { force: true });
     await p.click('dialog [type=submit]');
     await row.locator('text=Ιδιωτικό').waitFor();
   });
+  await step('certificates: sort by title and back by expiry', async () => {
+    await p.click('[data-sort=title]');
+    const titles = await p.locator('.cert-cell strong').allTextContents();
+    if (titles.join() !== [...titles].sort((a, b) => a.localeCompare(b)).join()) throw new Error('not sorted by title: ' + titles.join(', '));
+    await p.click('[data-sort=expiry]');
+  });
   await step('view PDF opens viewer', async () => {
-    await p.locator('li.row', { hasText: 'Άδεια λειτουργίας' }).locator('[data-act=view]').click();
+    await p.locator('.table--certs tr', { hasText: 'Άδεια λειτουργίας' }).locator('[data-act=view]').click();
     await p.waitForSelector('dialog[open] iframe');
     await p.click('dialog [data-close]');
   });

@@ -583,17 +583,21 @@ a.kpi:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(16, 24, 40
 /* Auth: brand panel + form */
 .auth { gap: 0; }
 @media (min-width: 960px) {
-  .auth--split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); place-items: stretch; padding: 0; }
-  .auth--split .auth-card { align-self: center; justify-self: center; }
+  /* Brand panel and form joined into one centered card; the form gets the room. */
+  .auth--split { grid-template-columns: minmax(0, 400px) minmax(0, 480px); justify-content: center; align-content: center;
+    align-items: stretch; place-items: initial; padding: 32px var(--gutter); }
+  .auth--split:has(.auth-card--wide) { grid-template-columns: minmax(0, 380px) minmax(0, 580px); }
+  .auth--split .auth-card { width: 100%; display: flex; flex-direction: column; justify-content: center; padding: 40px 44px;
+    border-radius: 0 24px 24px 0; border-left: 0; }
 }
 .auth-aside { display: none; }
 @media (min-width: 960px) {
-  .auth-aside { display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 56px; color: #fff; border-radius: 0 28px 28px 0;
+  .auth-aside { display: flex; flex-direction: column; justify-content: center; gap: 20px; padding: 44px 40px; color: #fff; border-radius: 24px 0 0 24px;
     background:
       radial-gradient(520px 300px at 90% 10%, rgba(124, 58, 237, .45), transparent 70%),
       radial-gradient(420px 260px at 0% 100%, rgba(34, 211, 238, .22), transparent 70%),
       var(--shell); }
-  .auth-aside h2 { font-size: 32px; line-height: 1.15; letter-spacing: -0.02em; max-width: 440px; }
+  .auth-aside h2 { font-size: 28px; line-height: 1.18; letter-spacing: -0.02em; max-width: 440px; }
   .auth-aside p { color: #c7cbe6; max-width: 420px; font-size: 15px; }
   .auth-aside ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
   .auth-aside li { display: flex; align-items: center; gap: 10px; color: #e0e7ff; }
@@ -629,7 +633,8 @@ a.kpi:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(16, 24, 40
 }
 @media (min-width: 980px) and (max-height: 820px) {
   .features .feature p { font-size: 13px; }
-  .auth-card { padding: 20px 24px; }
+  .auth-card, .auth--split .auth-card { padding: 22px 28px; }
+  .auth--split { padding-top: 16px; padding-bottom: 16px; }
   .auth-card > p { margin-bottom: 14px; }
   .auth-card form { gap: 12px; }
   .auth-card .form-grid { gap: 12px; }
@@ -707,3 +712,73 @@ body.app.is-navigating::after { opacity: 1; animation: nav-progress 1.6s cubic-b
 .topbar .popover { color: var(--text); }
 /* Phones: filters under the search, each on its own full line (no cut-off labels). */
 @media (max-width: 560px) { .toolbar > .select { flex: 1 1 100%; min-width: 0; width: 100%; } }
+
+/* ----------------------------------------------------------------- row action menu (src/ui/menu.ts) */
+.action-menu { position: fixed; z-index: 60; min-width: 220px; padding: 6px 0; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); animation: menu-in .12s ease-out; }
+.action-menu .menu-item:focus-visible { outline: none; background: var(--surface-hover); }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .action-menu { animation: none; } }
+
+/* ----------------------------------------------------------------- certificates table */
+.th-sort { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: inherit;
+  font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.th-sort .icon { opacity: 0; transition: opacity .15s; }
+.th-sort:hover .icon, .th-sort.is-on .icon { opacity: 1; }
+.th-sort.is-on { color: var(--text); }
+.table--certs td { padding-top: 10px; padding-bottom: 10px; }
+.table--certs tbody tr { transition: background .12s; }
+.table--certs tr.is-focus { background: var(--primary-soft); }
+.cert-cell { display: flex; align-items: center; gap: 12px; min-width: 240px; }
+.cert-cell > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.cert-cell strong { font-weight: 600; }
+.cert-cell small { color: var(--text-3); font-size: 12.5px; }
+.cert-expiry { color: var(--text-2); font-size: 13.5px; }
+.cert-actions { text-align: right; white-space: nowrap; }
+.cert-actions > * { vertical-align: middle; }
+.cert-actions .btn { margin-right: 4px; }
+
+/* Phones and narrow windows: each certificate becomes a compact card. */
+@media (max-width: 860px) {
+  .table--certs thead { display: none; }
+  .table--certs, .table--certs tbody { display: block; }
+  .table--certs tr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .table--certs td { display: block; padding: 0; border: 0; }
+  .table--certs .cert-name { flex: 1 1 100%; min-width: 0; }
+  .table--certs .cert-cell { min-width: 0; }
+  .table--certs .cert-expiry { flex: 1 1 100%; padding-left: 48px; font-size: 13px; }
+  .table--certs td:nth-child(3) { padding-left: 48px; }
+  .table--certs .cert-actions { margin-left: auto; display: flex; gap: 6px; }
+}
+
+/* Touch screens: bigger targets for small buttons. */
+@media (pointer: coarse) {
+  .icon-btn--sm { width: 40px; height: 40px; }
+  .btn--sm { min-height: 40px; }
+  .action-menu .menu-item { padding: 12px 16px; }
+}
+
+/* Certificate dialog: details | PDF and who sees it (src/pages/organization/certificateForms.ts) */
+.cert-form { display: grid; gap: 18px; }
+.cert-form__side { display: grid; gap: 16px; align-content: start; }
+@media (min-width: 900px) {
+  .cert-form { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .cert-form__side { padding-left: 24px; border-left: 1px solid var(--border); }
+  /* In the narrow side column the three sharing choices stack. */
+  .cert-form__side .choices--3 { grid-template-columns: 1fr; }
+  .cert-form__side .choice { padding: 10px 12px; }
+}
+
+/* A card whose header is a row of tabs (organization overview). */
+.card__head--tabs { padding: 10px 12px 0 10px; border-bottom: 0; }
+.tabs--inline { margin: 0; box-shadow: none; background: var(--surface-2); border: 0; }
+.card__sub { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 18px; border-bottom: 1px solid var(--border); color: var(--text-3); font-size: 13px; }
+.card__sub a { font-weight: 600; white-space: nowrap; }
+
+/* Table rows that open details (owner: organizations) */
+.tr-link { cursor: pointer; }
+.tr-link:hover td { background: var(--surface-hover); }
+.table th.num { white-space: normal; min-width: 84px; line-height: 1.25; }
+@media (max-width: 1439px) { .table th, .table td { padding-left: 12px; padding-right: 12px; } }
+/* Less important columns (dates) give way on narrower screens. */
+@media (max-width: 1299px) { .table .col-optional { display: none; } }
