@@ -18,10 +18,10 @@ All of these are covered by `supabase/tests/10_peer_network_test.sql` (`npm run 
 
 ## Frontend
 
-- Every dynamic value is escaped by the `html` template (`src/lib/html.js`); dialogs
+- Every dynamic value is escaped by the `html` template (`src/lib/html.ts`); dialogs
   use native `<dialog>`, and error messages are rendered as text.
 - No third-party scripts from CDNs; dependencies are pinned in `assets/vendor/`.
-- The Supabase anon key in `src/config/appConfig.js` is public by design; never
+- The Supabase anon key in `src/config/appConfig.ts` is public by design; never
   put the service-role key in frontend code.
 
 ## Fixed in the 2026-11 rebuild

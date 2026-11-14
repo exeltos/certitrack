@@ -15,7 +15,7 @@ you also won't hear about production errors until a user reports them.
 
 ## 2. Wire up the frontend DSN
 
-Edit `src/config/appConfig.js`:
+Edit `src/config/appConfig.ts`:
 
 ```js
 export const SENTRY_DSN = 'https://xxxxx@xxxxx.ingest.sentry.io/xxxxx';

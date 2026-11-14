@@ -637,22 +637,18 @@ a.kpi:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(16, 24, 40
   .pw-rules { gap: 1px; }
 }
 
-/* ----------------------------------------------------------------- page-to-page navigation
-   Every menu click loads a new page. To avoid a blank flash:
-   - before the script runs, an empty app page already paints the navy top bar and side bar;
-   - the shell is drawn at once from the last known account (see shell.js);
-   - supporting browsers cross-fade only the content, the frame stays put. */
+/* ----------------------------------------------------------------- first paint of an app page
+   Moving between pages never reloads (see src/app/router.ts). On a full load
+   (sign-in, refresh), the empty page already paints the navy top bar and side
+   bar before the script runs, and the shell is then drawn from the last known
+   account (src/app/shell.ts), so even a reload does not flash white. */
 body.app-pending:empty { min-height: 100vh; background: linear-gradient(var(--shell) 0 var(--topbar-h), var(--bg) var(--topbar-h)); }
 @media (min-width: 960px) {
   body.app-pending:empty { background:
     linear-gradient(var(--shell) 0 var(--topbar-h), transparent var(--topbar-h)),
     linear-gradient(90deg, var(--shell) 252px, var(--bg) 252px); }
 }
-@view-transition { navigation: auto; }
-.topbar { view-transition-name: topbar; }
-@media (min-width: 960px) { .sidenav { view-transition-name: sidenav; } }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: .14s; }
-@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+
 
 /* Contact card in the home hero */
 .contact-card { margin-top: clamp(14px, 2.4vh, 24px); display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 12px 16px;
@@ -691,3 +687,10 @@ body.app-pending:empty { min-height: 100vh; background: linear-gradient(var(--sh
   body.app #content [data-table] > .table-wrap { flex: 0 1 auto; min-height: 0; overflow: auto; }
   body.app #content .table th { position: sticky; top: 0; z-index: 1; }
 }
+
+/* Thin bar under the top bar while the next page is loading (src/app/router.ts). */
+body.app::after { content: ''; position: fixed; z-index: 40; left: 0; top: var(--topbar-h); height: 3px; width: 100%;
+  background: var(--brand-gradient); transform: scaleX(0); transform-origin: left; opacity: 0; pointer-events: none; }
+body.app.is-navigating::after { opacity: 1; animation: nav-progress 1.6s cubic-bezier(.2, .7, .3, 1) forwards; }
+@keyframes nav-progress { from { transform: scaleX(.05); } to { transform: scaleX(.85); } }
+@media (prefers-reduced-motion: reduce) { body.app.is-navigating::after { animation: none; transform: scaleX(.6); } }
