@@ -148,6 +148,25 @@ const step = async (name: string, fn: () => Promise<unknown>): Promise<void> => 
     await p.waitForURL(/index\.html/);
   });
 
+  // Desktop screens fit the window: nothing scrolls the page itself.
+  const fit = await b.newContext({ viewport: { width: 1366, height: 768 } });
+  await fit.addInitScript(() => { if (!localStorage.getItem('certitrack.demo')) localStorage.setItem('certitrack.demo', 'organization'); });
+  const fp = await fit.newPage();
+  for (const [role, pages] of [['organization', ['dashboard', 'certificates', 'partners', 'requests', 'profile']], ['admin', ['dashboard', 'presentations', 'organizations', 'network', 'audit', 'settings']]] as [string, string[]][]) {
+    await fp.evaluate(r => localStorage.setItem('certitrack.demo', r), role).catch(() => {});
+    for (const pg of pages) {
+      await step(`no page scroll at 1366x768: ${role}/${pg}`, async () => {
+        await fp.goto(`${B}/pages/${role}/${pg}.html`, { waitUntil: 'networkidle' });
+        await fp.evaluate(r => localStorage.setItem('certitrack.demo', r), role);
+        await fp.goto(`${B}/pages/${role}/${pg}.html`, { waitUntil: 'networkidle' });
+        await fp.waitForSelector('#content > *');
+        const overflow = await fp.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+        if (overflow > 0) throw new Error(`page scrolls by ${overflow}px`);
+      });
+    }
+  }
+  await fit.close();
+
   const m = await b.newContext({ ...devices['iPhone 13'] });
   await m.addInitScript(() => localStorage.setItem('certitrack.demo', 'organization'));
   const mp = await m.newPage();

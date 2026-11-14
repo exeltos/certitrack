@@ -30,6 +30,42 @@ jobs:
       - name: Production build
         run: npm run build
 
+  e2e:
+    name: End-to-end (browser)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Build with the in-browser demo
+        run: npm run build
+        env:
+          VITE_ENABLE_DEMO: 'true'
+
+      - name: Run the demo flows in a real browser
+        run: |
+          npx vite preview --port 8888 --host 127.0.0.1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8888/ >/dev/null && break; sleep 1; done
+          mkdir -p e2e-screenshots
+          npm run test:e2e -- e2e-screenshots
+
+      - name: Keep screenshots when something fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: e2e-screenshots
+
   secret-scan:
     name: Secret scan
     runs-on: ubuntu-latest
