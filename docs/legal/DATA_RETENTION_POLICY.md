@@ -49,7 +49,7 @@ written down once, instead of re-derived from the schema every time someone asks
   retention period above.
 - ✅ **Final erasure** (irreversible — deletes certificate files from
   storage, deletes Auth users with no other org membership, anonymizes the
-  organization row): `netlify/functions/finalize_account_erasure.js` +
+  organization row): `netlify/functions/finalize_account_erasure.mts` +
   `ct_finalize_erasure()`. Requires the organization to already be
   `closed`, and requires platform-admin confirmation
   (`{ "confirm": "ERASE" }`) — this is intentionally not self-service from

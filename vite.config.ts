@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
-import { PAGES } from './scripts/build-pages.mjs';
+import { PAGES } from './scripts/build-pages.mts';
 
 // The browser must not paint a page before its script has drawn the frame,
 // otherwise every menu click flashes an empty page. Vite drops the attribute

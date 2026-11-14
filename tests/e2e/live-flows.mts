@@ -6,20 +6,25 @@
 //   E2E_B_EMAIL / E2E_B_PASSWORD   organization "E2E Beta"   (VAT 900000002)
 //   E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD   a platform admin
 // Turn their email notifications off and delete the users and organizations afterwards.
-// Usage: node tests/e2e/live-flows.cjs [screenshot-dir]
-const { chromium } = require('playwright');
-const path = require('path');
-const env = k => { if (!process.env[k]) throw new Error(`missing ${k}`); return process.env[k]; };
+// Usage: node tests/e2e/live-flows.mts [screenshot-dir]
+import { chromium, type Page } from 'playwright';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const here = path.dirname(fileURLToPath(import.meta.url));
+const env = (k: string): string => { const v = process.env[k]; if (!v) throw new Error(`missing ${k}`); return v; };
 const pw = { a: env('E2E_A_PASSWORD'), b: env('E2E_B_PASSWORD'), adm: env('E2E_ADMIN_PASSWORD') };
 const B = process.env.BASE_URL || 'http://127.0.0.1:8888';
-const PDF = path.join(__dirname, '../../public/demo/sample-certificate.pdf');
-const OUT = process.argv[2] || require('os').tmpdir();
-const errors = [];
-const step = async (name, fn) => { try { await fn(); console.log('ok -', name); } catch (e) { console.log('FAIL -', name, '::', e.message.split('\n')[0]); errors.push(name); } };
+const PDF = path.join(here, '../../public/demo/sample-certificate.pdf');
+const OUT = process.argv[2] || os.tmpdir();
+const errors: string[] = [];
+const step = async (name: string, fn: () => Promise<unknown>): Promise<void> => {
+  try { await fn(); console.log('ok -', name); } catch (e) { console.log('FAIL -', name, '::', String(e instanceof Error ? e.message : e).split('\n')[0]); errors.push(name); }
+};
 
 (async () => {
   const browser = await chromium.launch(process.env.HTTPS_PROXY ? { proxy: { server: process.env.HTTPS_PROXY, bypass: '127.0.0.1,localhost' } } : {});
-  async function session(label, email, password) {
+  async function session(label: string, email: string, password: string): Promise<Page> {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ignoreHTTPSErrors: false });
     const p = await ctx.newPage();
     p.on('pageerror', e => { console.log(`[${label}] PAGEERROR`, e.message); errors.push(`${label}:pageerror`); });
@@ -30,7 +35,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
     await p.waitForURL(/\/pages\/(organization|admin)\//, { timeout: 20000 });
     return p;
   }
-  let A, Bp, adm;
+  let A!: Page, Bp!: Page, adm!: Page;
   await step('A: login lands on organization dashboard', async () => {
     A = await session('A', env('E2E_A_EMAIL'), pw.a);
     await A.waitForSelector('text=E2E Alpha'); await A.waitForSelector('.kpi');
@@ -48,7 +53,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
   });
   await step('A: open own PDF through signed URL', async () => {
     await A.locator('li.row', { hasText: 'E2E ISO 9001:2015' }).locator('[data-act=view]').click();
-    const src = await (await A.waitForSelector('dialog[open] iframe')).getAttribute('src');
+    const src = await (await A.waitForSelector('dialog[open] iframe')).getAttribute('src') ?? '';
     if (!/supabase\.co\/storage\/v1\/object\/sign\//.test(src)) throw new Error('not a signed URL: ' + src);
     const r = await A.request.get(src); if (r.status() !== 200) throw new Error('PDF fetch ' + r.status());
     await A.click('dialog [data-close]');
@@ -67,7 +72,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
     await Bp.click('[data-accept]');
     await Bp.waitForSelector('[data-active] :text("E2E Alpha")');
   });
-  let connUrl;
+  let connUrl = '';
   await step('B: private certificate of A is NOT visible', async () => {
     await Bp.click('[data-active] a.row');
     await Bp.waitForURL(/partner\.html/); connUrl = Bp.url();
@@ -92,7 +97,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
     await Bp.goto(connUrl.replace(/&tab=\w+/, '') + '&tab=theirs', { waitUntil: 'networkidle' });
     await Bp.waitForSelector('li.row:has-text("E2E ISO 9001:2015")');
     await Bp.locator('li.row', { hasText: 'E2E ISO 9001:2015' }).locator('[data-open]').click();
-    const src = await (await Bp.waitForSelector('dialog[open] iframe')).getAttribute('src');
+    const src = await (await Bp.waitForSelector('dialog[open] iframe')).getAttribute('src') ?? '';
     const r = await Bp.request.get(src); if (r.status() !== 200) throw new Error('partner PDF fetch ' + r.status());
     await Bp.click('dialog [data-close]');
   });

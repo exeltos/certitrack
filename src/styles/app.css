@@ -702,3 +702,8 @@ body.app.is-navigating::after { opacity: 1; animation: nav-progress 1.6s cubic-b
 .presentation__message { margin: 6px 0 0; color: var(--text-2); font-size: 13.5px; max-width: 70ch; white-space: pre-line; }
 .presentation .row__side { flex-wrap: wrap; justify-content: flex-end; }
 .hp-field { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+/* Popovers in the dark top bar use the page's text colour, not the bar's. */
+.topbar .popover { color: var(--text); }
+/* Phones: filters under the search, each on its own full line (no cut-off labels). */
+@media (max-width: 560px) { .toolbar > .select { flex: 1 1 100%; min-width: 0; width: 100%; } }

@@ -1,0 +1,20 @@
+{
+  // Code that runs in Node (not in the browser): build scripts, the Vite
+  // config, end-to-end tests and the Netlify function. Node 22 runs these
+  // .mts files directly (type stripping), so only erasable TypeScript is used.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["scripts/**/*.mts", "tests/e2e/**/*.mts", "netlify/functions/**/*.mts", "vite.config.ts"]
+}

@@ -210,6 +210,7 @@ export const en: Record<keyof typeof el, string> = {
   'pres.reply': 'Reply by email', 'pres.updated': 'Status updated.',
   'pres.emptyNew': 'No new requests', 'pres.emptyNewText': 'When someone asks for a presentation on the home page, it appears here and you get an email.',
   'pres.empty': 'No requests yet',
+  'auditAction.insert': 'Created', 'auditAction.update': 'Changed', 'auditAction.delete': 'Deleted', 'auditAction.site_contact.updated': 'Contact details changed',
   'admin.contactTitle': 'Home page contact details', 'admin.contactText': 'Shown on the home page, in the “Contact” card.',
   'admin.contactInvalid.email': 'The email is not valid.', 'admin.contactInvalid.phone': 'The phone number is not valid.',
   'admin.contactInvalid.website': 'The website must be an address like exeltos.com.', 'admin.contactInvalid.company': 'Enter the company name.',

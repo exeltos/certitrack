@@ -220,6 +220,7 @@ export const el = {
   'pres.reply': 'Απάντηση με email', 'pres.updated': 'Η κατάσταση ενημερώθηκε.',
   'pres.emptyNew': 'Κανένα νέο αίτημα', 'pres.emptyNewText': 'Όταν κάποιος ζητήσει παρουσίαση από την αρχική, θα εμφανιστεί εδώ και θα σας έρθει email.',
   'pres.empty': 'Κανένα αίτημα ακόμα',
+  'auditAction.insert': 'Δημιουργία', 'auditAction.update': 'Αλλαγή', 'auditAction.delete': 'Διαγραφή', 'auditAction.site_contact.updated': 'Αλλαγή στοιχείων επικοινωνίας',
   'admin.contactTitle': 'Στοιχεία επικοινωνίας αρχικής', 'admin.contactText': 'Εμφανίζονται στην αρχική σελίδα, στην κάρτα «Επικοινωνία».',
   'admin.contactInvalid.email': 'Το email δεν είναι έγκυρο.', 'admin.contactInvalid.phone': 'Το τηλέφωνο δεν είναι έγκυρο.',
   'admin.contactInvalid.website': 'Ο ιστότοπος πρέπει να είναι διεύθυνση όπως exeltos.com.', 'admin.contactInvalid.company': 'Συμπληρώστε το όνομα της εταιρείας.',

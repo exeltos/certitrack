@@ -52,4 +52,4 @@ Netlify runs `npm run build` and publishes `dist/` (see `netlify.toml`).
 `SUPABASE_SERVICE_ROLE_KEY` as Netlify environment variables.
 
 After changing page list or icons:
-`node scripts/build-pages.mjs`, `node scripts/build-icons.mjs <lucide package dir>`.
+`node scripts/build-pages.mts`, `node scripts/build-icons.mts <lucide package dir>`.

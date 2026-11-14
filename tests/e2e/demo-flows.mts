@@ -1,20 +1,25 @@
-const { chromium, devices } = require('playwright');
+import { chromium, devices } from 'playwright';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 // End-to-end smoke test of the demo (no backend needed).
-// Usage: VITE_ENABLE_DEMO=true npm run build && npm run preview  (in another terminal), then:  node tests/e2e/demo-flows.cjs [screenshot-dir]
+// Usage: VITE_ENABLE_DEMO=true npm run build && npm run preview  (in another terminal), then:  node tests/e2e/demo-flows.mts [screenshot-dir]
 // Requires Playwright with Chromium. Applies the CSP from netlify.toml to every page.
-const fs = require('fs');
-const path = require('path');
-const out = process.argv[2] || require('os').tmpdir();
+const here = path.dirname(fileURLToPath(import.meta.url));
+const out = process.argv[2] || os.tmpdir();
 const B = process.env.BASE_URL || 'http://127.0.0.1:8888';
-const CSP = /Content-Security-Policy = "([^"]+)"/.exec(fs.readFileSync(path.join(__dirname, '../../netlify.toml'), 'utf8'))[1];
-const errors = [];
-const step = async (name, fn) => { try { await fn(); console.log('ok -', name); } catch (e) { console.log('FAIL -', name, e.message.split('\n')[0]); errors.push(name); } };
+const CSP = /Content-Security-Policy = "([^"]+)"/.exec(fs.readFileSync(path.join(here, '../../netlify.toml'), 'utf8'))?.[1] ?? '';
+const errors: string[] = [];
+const step = async (name: string, fn: () => Promise<unknown>): Promise<void> => {
+  try { await fn(); console.log('ok -', name); } catch (e) { console.log('FAIL -', name, String(e instanceof Error ? e.message : e).split('\n')[0]); errors.push(name); }
+};
 (async () => {
   const b = await chromium.launch(process.env.HTTPS_PROXY ? { proxy: { server: process.env.HTTPS_PROXY, bypass: '127.0.0.1,localhost' } } : {});
   const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
   await ctx.route(B + '/**', async route => {
     const res = await route.fetch();
-    const headers = { ...res.headers() };
+    const headers: Record<string, string> = { ...res.headers() };
     if ((headers['content-type'] || '').includes('text/html')) headers['content-security-policy'] = CSP;
     await route.fulfill({ response: res, headers });
   });
@@ -29,7 +34,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
     await p.fill('#f-title', 'ISO 22000:2018');
     await p.selectOption('#f-type', 't-iso22000');
     await p.fill('#f-expiry', '2028-03-01');
-    await p.setInputFiles('input[name=file]', path.join(__dirname, '../../public/demo/sample-certificate.pdf'));
+    await p.setInputFiles('input[name=file]', path.join(here, '../../public/demo/sample-certificate.pdf'));
     await p.check('input[name=sharing][value=selected]', { force: true });
     await p.check('input[name=share][value=o-med]');
     await p.screenshot({ path: `${out}/dlg-new-cert.png` });
@@ -140,7 +145,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok -', name); 
   await m.addInitScript(() => localStorage.setItem('certitrack.demo', 'organization'));
   const mp = await m.newPage();
   mp.on('pageerror', e => { console.log('PAGEERROR(mobile)', e.message); errors.push('pageerror'); });
-  for (const [n, u] of [['m-dash', '/pages/organization/dashboard.html'], ['m-certs', '/pages/organization/certificates.html'], ['m-partner', '/pages/organization/partner.html?id=c-clean'], ['m-home', '/index.html']]) {
+  for (const [n, u] of [['m-dash', '/pages/organization/dashboard.html'], ['m-certs', '/pages/organization/certificates.html'], ['m-partner', '/pages/organization/partner.html?id=c-clean'], ['m-home', '/index.html']] as [string, string][]) {
     await mp.goto(B + u, { waitUntil: 'networkidle' });
     const overflow = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (overflow > 0) { console.log('FAIL - horizontal overflow on', n, overflow); errors.push(n); }

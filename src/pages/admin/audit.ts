@@ -10,6 +10,7 @@ import type { AuditEntry } from '../../types/domain';
 const ACTION_KIND: Record<string, BadgeKind> = { insert: 'success', update: 'info', delete: 'danger' };
 
 const entityLabel = (entity: string) => { const key = `entity.${entity}`; return isMessageKey(key) ? t(key) : entity; };
+const actionLabel = (action: string) => { const key = `auditAction.${action}`; return isMessageKey(key) ? t(key) : action; };
 
 type JsonObject = Record<string, unknown>;
 const asObject = (v: unknown): JsonObject | null => (v && typeof v === 'object' && !Array.isArray(v) ? v as JsonObject : null);
@@ -38,7 +39,7 @@ export default definePage({
         mount(content.querySelector('[data-table]'), list.length ? html`<div class="table-wrap"><table class="table">
           <thead><tr><th>${t('admin.colWhen')}</th><th>${t('admin.colOrg')}</th><th>${t('admin.colAction')}</th><th>${t('admin.colEntity')}</th><th>${t('admin.colChanges')}</th></tr></thead>
           <tbody>${list.map(r => html`<tr><td style="white-space:nowrap">${formatDateTime(r.created_at)}</td><td>${nameOf(r.organization_id) || '—'}</td>
-            <td>${badge(ACTION_KIND[r.action] ?? 'neutral', r.action)}</td><td>${entityLabel(r.entity_type)}</td><td class="muted">${changed(r) || reasonOf(r) || '—'}</td></tr>`)}</tbody></table></div>`
+            <td>${badge(ACTION_KIND[r.action] ?? 'neutral', actionLabel(r.action))}</td><td>${entityLabel(r.entity_type)}</td><td class="muted">${changed(r) || reasonOf(r) || '—'}</td></tr>`)}</tbody></table></div>`
           : emptyState({ iconName: 'list-checks', title: t('common.noResults') }));
       };
       const entities = [...new Set(rows.map(r => r.entity_type))].sort();
