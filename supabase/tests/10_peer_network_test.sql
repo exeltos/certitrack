@@ -335,6 +335,51 @@ select t_fails($$select ct_set_presentation_request_status((select id from prese
 reset role;
 
 -- ---------------------------------------------------------------------------
+-- Team: colleagues of the same organization (Διαχειριστής / Μέλος)
+-- ---------------------------------------------------------------------------
+set role authenticated;
+select t_as(:ua);
+select t_ok(ct_invite_team_member((select a from ids), 'Colleague@A.gr', 'member') is not null, 'an administrator invites a colleague');
+reset role;
+select t_ok(exists(select 1 from email_outbox where template_key = 'team_invitation' and recipient_email = 'colleague@a.gr'), 'the invitation email is queued');
+set role authenticated;
+select t_as(:ua);
+select t_fails($$select ct_invite_team_member((select a from ids), 'c@c.gr', 'member')$$, 'an email that already has an account cannot be invited');
+select t_fails($$select ct_invite_team_member((select a from ids), 'x@a.gr', 'owner')$$, 'only Διαχειριστής or Μέλος can be given');
+select t_as(:uc);
+select t_fails($$select ct_invite_team_member((select a from ids), 'spy@c.gr', 'admin')$$, 'another organization cannot invite into A');
+select t_ok((select count(*) from team_invitations) = 0, 'another organization does not see A''s invitations');
+select t_fails($$select * from ct_team((select a from ids))$$, 'another organization cannot list A''s team');
+reset role;
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data)
+values ('a0a0a0a0-0000-4000-8000-000000000002', 'colleague@a.gr', null, '{"type":"team_member"}');
+select t_ok((select status from organization_members where user_id = 'a0a0a0a0-0000-4000-8000-000000000002') = 'pending_verification', 'the invited colleague is pending until the email is verified');
+update auth.users set email_confirmed_at = now() where id = 'a0a0a0a0-0000-4000-8000-000000000002';
+select t_ok((select organization_id = (select a from ids) and role = 'member' and status = 'active'
+             from organization_members where user_id = 'a0a0a0a0-0000-4000-8000-000000000002'), 'after verification the colleague is a Μέλος of A');
+select t_fails($$insert into auth.users(email, raw_user_meta_data) values ('stranger@x.gr', '{"type":"team_member"}')$$, 'joining a team needs an invitation');
+set role authenticated;
+select t_as('a0a0a0a0-0000-4000-8000-000000000002');
+select t_ok((select count(*) from ct_team((select a from ids))) = 2, 'colleagues see their team');
+select t_ok((select count(*) from organizations where id = (select a from ids)) = 1, 'the colleague works inside A');
+select t_fails($$select ct_invite_team_member((select a from ids), 'more@a.gr', 'member')$$, 'a Μέλος cannot invite');
+select t_fails($$select ct_set_team_role((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002', 'admin')$$, 'a Μέλος cannot make themselves Διαχειριστής');
+select t_as(:ua);
+select ct_set_team_role((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002', 'admin');
+select t_ok((select role from organization_members where user_id = 'a0a0a0a0-0000-4000-8000-000000000002') = 'admin', 'an administrator promotes a colleague to Διαχειριστής');
+select t_as('a0a0a0a0-0000-4000-8000-000000000002');
+select ct_set_team_role((select a from ids), :ua, 'member');
+select t_fails($$select ct_remove_team_member((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002')$$, 'the last Διαχειριστής cannot be removed');
+select t_fails($$select ct_set_team_role((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002', 'member')$$, 'the last Διαχειριστής cannot step down');
+select ct_set_team_role((select a from ids), :ua, 'admin');
+select t_as(:ua);
+select ct_remove_team_member((select a from ids), 'a0a0a0a0-0000-4000-8000-000000000002');
+select t_ok((select count(*) from ct_team((select a from ids))) = 1, 'a removed colleague leaves the team');
+select t_as('a0a0a0a0-0000-4000-8000-000000000002');
+select t_ok((select count(*) from organizations where id = (select a from ids)) = 0, 'a removed colleague no longer sees A');
+reset role;
+
+-- ---------------------------------------------------------------------------
 -- Deleting a whole organization (cascades through certificates, connections…)
 -- ---------------------------------------------------------------------------
 reset role;

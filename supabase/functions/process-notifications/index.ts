@@ -88,6 +88,24 @@ function template(row:any){
     };
   }
 
+  // A colleague invited to join an organization's team.
+  if(row.template_key==='team_invitation'){
+    const org=String(p.organization||'Ένας οργανισμός');
+    const role=p.role==='admin'?'Διαχειριστής':'Μέλος';
+    const href=`${APP_URL}/pages/auth/register.html?join=1&email=${encodeURIComponent(String(p.email||row.recipient_email))}`;
+    return {
+      subject:row.subject,
+      text:`Η ${org} σας προσκαλεί στην ομάδα της στο CertiTrack (ρόλος: ${role}).\n\nΔημιουργήστε τον λογαριασμό σας με αυτό το email: ${href}\n\nΗ πρόσκληση ισχύει 14 ημέρες.`,
+      html:emailShell({
+        eyebrow:'Πρόσκληση στην ομάδα',
+        title:`Η ${org} σας προσκαλεί στο CertiTrack`,
+        body:`Σας προσκάλεσαν να συμμετέχετε στην ομάδα της <strong style="color:#12213a;">${esc(org)}</strong> ως <strong>${esc(role)}</strong>, για να διαχειρίζεστε μαζί πιστοποιητικά, συνδέσεις και αιτήματα.<br><br>Δημιουργήστε τον λογαριασμό σας με <strong>αυτό το email</strong>. Η πρόσκληση ισχύει 14 ημέρες.`,
+        buttonLabel:'Δημιουργία λογαριασμού',
+        buttonHref:href
+      })
+    };
+  }
+
   // "Request a presentation" from the home page, sent to the platform owner.
   // Replying to the email answers the person who asked (see replyTo below).
   if(row.template_key==='presentation_request'){

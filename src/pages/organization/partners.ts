@@ -122,7 +122,7 @@ class PartnersPage {
     const tab = this.tab;
     const panel = tab === 'incoming' ? html`<section class="card" role="tabpanel">
         <div class="card__head"><div><h2>${t('conn.incomingTitle')}</h2><p>${t('conn.incomingText')}</p></div></div>
-        <ul class="rows">${incoming.map(c => this.row(c, this.canManage
+        <ul class="rows">${incoming.map(c => this.row(c, this.canRequest
           ? html`<button class="btn btn--sm btn--secondary" data-decline="${c.id}">${t('common.decline')}</button><button class="btn btn--sm btn--primary" data-accept="${c.id}">${t('common.accept')}</button>`
           : html`<span class="hint">${t('conn.ownersRespond')}</span>`))}</ul></section>`
       : tab === 'outgoing' ? html`<section class="card" role="tabpanel">

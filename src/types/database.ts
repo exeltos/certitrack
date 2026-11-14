@@ -102,6 +102,10 @@ export type Database = {
       notifications: Table<NotificationRow>;
       audit_log: Table<AuditLogRow>;
       site_settings: Table<{ key: string; value: Json; updated_at: string; updated_by: string | null }>;
+      team_invitations: Table<{
+        id: string; organization_id: string; email: string; role: string; status: string; invited_by: string | null;
+        created_at: string; expires_at: string; accepted_at: string | null;
+      }>;
       presentation_requests: Table<{
         id: string; name: string; company: string; email: string; phone: string | null; message: string | null;
         status: string; created_at: string; updated_at: string; handled_by: string | null;
@@ -139,6 +143,11 @@ export type Database = {
       ct_request_organization_closure: { Args: { p_org: string; p_reason?: string }; Returns: OrganizationRow };
       ct_cancel_organization_closure: { Args: { p_org: string }; Returns: OrganizationRow };
       ct_platform_set_organization_state: { Args: { p_org: string; p_reason?: string; p_state: string }; Returns: OrganizationRow };
+      ct_team: { Args: { p_org: string }; Returns: { user_id: string; email: string; role: string; status: string; joined_at: string; is_me: boolean }[] };
+      ct_invite_team_member: { Args: { p_org: string; p_email: string; p_role: string }; Returns: string };
+      ct_cancel_team_invitation: { Args: { p_invitation: string }; Returns: undefined };
+      ct_set_team_role: { Args: { p_org: string; p_user: string; p_role: string }; Returns: undefined };
+      ct_remove_team_member: { Args: { p_org: string; p_user: string }; Returns: undefined };
       ct_submit_presentation_request: { Args: { p_name: string; p_company: string; p_email: string; p_phone?: string | null; p_message?: string | null; p_trap?: string | null }; Returns: undefined };
       ct_set_presentation_request_status: { Args: { p_request: string; p_status: string }; Returns: undefined };
       ct_set_site_contact: { Args: { p_company: string; p_email: string | null; p_phone: string | null; p_website: string | null }; Returns: Json };

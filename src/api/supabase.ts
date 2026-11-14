@@ -7,7 +7,7 @@ import type {
   AdminCertificate, Api, AppContext, AuditEntry, Certificate, CertificateInput, CertificateType, CertificateView,
   Connection, ConnectionResult, ConnectionStatus, DocumentRequest, Invitation, MemberRole, MfaFactor, NetworkEdge,
   Notification, NotificationPreferences, Organization, OrganizationStatus, OrganizationUpdate, OpenedFile,
-  PartnerCandidate, PresentationInput, PresentationRequest, PresentationStatus, RequestStatus, Sharing, ShareInput, SiteContact
+  PartnerCandidate, PresentationInput, Team, TeamMember, TeamRole, PresentationRequest, PresentationStatus, RequestStatus, Sharing, ShareInput, SiteContact
 } from '../types/domain';
 
 type Client = SupabaseClient<Database>;
@@ -117,6 +117,13 @@ export const supabaseApi = {
     return check(await (await client()).auth.signUp({
       email, password,
       options: { data: { type: 'organization', country_code: 'GR', afm: vat, name }, emailRedirectTo: redirectTo }
+    }));
+  },
+
+  /** Sign up as a colleague invited to an organization's team. */
+  async joinTeam({ email, password, redirectTo }: { email: string; password: string; redirectTo: string }) {
+    return check(await (await client()).auth.signUp({
+      email, password, options: { data: { type: 'team_member' }, emailRedirectTo: redirectTo }
     }));
   },
 
@@ -362,6 +369,32 @@ export const supabaseApi = {
   },
   async setSiteContact(c: SiteContact) {
     return toSiteContact(await rpc('ct_set_site_contact', { p_company: c.company, p_email: c.email || null, p_phone: c.phone || null, p_website: c.website || null }) as Partial<SiteContact>);
+  },
+
+  // ---------------------------------------------------------------- team
+  async team(): Promise<Team> {
+    const org = await currentOrganization();
+    const [members, invitations] = await Promise.all([
+      rpc('ct_team', { p_org: org.id }),
+      (await client()).from('team_invitations').select('id, email, role, created_at, expires_at')
+        .eq('organization_id', org.id).eq('status', 'pending').gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false }).then(check)
+    ]);
+    return {
+      members: (members ?? []).map(m => ({ ...m, role: m.role as MemberRole, status: m.status as TeamMember['status'] })),
+      invitations: invitations.map(i => ({ ...i, role: i.role as TeamRole }))
+    };
+  },
+  async inviteTeamMember(email: string, role: TeamRole) {
+    await rpc('ct_invite_team_member', { p_org: (await currentOrganization()).id, p_email: email, p_role: role });
+  },
+  async cancelTeamInvitation(id: string) { await rpc('ct_cancel_team_invitation', { p_invitation: id }); },
+  async setTeamRole(userId: string, role: TeamRole) {
+    await rpc('ct_set_team_role', { p_org: (await currentOrganization()).id, p_user: userId, p_role: role });
+    ctxCache = null;
+  },
+  async removeTeamMember(userId: string) {
+    await rpc('ct_remove_team_member', { p_org: (await currentOrganization()).id, p_user: userId });
   },
 
   // ---------------------------------------------------------------- "request a presentation"

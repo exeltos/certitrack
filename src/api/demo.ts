@@ -6,7 +6,7 @@ import { DEMO_PDF_URL } from './demoAssets';
 import type {
   Api, AppContext, AuditEntry, Certificate, CertificateInput, CertificateShare, CertificateType, CertificateView,
   Connection, ConnectionResult, ConnectionStatus, DocumentRequest, Invitation, NetworkEdge, Notification,
-  NotificationPreferences, Organization, OrganizationUpdate, PartnerCandidate, PresentationInput, PresentationRequest, PresentationStatus, Sharing, ShareInput, SiteContact
+  NotificationPreferences, Organization, OrganizationUpdate, PartnerCandidate, PresentationInput, PresentationRequest, PresentationStatus, Sharing, ShareInput, SiteContact, Team, TeamRole
 } from '../types/domain';
 
 type DemoCert = Omit<Certificate, 'type' | 'shares'> & { deleted_at?: string | null };
@@ -204,6 +204,23 @@ function loadPresentations(): PresentationRequest[] {
 }
 const demoPresentations = loadPresentations();
 function savePresentations(): void { try { sessionStorage.setItem(PRESENTATIONS_KEY, JSON.stringify(demoPresentations)); } catch { /* demo only */ } }
+
+// The demo organization's team, kept for the tab like the presentations.
+const TEAM_KEY = 'certitrack.demo.team';
+const SAMPLE_TEAM: Team = {
+  members: [
+    { user_id: 'u-demo', email: 'quality@demo-group.example', role: 'owner', status: 'active', joined_at: '2025-09-20T09:00:00Z', is_me: true },
+    { user_id: 'u-maria', email: 'maria@demo-group.example', role: 'member', status: 'active', joined_at: '2026-02-03T09:00:00Z', is_me: false },
+    { user_id: 'u-nikos', email: 'n.ioannou@demo-group.example', role: 'admin', status: 'active', joined_at: '2026-05-11T09:00:00Z', is_me: false }
+  ],
+  invitations: [
+    { id: 't-1', email: 'logistirio@demo-group.example', role: 'member', created_at: new Date(Date.now() - 2 * 86400000).toISOString(), expires_at: new Date(Date.now() + 12 * 86400000).toISOString() }
+  ]
+};
+function loadTeam(): Team { try { return JSON.parse(sessionStorage.getItem(TEAM_KEY) || 'null') as Team | null ?? structuredClone(SAMPLE_TEAM); } catch { return structuredClone(SAMPLE_TEAM); } }
+const demoTeam = loadTeam();
+function saveTeam(): void { try { sessionStorage.setItem(TEAM_KEY, JSON.stringify(demoTeam)); } catch { /* demo only */ } }
+const adminCount = () => demoTeam.members.filter(m => m.role === 'owner' || m.role === 'admin').length;
 
 let demoContact: SiteContact = { company: 'Exeltos', email: 'info@exeltos.com', phone: '6942471022', website: 'https://exeltos.com' };
 
@@ -415,6 +432,35 @@ export const demoApi = {
   async adminSetOrganizationState(id: string, state: 'active' | 'suspended' | 'closed') { await wait(); orgById(id).status = state; save(); },
   async siteContact() { return { ...demoContact }; },
   async setSiteContact(c: SiteContact) { await wait(); demoContact = { ...c }; return { ...demoContact }; },
+  async team() { await wait(); return structuredClone(demoTeam); },
+  async inviteTeamMember(email: string, role: TeamRole) {
+    await wait();
+    const e = email.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) throw new Error('Invalid email');
+    if (demoTeam.members.some(m => m.email === e)) throw new Error('This email already has a CertiTrack account');
+    const existing = demoTeam.invitations.find(i => i.email === e);
+    const now = new Date().toISOString(), expires = new Date(Date.now() + 14 * 86400000).toISOString();
+    if (existing) Object.assign(existing, { role, created_at: now, expires_at: expires });
+    else demoTeam.invitations.unshift({ id: `t-${Date.now()}`, email: e, role, created_at: now, expires_at: expires });
+    saveTeam();
+  },
+  async cancelTeamInvitation(id: string) { await wait(); demoTeam.invitations = demoTeam.invitations.filter(i => i.id !== id); saveTeam(); },
+  async setTeamRole(userId: string, role: TeamRole) {
+    await wait();
+    const m = demoTeam.members.find(x => x.user_id === userId);
+    if (!m) throw new Error('Member not found');
+    if (role === 'member' && m.role !== 'member' && adminCount() <= 1) throw new Error('The team needs at least one administrator');
+    if (!(m.role === 'owner' && role === 'admin')) m.role = role;
+    saveTeam();
+  },
+  async removeTeamMember(userId: string) {
+    await wait();
+    const m = demoTeam.members.find(x => x.user_id === userId);
+    if (m && m.role !== 'member' && adminCount() <= 1) throw new Error('The team needs at least one administrator');
+    demoTeam.members = demoTeam.members.filter(x => x.user_id !== userId);
+    saveTeam();
+  },
+
   async submitPresentationRequest(input: PresentationInput) {
     await wait();
     if (input.trap) return;

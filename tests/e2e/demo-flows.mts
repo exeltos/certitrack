@@ -127,6 +127,27 @@ const step = async (name: string, fn: () => Promise<unknown>): Promise<void> => 
     await p.screenshot({ path: `${out}/conns-dark.png` });
     await p.click('[data-action=theme]');
   });
+  await step('team: invite a colleague, change a level, remove a member', async () => {
+    await p.goto(B + '/pages/organization/profile.html#team', { waitUntil: 'networkidle' });
+    await p.waitForSelector('[data-panel=team] .rows');
+    const invitations = () => p.locator('[data-panel=team] [data-invite-cancel]').count();
+    const before = await invitations();
+    await p.click('[data-team-invite]');
+    await p.fill('#ti-email', 'new.colleague@demo-group.example');
+    await p.click('dialog [type=submit]');
+    await p.waitForFunction(n => document.querySelectorAll('[data-panel=team] [data-invite-cancel]').length === n, before + 1);
+    await p.locator('[data-team-role]').first().selectOption('admin');
+    await p.waitForFunction(() => (document.querySelector('[data-team-role]') as HTMLSelectElement | null)?.value === 'admin');
+    const members = await p.locator('[data-team-remove]').count();
+    await p.locator('[data-team-remove]').first().click();
+    await p.click('dialog [type=submit]');
+    await p.waitForFunction(n => document.querySelectorAll('[data-team-remove]').length === n, members - 1);
+  });
+  await step('invitation link opens the join form', async () => {
+    await p.goto(B + '/pages/auth/register.html?join=1&email=colleague%40example.com', { waitUntil: 'networkidle' });
+    if (await p.inputValue('#email') !== 'colleague@example.com') throw new Error('email not prefilled');
+    if (await p.locator('#vat').count()) throw new Error('join form should not ask for a VAT number');
+  });
   // While still in the demo, so nothing reaches the real backend.
   await step('request a presentation from the home page', async () => {
     await p.goto(B + '/index.html', { waitUntil: 'networkidle' });

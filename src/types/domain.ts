@@ -115,6 +115,13 @@ export type OrganizationUpdate = Partial<Pick<OrganizationRow,
 export interface OpenedFile { url: string; fileName: string }
 
 export type PresentationStatus = 'new' | 'contacted' | 'done';
+
+/** Levels inside one organization: Διαχειριστής (owner/admin) and Μέλος (member). */
+export type TeamRole = 'admin' | 'member';
+export const isTeamAdmin = (role: MemberRole | null | undefined): boolean => role === 'owner' || role === 'admin';
+export interface TeamMember { user_id: string; email: string; role: MemberRole; status: 'active' | 'pending_verification'; joined_at: string; is_me: boolean }
+export interface TeamInvitation { id: string; email: string; role: TeamRole; created_at: string; expires_at: string }
+export interface Team { members: TeamMember[]; invitations: TeamInvitation[] }
 /** A "request a presentation" sent from the home page. */
 export interface PresentationRequest {
   id: string; name: string; company: string; email: string; phone: string | null; message: string | null;
@@ -191,6 +198,12 @@ export interface Api {
 
   siteContact(): Promise<SiteContact>;
   setSiteContact(contact: SiteContact): Promise<SiteContact>;
+
+  team(): Promise<Team>;
+  inviteTeamMember(email: string, role: TeamRole): Promise<void>;
+  cancelTeamInvitation(id: string): Promise<void>;
+  setTeamRole(userId: string, role: TeamRole): Promise<void>;
+  removeTeamMember(userId: string): Promise<void>;
 
   submitPresentationRequest(input: PresentationInput): Promise<void>;
   presentationRequests(): Promise<PresentationRequest[]>;
