@@ -46,6 +46,10 @@ grant execute on function public.t_ok(boolean, text), public.t_fails(text, text)
 -- Sign-up is by invitation only.
 select t_fails($$insert into auth.users(email, raw_user_meta_data) values ('walk-in@x.gr', '{"type":"organization","name":"Walk-in AE","afm":"999999999"}')$$,
                'an organization cannot sign up without an invitation');
+select t_fails($$insert into auth.users(email, raw_user_meta_data) values ('bot@throwaway.example', '{}')$$,
+               'a sign-up with no account type is refused');
+select t_fails($$insert into auth.users(email, raw_user_meta_data) values ('bot2@throwaway.example', '{"type":"whatever"}')$$,
+               'a sign-up with an unknown account type is refused');
 insert into public.organization_invitations(email) values ('a@a.gr'), ('b@b.gr'), ('C@c.gr'), ('d@d.gr');
 insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data) values
   (:ua, 'a@a.gr', now(), '{"type":"organization","name":"Alpha AE","afm":"111111111"}'),
